@@ -1,0 +1,1663 @@
+{
+  "metadata": {
+    "n_subjects": 15,
+    "window_sec": 5,
+    "elapsed_sec": 64.9
+  },
+  "pca_info": {
+    "variance_explained": [
+      0.631030557569456,
+      0.24858657997272085,
+      0.07297299300639008,
+      0.03415698265288938,
+      0.013252886798543547
+    ],
+    "pc1_loadings": {
+      "hr_mean": -0.1833313545701211,
+      "hr_std": 0.43799705637370157,
+      "rmssd": 0.5349590912160178,
+      "sdnn": 0.5411594065725804,
+      "pnn50": 0.4421690405747579
+    },
+    "pc1_var_pct": 63.1,
+    "stress_is_1d": false
+  },
+  "aggregation_hr_mean": {
+    "stationarity_summary": {
+      "STATIONARY": 12,
+      "TREND_STATIONARY": 3
+    },
+    "ou_parameters": {
+      "theta_mean": 0.074218,
+      "theta_std": 0.02368,
+      "sigma_mean": 0.261031,
+      "n_mean_reverting": 15,
+      "n_total": 15,
+      "half_life_mean_sec": 10.7
+    },
+    "hurst_summary": {
+      "mean": 0.8446,
+      "std": 0.0416
+    },
+    "increment_distribution": {
+      "HEAVY_TAILED_SKEWED": 1,
+      "NON_GAUSSIAN_LIGHT_TAILED": 12,
+      "HEAVY_TAILED_SYMMETRIC": 2
+    },
+    "consistency": {
+      "theta_cv": 0.3191,
+      "theta_consistent": true
+    },
+    "process_class": "ORNSTEIN_UHLENBECK"
+  },
+  "aggregation_pc1": {
+    "stationarity_summary": {
+      "TREND_STATIONARY": 3,
+      "STATIONARY": 12
+    },
+    "ou_parameters": {
+      "theta_mean": 0.160911,
+      "theta_std": 0.018377,
+      "sigma_mean": 0.408178,
+      "n_mean_reverting": 15,
+      "n_total": 15,
+      "half_life_mean_sec": 4.4
+    },
+    "hurst_summary": {
+      "mean": 0.7109,
+      "std": 0.0501
+    },
+    "increment_distribution": {
+      "HEAVY_TAILED_SKEWED": 1,
+      "NON_GAUSSIAN_LIGHT_TAILED": 5,
+      "HEAVY_TAILED_SYMMETRIC": 9
+    },
+    "consistency": {
+      "theta_cv": 0.1142,
+      "theta_consistent": true
+    },
+    "process_class": "OU_WITH_JUMPS"
+  },
+  "proxy_comparison": {
+    "same_process_class": false,
+    "hr_class": "ORNSTEIN_UHLENBECK",
+    "pc1_class": "OU_WITH_JUMPS",
+    "theta_ratio": 0.461,
+    "hurst_delta": 0.1337,
+    "verdict": "PROXIES_DISAGREE",
+    "detail": "Proxies disagree on process class. This suggests the choice of stress proxy materially affects conclusions. Further investigation needed."
+  },
+  "verdict": {
+    "components": {
+      "Dimensionality": {
+        "verdict": "STRESS_MULTI_DIMENSIONAL",
+        "detail": "PC1 explains only 63.1% (<70% threshold)"
+      },
+      "Process Class": {
+        "verdict": "MEAN_REVERTING",
+        "detail": "OU process with half-life ~0.2 min"
+      },
+      "Cross-Subject Consistency": {
+        "verdict": "HIGHLY_CONSISTENT",
+        "detail": "Theta CV=0.319 — universal stress dynamics"
+      },
+      "Proxy Agreement": {
+        "verdict": "PROXIES_DISAGREE",
+        "detail": "Proxies disagree on process class. This suggests the choice of stress proxy materially affects conclusions. Further investigation needed."
+      },
+      "Protocol Effect": {
+        "verdict": "PROTOCOL_SUBTRACTION_HELPS",
+        "detail": "Stationarity: 4/15 (raw) -> 12/15 (after subtraction)"
+      }
+    },
+    "overall": "FURTHER_INVESTIGATION_NEEDED",
+    "overall_detail": "Process class depends on proxy choice. Need more data or better proxy."
+  },
+  "per_subject_hr": [
+    {
+      "subject_id": "S2",
+      "residual": {
+        "stationarity": {
+          "verdict": "STATIONARY",
+          "adf_stat": -7.1276,
+          "adf_p": 0.0,
+          "kpss_stat": 0.0813,
+          "kpss_p": 0.1,
+          "n": 1215
+        },
+        "ou_fit": {
+          "model": "OU",
+          "fitted": true,
+          "theta": 0.099498,
+          "mu": 0.091,
+          "sigma": 0.371673,
+          "half_life_sec": 7.0,
+          "half_life_min": 0.12,
+          "a_coefficient": 0.502509,
+          "r_squared": 0.252,
+          "mean_reversion_p": 0.0,
+          "is_mean_reverting": true,
+          "bic_ou": -435.03,
+          "bic_rw": -95.66,
+          "prefers_ou": true,
+          "n": 1215
+        },
+        "hurst": {
+          "hurst": 0.7807,
+          "r_squared": 0.9977,
+          "verdict": "PERSISTENT"
+        },
+        "increments": {
+          "mean": -0.001118,
+          "std": 0.9586,
+          "skewness": 0.5737,
+          "excess_kurtosis": 12.5706,
+          "shapiro_p": 0.0,
+          "jarque_bera_p": 0.0,
+          "hill_tail_index": 2.44,
+          "n_increments": 1214,
+          "distribution_class": "HEAVY_TAILED_SKEWED",
+          "is_gaussian": false,
+          "is_heavy_tailed": true
+        },
+        "jumps": {
+          "n_jumps": 94,
+          "jump_rate": 0.0774,
+          "expected_gaussian": 3.28,
+          "jump_excess_ratio": 28.68,
+          "mean_jump_size": 2.7807,
+          "max_jump_size": 7.6463,
+          "n_positive_jumps": 45,
+          "n_negative_jumps": 49,
+          "threshold": 1.47
+        },
+        "acf_lag1": 0.5015741789617615,
+        "n_sig_acf": 19,
+        "acf_decay_rate": 0.1139
+      },
+      "within_phase": {
+        "baseline": {
+          "n_windows": 230,
+          "stationarity": "INCONCLUSIVE",
+          "ou_theta": 0.111616,
+          "ou_half_life_min": 0.1,
+          "hurst": 0.7018,
+          "increment_class": "HEAVY_TAILED_SKEWED"
+        },
+        "stress": {
+          "n_windows": 124,
+          "stationarity": "TREND_STATIONARY",
+          "ou_theta": 0.130739,
+          "ou_half_life_min": 0.09,
+          "hurst": 0.8104,
+          "increment_class": "HEAVY_TAILED_SYMMETRIC"
+        },
+        "amusement": {
+          "n_windows": 74,
+          "stationarity": "STATIONARY",
+          "ou_theta": 0.132322,
+          "ou_half_life_min": 0.09,
+          "hurst": 0.6841,
+          "increment_class": "GAUSSIAN"
+        },
+        "meditation": {
+          "n_windows": 155,
+          "stationarity": "STATIONARY",
+          "ou_theta": 0.120121,
+          "ou_half_life_min": 0.1,
+          "hurst": 0.8306,
+          "increment_class": "NON_GAUSSIAN_LIGHT_TAILED"
+        }
+      },
+      "full_series_stationarity": "STATIONARY",
+      "phase_means": {
+        "baseline": -0.058543368114112274,
+        "stress": 0.2584604763043088,
+        "amusement": -0.6133072915223874,
+        "meditation": -0.548909998730212
+      }
+    },
+    {
+      "subject_id": "S3",
+      "residual": {
+        "stationarity": {
+          "verdict": "STATIONARY",
+          "adf_stat": -9.8867,
+          "adf_p": 0.0,
+          "kpss_stat": 0.2603,
+          "kpss_p": 0.1,
+          "n": 1298
+        },
+        "ou_fit": {
+          "model": "OU",
+          "fitted": true,
+          "theta": 0.068572,
+          "mu": -0.0147,
+          "sigma": 0.250254,
+          "half_life_sec": 10.1,
+          "half_life_min": 0.17,
+          "a_coefficient": 0.657141,
+          "r_squared": 0.4311,
+          "mean_reversion_p": 0.0,
+          "is_mean_reverting": true,
+          "bic_ou": -1491.64,
+          "bic_rw": -1255.55,
+          "prefers_ou": true,
+          "n": 1298
+        },
+        "hurst": {
+          "hurst": 0.808,
+          "r_squared": 0.9876,
+          "verdict": "PERSISTENT"
+        },
+        "increments": {
+          "mean": -0.001247,
+          "std": 0.6146,
+          "skewness": -0.4021,
+          "excess_kurtosis": 0.7606,
+          "shapiro_p": 0.0,
+          "jarque_bera_p": 0.0,
+          "hill_tail_index": 5.09,
+          "n_increments": 1297,
+          "distribution_class": "NON_GAUSSIAN_LIGHT_TAILED",
+          "is_gaussian": false,
+          "is_heavy_tailed": false
+        },
+        "jumps": {
+          "n_jumps": 42,
+          "jump_rate": 0.0324,
+          "expected_gaussian": 3.5,
+          "jump_excess_ratio": 11.99,
+          "mean_jump_size": 1.6833,
+          "max_jump_size": 2.2535,
+          "n_positive_jumps": 13,
+          "n_negative_jumps": 29,
+          "threshold": 1.455
+        },
+        "acf_lag1": 0.6558759621370869,
+        "n_sig_acf": 18,
+        "acf_decay_rate": 0.1611
+      },
+      "within_phase": {
+        "baseline": {
+          "n_windows": 229,
+          "stationarity": "STATIONARY",
+          "ou_theta": 0.150272,
+          "ou_half_life_min": 0.08,
+          "hurst": 0.7777,
+          "increment_class": "NON_GAUSSIAN_LIGHT_TAILED"
+        },
+        "stress": {
+          "n_windows": 129,
+          "stationarity": "TREND_STATIONARY",
+          "ou_theta": 0.052217,
+          "ou_half_life_min": 0.22,
+          "hurst": 0.927,
+          "increment_class": "GAUSSIAN"
+        },
+        "amusement": {
+          "n_windows": 76,
+          "stationarity": "STATIONARY",
+          "ou_theta": 0.137139,
+          "ou_half_life_min": 0.08,
+          "hurst": 0.7756,
+          "increment_class": "NON_GAUSSIAN_LIGHT_TAILED"
+        },
+        "meditation": {
+          "n_windows": 158,
+          "stationarity": "STATIONARY",
+          "ou_theta": 0.2782,
+          "ou_half_life_min": 0.04,
+          "hurst": 0.7895,
+          "increment_class": "NON_GAUSSIAN_LIGHT_TAILED"
+        }
+      },
+      "full_series_stationarity": "TREND_STATIONARY",
+      "phase_means": {
+        "baseline": -0.46494086809863217,
+        "stress": 1.9043220138980264,
+        "amusement": -0.43292002951152225,
+        "meditation": -0.5744141189916496
+      }
+    },
+    {
+      "subject_id": "S4",
+      "residual": {
+        "stationarity": {
+          "verdict": "STATIONARY",
+          "adf_stat": -12.4204,
+          "adf_p": 0.0,
+          "kpss_stat": 0.2633,
+          "kpss_p": 0.1,
+          "n": 1284
+        },
+        "ou_fit": {
+          "model": "OU",
+          "fitted": true,
+          "theta": 0.074014,
+          "mu": -0.0193,
+          "sigma": 0.287756,
+          "half_life_sec": 9.4,
+          "half_life_min": 0.16,
+          "a_coefficient": 0.629929,
+          "r_squared": 0.3957,
+          "mean_reversion_p": 0.0,
+          "is_mean_reverting": true,
+          "bic_ou": -1117.09,
+          "bic_rw": -862.87,
+          "prefers_ou": true,
+          "n": 1284
+        },
+        "hurst": {
+          "hurst": 0.7749,
+          "r_squared": 0.986,
+          "verdict": "PERSISTENT"
+        },
+        "increments": {
+          "mean": 0.00098,
+          "std": 0.7124,
+          "skewness": -0.2879,
+          "excess_kurtosis": 1.9755,
+          "shapiro_p": 0.0,
+          "jarque_bera_p": 0.0,
+          "hill_tail_index": 4.61,
+          "n_increments": 1283,
+          "distribution_class": "NON_GAUSSIAN_LIGHT_TAILED",
+          "is_gaussian": false,
+          "is_heavy_tailed": false
+        },
+        "jumps": {
+          "n_jumps": 41,
+          "jump_rate": 0.032,
+          "expected_gaussian": 3.46,
+          "jump_excess_ratio": 11.84,
+          "mean_jump_size": 2.1474,
+          "max_jump_size": 3.6658,
+          "n_positive_jumps": 18,
+          "n_negative_jumps": 23,
+          "threshold": 1.692
+        },
+        "acf_lag1": 0.6280049226588449,
+        "n_sig_acf": 18,
+        "acf_decay_rate": 0.1334
+      },
+      "within_phase": {
+        "baseline": {
+          "n_windows": 232,
+          "stationarity": "STATIONARY",
+          "ou_theta": 0.071376,
+          "ou_half_life_min": 0.16,
+          "hurst": 0.9125,
+          "increment_class": "NON_GAUSSIAN_LIGHT_TAILED"
+        },
+        "stress": {
+          "n_windows": 128,
+          "stationarity": "NON_STATIONARY",
+          "ou_theta": 0.097103,
+          "ou_half_life_min": 0.12,
+          "hurst": 0.8721,
+          "increment_class": "GAUSSIAN"
+        },
+        "amusement": {
+          "n_windows": 75,
+          "stationarity": "STATIONARY",
+          "ou_theta": 0.176846,
+          "ou_half_life_min": 0.07,
+          "hurst": 0.8097,
+          "increment_class": "NON_GAUSSIAN_LIGHT_TAILED"
+        },
+        "meditation": {
+          "n_windows": 162,
+          "stationarity": "STATIONARY",
+          "ou_theta": 0.088281,
+          "ou_half_life_min": 0.13,
+          "hurst": 0.7053,
+          "increment_class": "NON_GAUSSIAN_LIGHT_TAILED"
+        }
+      },
+      "full_series_stationarity": "TREND_STATIONARY",
+      "phase_means": {
+        "baseline": -0.48885976565117834,
+        "stress": 1.6061663117480396,
+        "amusement": -0.34669113432741655,
+        "meditation": -0.24442038772431224
+      }
+    },
+    {
+      "subject_id": "S5",
+      "residual": {
+        "stationarity": {
+          "verdict": "STATIONARY",
+          "adf_stat": -6.5899,
+          "adf_p": 0.0,
+          "kpss_stat": 0.2392,
+          "kpss_p": 0.1,
+          "n": 1251
+        },
+        "ou_fit": {
+          "model": "OU",
+          "fitted": true,
+          "theta": 0.088305,
+          "mu": 0.0278,
+          "sigma": 0.242747,
+          "half_life_sec": 7.8,
+          "half_life_min": 0.13,
+          "a_coefficient": 0.558477,
+          "r_squared": 0.3119,
+          "mean_reversion_p": 0.0,
+          "is_mean_reverting": true,
+          "bic_ou": -1513.28,
+          "bic_rw": -1208.61,
+          "prefers_ou": true,
+          "n": 1251
+        },
+        "hurst": {
+          "hurst": 0.8472,
+          "r_squared": 0.9986,
+          "verdict": "PERSISTENT"
+        },
+        "increments": {
+          "mean": 0.000129,
+          "std": 0.6149,
+          "skewness": -0.4334,
+          "excess_kurtosis": 4.0218,
+          "shapiro_p": 0.0,
+          "jarque_bera_p": 0.0,
+          "hill_tail_index": 3.73,
+          "n_increments": 1250,
+          "distribution_class": "HEAVY_TAILED_SYMMETRIC",
+          "is_gaussian": false,
+          "is_heavy_tailed": true
+        },
+        "jumps": {
+          "n_jumps": 28,
+          "jump_rate": 0.0224,
+          "expected_gaussian": 3.37,
+          "jump_excess_ratio": 8.3,
+          "mean_jump_size": 2.053,
+          "max_jump_size": 3.9459,
+          "n_positive_jumps": 10,
+          "n_negative_jumps": 18,
+          "threshold": 1.5479
+        },
+        "acf_lag1": 0.5584732616484042,
+        "n_sig_acf": 20,
+        "acf_decay_rate": 0.0396
+      },
+      "within_phase": {
+        "baseline": {
+          "n_windows": 241,
+          "stationarity": "STATIONARY",
+          "ou_theta": 0.123047,
+          "ou_half_life_min": 0.09,
+          "hurst": 0.7898,
+          "increment_class": "GAUSSIAN"
+        },
+        "stress": {
+          "n_windows": 130,
+          "stationarity": "TREND_STATIONARY",
+          "ou_theta": 0.103497,
+          "ou_half_life_min": 0.11,
+          "hurst": 0.909,
+          "increment_class": "GAUSSIAN"
+        },
+        "amusement": {
+          "n_windows": 76,
+          "stationarity": "STATIONARY",
+          "ou_theta": 0.139102,
+          "ou_half_life_min": 0.08,
+          "hurst": 0.6765,
+          "increment_class": "NON_GAUSSIAN_LIGHT_TAILED"
+        },
+        "meditation": {
+          "n_windows": 160,
+          "stationarity": "TREND_STATIONARY",
+          "ou_theta": 0.153537,
+          "ou_half_life_min": 0.08,
+          "hurst": 0.8265,
+          "increment_class": "GAUSSIAN"
+        }
+      },
+      "full_series_stationarity": "NON_STATIONARY",
+      "phase_means": {
+        "baseline": -0.7200840759422643,
+        "stress": 2.0073054900632137,
+        "amusement": -0.3516916949417992,
+        "meditation": -0.594997888925605
+      }
+    },
+    {
+      "subject_id": "S6",
+      "residual": {
+        "stationarity": {
+          "verdict": "STATIONARY",
+          "adf_stat": -9.8475,
+          "adf_p": 0.0,
+          "kpss_stat": 0.3791,
+          "kpss_p": 0.0862,
+          "n": 1414
+        },
+        "ou_fit": {
+          "model": "OU",
+          "fitted": true,
+          "theta": 0.087856,
+          "mu": 0.0403,
+          "sigma": 0.340763,
+          "half_life_sec": 7.9,
+          "half_life_min": 0.13,
+          "a_coefficient": 0.560718,
+          "r_squared": 0.3144,
+          "mean_reversion_p": 0.0,
+          "is_mean_reverting": true,
+          "bic_ou": -753.74,
+          "bic_rw": -410.52,
+          "prefers_ou": true,
+          "n": 1414
+        },
+        "hurst": {
+          "hurst": 0.7992,
+          "r_squared": 0.9991,
+          "verdict": "PERSISTENT"
+        },
+        "increments": {
+          "mean": -0.000325,
+          "std": 0.8626,
+          "skewness": -0.1266,
+          "excess_kurtosis": 1.0084,
+          "shapiro_p": 0.0,
+          "jarque_bera_p": 0.0,
+          "hill_tail_index": 4.88,
+          "n_increments": 1413,
+          "distribution_class": "NON_GAUSSIAN_LIGHT_TAILED",
+          "is_gaussian": false,
+          "is_heavy_tailed": false
+        },
+        "jumps": {
+          "n_jumps": 40,
+          "jump_rate": 0.0283,
+          "expected_gaussian": 3.81,
+          "jump_excess_ratio": 10.49,
+          "mean_jump_size": 2.4631,
+          "max_jump_size": 3.4933,
+          "n_positive_jumps": 20,
+          "n_negative_jumps": 20,
+          "threshold": 2.0568
+        },
+        "acf_lag1": 0.5607144324242281,
+        "n_sig_acf": 16,
+        "acf_decay_rate": 0.1204
+      },
+      "within_phase": {
+        "baseline": {
+          "n_windows": 237,
+          "stationarity": "TREND_STATIONARY",
+          "ou_theta": 0.083663,
+          "ou_half_life_min": 0.14,
+          "hurst": 0.8119,
+          "increment_class": "NON_GAUSSIAN_LIGHT_TAILED"
+        },
+        "stress": {
+          "n_windows": 131,
+          "stationarity": "STATIONARY",
+          "ou_theta": 0.143178,
+          "ou_half_life_min": 0.08,
+          "hurst": 0.8145,
+          "increment_class": "GAUSSIAN"
+        },
+        "amusement": {
+          "n_windows": 75,
+          "stationarity": "STATIONARY",
+          "ou_theta": 0.166441,
+          "ou_half_life_min": 0.07,
+          "hurst": 0.7696,
+          "increment_class": "GAUSSIAN"
+        },
+        "meditation": {
+          "n_windows": 160,
+          "stationarity": "STATIONARY",
+          "ou_theta": 0.219567,
+          "ou_half_life_min": 0.05,
+          "hurst": 0.8028,
+          "increment_class": "GAUSSIAN"
+        }
+      },
+      "full_series_stationarity": "TREND_STATIONARY",
+      "phase_means": {
+        "baseline": -0.24167651966005632,
+        "stress": 0.9877953740293688,
+        "amusement": -0.659379008765036,
+        "meditation": -0.5034959657248367
+      }
+    },
+    {
+      "subject_id": "S7",
+      "residual": {
+        "stationarity": {
+          "verdict": "STATIONARY",
+          "adf_stat": -4.7628,
+          "adf_p": 0.0001,
+          "kpss_stat": 0.1944,
+          "kpss_p": 0.1,
+          "n": 1047
+        },
+        "ou_fit": {
+          "model": "OU",
+          "fitted": true,
+          "theta": 0.045031,
+          "mu": 0.0796,
+          "sigma": 0.246303,
+          "half_life_sec": 15.4,
+          "half_life_min": 0.26,
+          "a_coefficient": 0.774843,
+          "r_squared": 0.6001,
+          "mean_reversion_p": 0.0,
+          "is_mean_reverting": true,
+          "bic_ou": -1233.92,
+          "bic_rw": -1116.09,
+          "prefers_ou": true,
+          "n": 1047
+        },
+        "hurst": {
+          "hurst": 0.8729,
+          "r_squared": 0.9994,
+          "verdict": "PERSISTENT"
+        },
+        "increments": {
+          "mean": -0.000604,
+          "std": 0.5846,
+          "skewness": -0.1799,
+          "excess_kurtosis": 1.0729,
+          "shapiro_p": 0.0,
+          "jarque_bera_p": 0.0,
+          "hill_tail_index": 5.18,
+          "n_increments": 1046,
+          "distribution_class": "NON_GAUSSIAN_LIGHT_TAILED",
+          "is_gaussian": false,
+          "is_heavy_tailed": false
+        },
+        "jumps": {
+          "n_jumps": 39,
+          "jump_rate": 0.0373,
+          "expected_gaussian": 2.82,
+          "jump_excess_ratio": 13.81,
+          "mean_jump_size": 1.6198,
+          "max_jump_size": 2.197,
+          "n_positive_jumps": 16,
+          "n_negative_jumps": 23,
+          "threshold": 1.4021
+        },
+        "acf_lag1": 0.7744391361638292,
+        "n_sig_acf": 20,
+        "acf_decay_rate": 0.048
+      },
+      "within_phase": {
+        "baseline": {
+          "n_windows": 238,
+          "stationarity": "STATIONARY",
+          "ou_theta": 0.127239,
+          "ou_half_life_min": 0.09,
+          "hurst": 0.7697,
+          "increment_class": "GAUSSIAN"
+        },
+        "stress": {
+          "n_windows": 129,
+          "stationarity": "STATIONARY",
+          "ou_theta": 0.040231,
+          "ou_half_life_min": 0.29,
+          "hurst": 0.9446,
+          "increment_class": "GAUSSIAN"
+        },
+        "amusement": {
+          "n_windows": 75,
+          "stationarity": "STATIONARY",
+          "ou_theta": 0.160848,
+          "ou_half_life_min": 0.07,
+          "hurst": 0.5812,
+          "increment_class": "NON_GAUSSIAN_LIGHT_TAILED"
+        },
+        "meditation": {
+          "n_windows": 160,
+          "stationarity": "TREND_STATIONARY",
+          "ou_theta": 0.293581,
+          "ou_half_life_min": 0.04,
+          "hurst": 0.7159,
+          "increment_class": "NON_GAUSSIAN_LIGHT_TAILED"
+        }
+      },
+      "full_series_stationarity": "STATIONARY",
+      "phase_means": {
+        "baseline": -0.07833969999852723,
+        "stress": 0.8911524227764289,
+        "amusement": -0.9100929141318889,
+        "meditation": -0.7099734104426887
+      }
+    },
+    {
+      "subject_id": "S8",
+      "residual": {
+        "stationarity": {
+          "verdict": "STATIONARY",
+          "adf_stat": -5.9273,
+          "adf_p": 0.0,
+          "kpss_stat": 0.1883,
+          "kpss_p": 0.1,
+          "n": 1093
+        },
+        "ou_fit": {
+          "model": "OU",
+          "fitted": true,
+          "theta": 0.099103,
+          "mu": 0.0377,
+          "sigma": 0.299766,
+          "half_life_sec": 7.0,
+          "half_life_min": 0.12,
+          "a_coefficient": 0.504486,
+          "r_squared": 0.2541,
+          "mean_reversion_p": 0.0,
+          "is_mean_reverting": true,
+          "bic_ou": -859.69,
+          "bic_rw": -556.32,
+          "prefers_ou": true,
+          "n": 1093
+        },
+        "hurst": {
+          "hurst": 0.8475,
+          "r_squared": 0.9955,
+          "verdict": "PERSISTENT"
+        },
+        "increments": {
+          "mean": 0.000651,
+          "std": 0.7727,
+          "skewness": -0.3284,
+          "excess_kurtosis": 1.3607,
+          "shapiro_p": 0.0,
+          "jarque_bera_p": 0.0,
+          "hill_tail_index": 4.33,
+          "n_increments": 1092,
+          "distribution_class": "NON_GAUSSIAN_LIGHT_TAILED",
+          "is_gaussian": false,
+          "is_heavy_tailed": false
+        },
+        "jumps": {
+          "n_jumps": 36,
+          "jump_rate": 0.033,
+          "expected_gaussian": 2.95,
+          "jump_excess_ratio": 12.21,
+          "mean_jump_size": 2.2317,
+          "max_jump_size": 3.344,
+          "n_positive_jumps": 12,
+          "n_negative_jumps": 24,
+          "threshold": 1.8026
+        },
+        "acf_lag1": 0.5036758581692711,
+        "n_sig_acf": 20,
+        "acf_decay_rate": 0.0439
+      },
+      "within_phase": {
+        "baseline": {
+          "n_windows": 235,
+          "stationarity": "TREND_STATIONARY",
+          "ou_theta": 0.098978,
+          "ou_half_life_min": 0.12,
+          "hurst": 0.8775,
+          "increment_class": "NON_GAUSSIAN_LIGHT_TAILED"
+        },
+        "stress": {
+          "n_windows": 135,
+          "stationarity": "STATIONARY",
+          "ou_theta": 0.142877,
+          "ou_half_life_min": 0.08,
+          "hurst": 0.7479,
+          "increment_class": "NON_GAUSSIAN_LIGHT_TAILED"
+        },
+        "amusement": {
+          "n_windows": 75,
+          "stationarity": "STATIONARY",
+          "ou_theta": 0.148473,
+          "ou_half_life_min": 0.08,
+          "hurst": 0.5927,
+          "increment_class": "GAUSSIAN"
+        },
+        "meditation": {
+          "n_windows": 161,
+          "stationarity": "NON_STATIONARY",
+          "ou_theta": 0.239112,
+          "ou_half_life_min": 0.05,
+          "hurst": 0.7983,
+          "increment_class": "NON_GAUSSIAN_LIGHT_TAILED"
+        }
+      },
+      "full_series_stationarity": "NON_STATIONARY",
+      "phase_means": {
+        "baseline": -0.4837627750716224,
+        "stress": 1.506483192155037,
+        "amusement": -0.5747711461446227,
+        "meditation": -0.5427043903428538
+      }
+    },
+    {
+      "subject_id": "S9",
+      "residual": {
+        "stationarity": {
+          "verdict": "STATIONARY",
+          "adf_stat": -7.9316,
+          "adf_p": 0.0,
+          "kpss_stat": 0.3324,
+          "kpss_p": 0.1,
+          "n": 1044
+        },
+        "ou_fit": {
+          "model": "OU",
+          "fitted": true,
+          "theta": 0.105808,
+          "mu": 0.101,
+          "sigma": 0.361377,
+          "half_life_sec": 6.6,
+          "half_life_min": 0.11,
+          "a_coefficient": 0.470958,
+          "r_squared": 0.2228,
+          "mean_reversion_p": 0.0,
+          "is_mean_reverting": true,
+          "bic_ou": -430.66,
+          "bic_rw": -115.57,
+          "prefers_ou": true,
+          "n": 1044
+        },
+        "hurst": {
+          "hurst": 0.8166,
+          "r_squared": 0.998,
+          "verdict": "PERSISTENT"
+        },
+        "increments": {
+          "mean": -0.000712,
+          "std": 0.943,
+          "skewness": -0.3408,
+          "excess_kurtosis": 1.775,
+          "shapiro_p": 0.0,
+          "jarque_bera_p": 0.0,
+          "hill_tail_index": 4.21,
+          "n_increments": 1043,
+          "distribution_class": "NON_GAUSSIAN_LIGHT_TAILED",
+          "is_gaussian": false,
+          "is_heavy_tailed": false
+        },
+        "jumps": {
+          "n_jumps": 13,
+          "jump_rate": 0.0125,
+          "expected_gaussian": 2.82,
+          "jump_excess_ratio": 4.62,
+          "mean_jump_size": 3.3848,
+          "max_jump_size": 4.5354,
+          "n_positive_jumps": 3,
+          "n_negative_jumps": 10,
+          "threshold": 2.582
+        },
+        "acf_lag1": 0.4682058034537739,
+        "n_sig_acf": 20,
+        "acf_decay_rate": 0.0882
+      },
+      "within_phase": {
+        "baseline": {
+          "n_windows": 237,
+          "stationarity": "STATIONARY",
+          "ou_theta": 0.184988,
+          "ou_half_life_min": 0.06,
+          "hurst": 0.7156,
+          "increment_class": "GAUSSIAN"
+        },
+        "stress": {
+          "n_windows": 130,
+          "stationarity": "TREND_STATIONARY",
+          "ou_theta": 0.15669,
+          "ou_half_life_min": 0.07,
+          "hurst": 0.8723,
+          "increment_class": "GAUSSIAN"
+        },
+        "amusement": {
+          "n_windows": 76,
+          "stationarity": "TREND_STATIONARY",
+          "ou_theta": 0.160271,
+          "ou_half_life_min": 0.07,
+          "hurst": 0.7432,
+          "increment_class": "HEAVY_TAILED_SYMMETRIC"
+        },
+        "meditation": {
+          "n_windows": 161,
+          "stationarity": "STATIONARY",
+          "ou_theta": 0.204626,
+          "ou_half_life_min": 0.06,
+          "hurst": 0.7133,
+          "increment_class": "GAUSSIAN"
+        }
+      },
+      "full_series_stationarity": "STATIONARY",
+      "phase_means": {
+        "baseline": -0.2504047872288215,
+        "stress": 0.12266570264683495,
+        "amusement": 0.7234681685540699,
+        "meditation": -0.7500813990596704
+      }
+    },
+    {
+      "subject_id": "S10",
+      "residual": {
+        "stationarity": {
+          "verdict": "STATIONARY",
+          "adf_stat": -5.4928,
+          "adf_p": 0.0,
+          "kpss_stat": 0.2032,
+          "kpss_p": 0.1,
+          "n": 1099
+        },
+        "ou_fit": {
+          "model": "OU",
+          "fitted": true,
+          "theta": 0.061954,
+          "mu": -0.0034,
+          "sigma": 0.247614,
+          "half_life_sec": 11.2,
+          "half_life_min": 0.19,
+          "a_coefficient": 0.690232,
+          "r_squared": 0.474,
+          "mean_reversion_p": 0.0,
+          "is_mean_reverting": true,
+          "bic_ou": -1284.2,
+          "bic_rw": -1108.07,
+          "prefers_ou": true,
+          "n": 1099
+        },
+        "hurst": {
+          "hurst": 0.8857,
+          "r_squared": 0.999,
+          "verdict": "PERSISTENT"
+        },
+        "increments": {
+          "mean": 0.001526,
+          "std": 0.6018,
+          "skewness": -0.3709,
+          "excess_kurtosis": 3.0786,
+          "shapiro_p": 0.0,
+          "jarque_bera_p": 0.0,
+          "hill_tail_index": 3.42,
+          "n_increments": 1098,
+          "distribution_class": "HEAVY_TAILED_SYMMETRIC",
+          "is_gaussian": false,
+          "is_heavy_tailed": true
+        },
+        "jumps": {
+          "n_jumps": 32,
+          "jump_rate": 0.0291,
+          "expected_gaussian": 2.96,
+          "jump_excess_ratio": 10.79,
+          "mean_jump_size": 1.9381,
+          "max_jump_size": 3.1611,
+          "n_positive_jumps": 7,
+          "n_negative_jumps": 25,
+          "threshold": 1.4375
+        },
+        "acf_lag1": 0.686697282222885,
+        "n_sig_acf": 20,
+        "acf_decay_rate": 0.0344
+      },
+      "within_phase": {
+        "baseline": {
+          "n_windows": 237,
+          "stationarity": "STATIONARY",
+          "ou_theta": 0.093669,
+          "ou_half_life_min": 0.12,
+          "hurst": 0.8433,
+          "increment_class": "NON_GAUSSIAN_LIGHT_TAILED"
+        },
+        "stress": {
+          "n_windows": 146,
+          "stationarity": "TREND_STATIONARY",
+          "ou_theta": 0.074991,
+          "ou_half_life_min": 0.15,
+          "hurst": 0.9202,
+          "increment_class": "NON_GAUSSIAN_LIGHT_TAILED"
+        },
+        "amusement": {
+          "n_windows": 75,
+          "stationarity": "TREND_STATIONARY",
+          "ou_theta": 0.109637,
+          "ou_half_life_min": 0.11,
+          "hurst": 0.9477,
+          "increment_class": "GAUSSIAN"
+        },
+        "meditation": {
+          "n_windows": 162,
+          "stationarity": "STATIONARY",
+          "ou_theta": 0.18941,
+          "ou_half_life_min": 0.06,
+          "hurst": 0.6621,
+          "increment_class": "HEAVY_TAILED_SYMMETRIC"
+        }
+      },
+      "full_series_stationarity": "STATIONARY",
+      "phase_means": {
+        "baseline": 0.43766122513733324,
+        "stress": 1.0324107802515634,
+        "amusement": -1.093592556776053,
+        "meditation": -1.0192397535053022
+      }
+    },
+    {
+      "subject_id": "S11",
+      "residual": {
+        "stationarity": {
+          "verdict": "STATIONARY",
+          "adf_stat": -4.3993,
+          "adf_p": 0.0003,
+          "kpss_stat": 0.175,
+          "kpss_p": 0.1,
+          "n": 1046
+        },
+        "ou_fit": {
+          "model": "OU",
+          "fitted": true,
+          "theta": 0.083295,
+          "mu": 0.0583,
+          "sigma": 0.194852,
+          "half_life_sec": 8.3,
+          "half_life_min": 0.14,
+          "a_coefficient": 0.583526,
+          "r_squared": 0.3405,
+          "mean_reversion_p": 0.0,
+          "is_mean_reverting": true,
+          "bic_ou": -1722.46,
+          "bic_rw": -1485.42,
+          "prefers_ou": true,
+          "n": 1046
+        },
+        "hurst": {
+          "hurst": 0.8951,
+          "r_squared": 0.9993,
+          "verdict": "PERSISTENT"
+        },
+        "increments": {
+          "mean": 4.4e-05,
+          "std": 0.4897,
+          "skewness": -0.167,
+          "excess_kurtosis": 2.3548,
+          "shapiro_p": 0.0,
+          "jarque_bera_p": 0.0,
+          "hill_tail_index": 4.67,
+          "n_increments": 1045,
+          "distribution_class": "NON_GAUSSIAN_LIGHT_TAILED",
+          "is_gaussian": false,
+          "is_heavy_tailed": false
+        },
+        "jumps": {
+          "n_jumps": 61,
+          "jump_rate": 0.0584,
+          "expected_gaussian": 2.82,
+          "jump_excess_ratio": 21.62,
+          "mean_jump_size": 1.3635,
+          "max_jump_size": 2.1725,
+          "n_positive_jumps": 28,
+          "n_negative_jumps": 33,
+          "threshold": 1.0348
+        },
+        "acf_lag1": 0.5834970939412331,
+        "n_sig_acf": 20,
+        "acf_decay_rate": 0.0364
+      },
+      "within_phase": {
+        "baseline": {
+          "n_windows": 237,
+          "stationarity": "STATIONARY",
+          "ou_theta": 0.102896,
+          "ou_half_life_min": 0.11,
+          "hurst": 0.8871,
+          "increment_class": "GAUSSIAN"
+        },
+        "stress": {
+          "n_windows": 137,
+          "stationarity": "STATIONARY",
+          "ou_theta": 0.073101,
+          "ou_half_life_min": 0.16,
+          "hurst": 0.9381,
+          "increment_class": "NON_GAUSSIAN_LIGHT_TAILED"
+        },
+        "amusement": {
+          "n_windows": 75,
+          "stationarity": "STATIONARY",
+          "ou_theta": 0.225601,
+          "ou_half_life_min": 0.05,
+          "hurst": 0.812,
+          "increment_class": "GAUSSIAN"
+        },
+        "meditation": {
+          "n_windows": 160,
+          "stationarity": "TREND_STATIONARY",
+          "ou_theta": 0.235664,
+          "ou_half_life_min": 0.05,
+          "hurst": 0.6538,
+          "increment_class": "GAUSSIAN"
+        }
+      },
+      "full_series_stationarity": "NON_STATIONARY",
+      "phase_means": {
+        "baseline": -0.88626548018412,
+        "stress": 1.88522517328875,
+        "amusement": -0.8666489147179752,
+        "meditation": -0.27657968573226366
+      }
+    },
+    {
+      "subject_id": "S13",
+      "residual": {
+        "stationarity": {
+          "verdict": "TREND_STATIONARY",
+          "adf_stat": -6.2043,
+          "adf_p": 0.0,
+          "kpss_stat": 0.7794,
+          "kpss_p": 0.01,
+          "n": 1107
+        },
+        "ou_fit": {
+          "model": "OU",
+          "fitted": true,
+          "theta": 0.096574,
+          "mu": -0.0768,
+          "sigma": 0.266685,
+          "half_life_sec": 7.2,
+          "half_life_min": 0.12,
+          "a_coefficient": 0.517131,
+          "r_squared": 0.2658,
+          "mean_reversion_p": 0.0,
+          "is_mean_reverting": true,
+          "bic_ou": -1129.51,
+          "bic_rw": -833.13,
+          "prefers_ou": true,
+          "n": 1107
+        },
+        "hurst": {
+          "hurst": 0.8508,
+          "r_squared": 0.999,
+          "verdict": "PERSISTENT"
+        },
+        "increments": {
+          "mean": 0.0019,
+          "std": 0.684,
+          "skewness": -0.4887,
+          "excess_kurtosis": 1.1856,
+          "shapiro_p": 0.0,
+          "jarque_bera_p": 0.0,
+          "hill_tail_index": 5.4,
+          "n_increments": 1106,
+          "distribution_class": "NON_GAUSSIAN_LIGHT_TAILED",
+          "is_gaussian": false,
+          "is_heavy_tailed": false
+        },
+        "jumps": {
+          "n_jumps": 19,
+          "jump_rate": 0.0172,
+          "expected_gaussian": 2.99,
+          "jump_excess_ratio": 6.36,
+          "mean_jump_size": 2.1006,
+          "max_jump_size": 3.4328,
+          "n_positive_jumps": 5,
+          "n_negative_jumps": 14,
+          "threshold": 1.7748
+        },
+        "acf_lag1": 0.5138948915901757,
+        "n_sig_acf": 20,
+        "acf_decay_rate": 0.061
+      },
+      "within_phase": {
+        "baseline": {
+          "n_windows": 237,
+          "stationarity": "STATIONARY",
+          "ou_theta": 0.125849,
+          "ou_half_life_min": 0.09,
+          "hurst": 0.753,
+          "increment_class": "NON_GAUSSIAN_LIGHT_TAILED"
+        },
+        "stress": {
+          "n_windows": 133,
+          "stationarity": "NON_STATIONARY",
+          "ou_theta": 0.060829,
+          "ou_half_life_min": 0.19,
+          "hurst": 0.9531,
+          "increment_class": "GAUSSIAN"
+        },
+        "amusement": {
+          "n_windows": 78,
+          "stationarity": "STATIONARY",
+          "ou_theta": 0.251217,
+          "ou_half_life_min": 0.05,
+          "hurst": 0.6878,
+          "increment_class": "GAUSSIAN"
+        },
+        "meditation": {
+          "n_windows": 160,
+          "stationarity": "STATIONARY",
+          "ou_theta": 0.227118,
+          "ou_half_life_min": 0.05,
+          "hurst": 0.7648,
+          "increment_class": "NON_GAUSSIAN_LIGHT_TAILED"
+        }
+      },
+      "full_series_stationarity": "TREND_STATIONARY",
+      "phase_means": {
+        "baseline": -0.022229113542186082,
+        "stress": 1.8095202942962711,
+        "amusement": -0.057597022766168106,
+        "meditation": -0.8960388931586991
+      }
+    },
+    {
+      "subject_id": "S14",
+      "residual": {
+        "stationarity": {
+          "verdict": "TREND_STATIONARY",
+          "adf_stat": -4.9771,
+          "adf_p": 0.0,
+          "kpss_stat": 0.5617,
+          "kpss_p": 0.0278,
+          "n": 1109
+        },
+        "ou_fit": {
+          "model": "OU",
+          "fitted": true,
+          "theta": 0.034826,
+          "mu": 0.0321,
+          "sigma": 0.15133,
+          "half_life_sec": 19.9,
+          "half_life_min": 0.33,
+          "a_coefficient": 0.825872,
+          "r_squared": 0.682,
+          "mean_reversion_p": 0.0,
+          "is_mean_reverting": true,
+          "bic_ou": -2387.17,
+          "bic_rw": -2293.28,
+          "prefers_ou": true,
+          "n": 1109
+        },
+        "hurst": {
+          "hurst": 0.9175,
+          "r_squared": 0.9995,
+          "verdict": "PERSISTENT"
+        },
+        "increments": {
+          "mean": 0.000317,
+          "std": 0.3541,
+          "skewness": -0.4996,
+          "excess_kurtosis": 2.7165,
+          "shapiro_p": 0.0,
+          "jarque_bera_p": 0.0,
+          "hill_tail_index": 4.31,
+          "n_increments": 1108,
+          "distribution_class": "NON_GAUSSIAN_LIGHT_TAILED",
+          "is_gaussian": false,
+          "is_heavy_tailed": false
+        },
+        "jumps": {
+          "n_jumps": 23,
+          "jump_rate": 0.0208,
+          "expected_gaussian": 2.99,
+          "jump_excess_ratio": 7.69,
+          "mean_jump_size": 1.2036,
+          "max_jump_size": 1.897,
+          "n_positive_jumps": 4,
+          "n_negative_jumps": 19,
+          "threshold": 0.8963
+        },
+        "acf_lag1": 0.825780988791094,
+        "n_sig_acf": 20,
+        "acf_decay_rate": 0.0512
+      },
+      "within_phase": {
+        "baseline": {
+          "n_windows": 237,
+          "stationarity": "TREND_STATIONARY",
+          "ou_theta": 0.117321,
+          "ou_half_life_min": 0.1,
+          "hurst": 0.7538,
+          "increment_class": "NON_GAUSSIAN_LIGHT_TAILED"
+        },
+        "stress": {
+          "n_windows": 136,
+          "stationarity": "NON_STATIONARY",
+          "ou_theta": 0.040634,
+          "ou_half_life_min": 0.28,
+          "hurst": 0.9314,
+          "increment_class": "HEAVY_TAILED_SKEWED"
+        },
+        "amusement": {
+          "n_windows": 75,
+          "stationarity": "STATIONARY",
+          "ou_theta": 0.191437,
+          "ou_half_life_min": 0.06,
+          "hurst": 0.7393,
+          "increment_class": "GAUSSIAN"
+        },
+        "meditation": {
+          "n_windows": 161,
+          "stationarity": "STATIONARY",
+          "ou_theta": 0.160725,
+          "ou_half_life_min": 0.07,
+          "hurst": 0.7064,
+          "increment_class": "GAUSSIAN"
+        }
+      },
+      "full_series_stationarity": "NON_STATIONARY",
+      "phase_means": {
+        "baseline": -0.7718331987038557,
+        "stress": 1.932908742972912,
+        "amusement": -0.27315093649956484,
+        "meditation": -0.579441129533153
+      }
+    },
+    {
+      "subject_id": "S15",
+      "residual": {
+        "stationarity": {
+          "verdict": "TREND_STATIONARY",
+          "adf_stat": -12.166,
+          "adf_p": 0.0,
+          "kpss_stat": 0.781,
+          "kpss_p": 0.01,
+          "n": 1050
+        },
+        "ou_fit": {
+          "model": "OU",
+          "fitted": true,
+          "theta": 0.088356,
+          "mu": 0.0279,
+          "sigma": 0.314961,
+          "half_life_sec": 7.8,
+          "half_life_min": 0.13,
+          "a_coefficient": 0.558222,
+          "r_squared": 0.3118,
+          "mean_reversion_p": 0.0,
+          "is_mean_reverting": true,
+          "bic_ou": -721.62,
+          "bic_rw": -466.56,
+          "prefers_ou": true,
+          "n": 1050
+        },
+        "hurst": {
+          "hurst": 0.8294,
+          "r_squared": 0.9982,
+          "verdict": "PERSISTENT"
+        },
+        "increments": {
+          "mean": -0.000585,
+          "std": 0.798,
+          "skewness": -0.4943,
+          "excess_kurtosis": 1.5907,
+          "shapiro_p": 0.0,
+          "jarque_bera_p": 0.0,
+          "hill_tail_index": 4.59,
+          "n_increments": 1049,
+          "distribution_class": "NON_GAUSSIAN_LIGHT_TAILED",
+          "is_gaussian": false,
+          "is_heavy_tailed": false
+        },
+        "jumps": {
+          "n_jumps": 21,
+          "jump_rate": 0.02,
+          "expected_gaussian": 2.83,
+          "jump_excess_ratio": 7.42,
+          "mean_jump_size": 2.5342,
+          "max_jump_size": 4.2244,
+          "n_positive_jumps": 4,
+          "n_negative_jumps": 17,
+          "threshold": 1.9964
+        },
+        "acf_lag1": 0.5582215832308345,
+        "n_sig_acf": 20,
+        "acf_decay_rate": 0.0657
+      },
+      "within_phase": {
+        "baseline": {
+          "n_windows": 236,
+          "stationarity": "STATIONARY",
+          "ou_theta": 0.161073,
+          "ou_half_life_min": 0.07,
+          "hurst": 0.6461,
+          "increment_class": "NON_GAUSSIAN_LIGHT_TAILED"
+        },
+        "stress": {
+          "n_windows": 139,
+          "stationarity": "TREND_STATIONARY",
+          "ou_theta": 0.118447,
+          "ou_half_life_min": 0.1,
+          "hurst": 0.8652,
+          "increment_class": "GAUSSIAN"
+        },
+        "amusement": {
+          "n_windows": 75,
+          "stationarity": "STATIONARY",
+          "ou_theta": 0.182578,
+          "ou_half_life_min": 0.06,
+          "hurst": 0.6903,
+          "increment_class": "NON_GAUSSIAN_LIGHT_TAILED"
+        },
+        "meditation": {
+          "n_windows": 161,
+          "stationarity": "TREND_STATIONARY",
+          "ou_theta": 0.110227,
+          "ou_half_life_min": 0.1,
+          "hurst": 0.8385,
+          "increment_class": "GAUSSIAN"
+        }
+      },
+      "full_series_stationarity": "TREND_STATIONARY",
+      "phase_means": {
+        "baseline": 0.36920735472339344,
+        "stress": 0.6209259010962133,
+        "amusement": -0.3393279599448621,
+        "meditation": -1.1097159978417253
+      }
+    },
+    {
+      "subject_id": "S16",
+      "residual": {
+        "stationarity": {
+          "verdict": "STATIONARY",
+          "adf_stat": -5.1212,
+          "adf_p": 0.0,
+          "kpss_stat": 0.2253,
+          "kpss_p": 0.1,
+          "n": 1126
+        },
+        "ou_fit": {
+          "model": "OU",
+          "fitted": true,
+          "theta": 0.034297,
+          "mu": 0.0323,
+          "sigma": 0.14211,
+          "half_life_sec": 20.2,
+          "half_life_min": 0.34,
+          "a_coefficient": 0.828517,
+          "r_squared": 0.6864,
+          "mean_reversion_p": 0.0,
+          "is_mean_reverting": true,
+          "bic_ou": -2565.43,
+          "bic_rw": -2471.62,
+          "prefers_ou": true,
+          "n": 1126
+        },
+        "hurst": {
+          "hurst": 0.8902,
+          "r_squared": 0.999,
+          "verdict": "PERSISTENT"
+        },
+        "increments": {
+          "mean": 8.9e-05,
+          "std": 0.3323,
+          "skewness": -0.2903,
+          "excess_kurtosis": 2.1624,
+          "shapiro_p": 0.0,
+          "jarque_bera_p": 0.0,
+          "hill_tail_index": 4.32,
+          "n_increments": 1125,
+          "distribution_class": "NON_GAUSSIAN_LIGHT_TAILED",
+          "is_gaussian": false,
+          "is_heavy_tailed": false
+        },
+        "jumps": {
+          "n_jumps": 24,
+          "jump_rate": 0.0213,
+          "expected_gaussian": 3.04,
+          "jump_excess_ratio": 7.9,
+          "mean_jump_size": 1.0536,
+          "max_jump_size": 1.9184,
+          "n_positive_jumps": 9,
+          "n_negative_jumps": 15,
+          "threshold": 0.8133
+        },
+        "acf_lag1": 0.8284904413396944,
+        "n_sig_acf": 20,
+        "acf_decay_rate": 0.0447
+      },
+      "within_phase": {
+        "baseline": {
+          "n_windows": 237,
+          "stationarity": "STATIONARY",
+          "ou_theta": 0.111566,
+          "ou_half_life_min": 0.1,
+          "hurst": 0.8312,
+          "increment_class": "NON_GAUSSIAN_LIGHT_TAILED"
+        },
+        "stress": {
+          "n_windows": 136,
+          "stationarity": "INCONCLUSIVE",
+          "ou_theta": 0.025056,
+          "ou_half_life_min": 0.46,
+          "hurst": 0.9986,
+          "increment_class": "GAUSSIAN"
+        },
+        "amusement": {
+          "n_windows": 74,
+          "stationarity": "TREND_STATIONARY",
+          "ou_theta": 0.124087,
+          "ou_half_life_min": 0.09,
+          "hurst": 0.932,
+          "increment_class": "GAUSSIAN"
+        },
+        "meditation": {
+          "n_windows": 161,
+          "stationarity": "TREND_STATIONARY",
+          "ou_theta": 0.126142,
+          "ou_half_life_min": 0.09,
+          "hurst": 0.7377,
+          "increment_class": "GAUSSIAN"
+        }
+      },
+      "full_series_stationarity": "NON_STATIONARY",
+      "phase_means": {
+        "baseline": -0.9422966401698972,
+        "stress": 1.9482048197353823,
+        "amusement": -0.01999145277282256,
+        "meditation": -0.4724655238049946
+      }
+    },
+    {
+      "subject_id": "S17",
+      "residual": {
+        "stationarity": {
+          "verdict": "STATIONARY",
+          "adf_stat": -6.9748,
+          "adf_p": 0.0,
+          "kpss_stat": 0.2108,
+          "kpss_p": 0.1,
+          "n": 1184
+        },
+        "ou_fit": {
+          "model": "OU",
+          "fitted": true,
+          "theta": 0.045781,
+          "mu": -0.0216,
+          "sigma": 0.197269,
+          "half_life_sec": 15.1,
+          "half_life_min": 0.25,
+          "a_coefficient": 0.771094,
+          "r_squared": 0.595,
+          "mean_reversion_p": 0.0,
+          "is_mean_reverting": true,
+          "bic_ou": -1922.35,
+          "bic_rw": -1785.41,
+          "prefers_ou": true,
+          "n": 1184
+        },
+        "hurst": {
+          "hurst": 0.8536,
+          "r_squared": 0.9947,
+          "verdict": "PERSISTENT"
+        },
+        "increments": {
+          "mean": -0.000517,
+          "std": 0.4688,
+          "skewness": -0.2457,
+          "excess_kurtosis": 1.242,
+          "shapiro_p": 0.0,
+          "jarque_bera_p": 0.0,
+          "hill_tail_index": 3.79,
+          "n_increments": 1183,
+          "distribution_class": "NON_GAUSSIAN_LIGHT_TAILED",
+          "is_gaussian": false,
+          "is_heavy_tailed": false
+        },
+        "jumps": {
+          "n_jumps": 30,
+          "jump_rate": 0.0254,
+          "expected_gaussian": 3.19,
+          "jump_excess_ratio": 9.39,
+          "mean_jump_size": 1.3927,
+          "max_jump_size": 2.3503,
+          "n_positive_jumps": 12,
+          "n_negative_jumps": 18,
+          "threshold": 1.1778
+        },
+        "acf_lag1": 0.7710940484558503,
+        "n_sig_acf": 20,
+        "acf_decay_rate": 0.0829
+      },
+      "within_phase": {
+        "baseline": {
+          "n_windows": 237,
+          "stationarity": "STATIONARY",
+          "ou_theta": 0.088288,
+          "ou_half_life_min": 0.13,
+          "hurst": 0.7576,
+          "increment_class": "NON_GAUSSIAN_LIGHT_TAILED"
+        },
+        "stress": {
+          "n_windows": 146,
+          "stationarity": "NON_STATIONARY",
+          "ou_theta": 0.045484,
+          "ou_half_life_min": 0.25,
+          "hurst": 0.9579,
+          "increment_class": "NON_GAUSSIAN_LIGHT_TAILED"
+        },
+        "amusement": {
+          "n_windows": 75,
+          "stationarity": "INCONCLUSIVE",
+          "ou_theta": 0.083325,
+          "ou_half_life_min": 0.14,
+          "hurst": 0.8866,
+          "increment_class": "GAUSSIAN"
+        },
+        "meditation": {
+          "n_windows": 149,
+          "stationarity": "TREND_STATIONARY",
+          "ou_theta": 0.133591,
+          "ou_half_life_min": 0.09,
+          "hurst": 0.7851,
+          "increment_class": "NON_GAUSSIAN_LIGHT_TAILED"
+        }
+      },
+      "full_series_stationarity": "TREND_STATIONARY",
+      "phase_means": {
+        "baseline": -0.5227771668015252,
+        "stress": 1.798234018164336,
+        "amusement": -0.1159021860952389,
+        "meditation": -0.7188301062088949
+      }
+    }
+  ]
+}

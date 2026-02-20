@@ -1,0 +1,38 @@
+# ── Core numeric / data ──
+numpy>=1.24
+pandas>=2.0
+pyarrow>=14.0
+
+# ── Signal processing ──
+scipy>=1.11
+
+# ── Plotting ──
+matplotlib>=3.7
+
+# ── HTTP / API ──
+requests>=2.31
+
+# ── Tardis BTC data (OPTIONAL – Binance Vision is the free default) ──
+# Uncomment below ONLY if you have a Tardis API key:
+# tardis-dev>=2.1,<3.0; python_version < "3.11"
+# tardis-dev>=3.0; python_version >= "3.11"
+
+# ── Orderbook reconstruction ──
+sortedcontainers>=2.4
+
+# ── Machine learning ──
+scikit-learn>=1.3
+
+# ── Deep learning (optional — needed for GRL adversarial test & Tiny CNN) ──
+# torch>=2.0
+# (Install separately: pip install torch --index-url https://download.pytorch.org/whl/cu121)
+
+# ── MATLAB .mat file loading ──
+# (scipy.io.loadmat is used; no extra package needed)
+
+# ── Optional: quick WESAD tabular fetch (UCI) ──
+ucimlrepo>=0.0.7
+
+# ── Notebook runtime (optional) ──
+jupyter>=1.0
+ipykernel>=6.25
