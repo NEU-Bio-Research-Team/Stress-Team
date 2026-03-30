@@ -121,6 +121,65 @@ STRESS_EXPECTED_STD  = (0.05, 0.15)
 STYLIZED_FACTS_LAGS = list(range(1, 101))
 VOLATILITY_WINDOWS  = [60, 300, 3600]   # seconds: 1min, 5min, 1hr
 
+# ──────────────────────────── Stage 2: HFT Reindex ───────────────────
+# Tick-level reindex pipeline configuration
+HFT_TICK_DIR        = PROCESSED_DIR / "tardis" / "ticks"     # per-day tick parquet
+HFT_BARS_DIR        = PROCESSED_DIR / "tardis" / "bars"      # multi-resolution bars
+HFT_FEATURES_DIR    = PROCESSED_DIR / "tardis" / "hft_features"
+
+# Multi-resolution bar periods (pandas frequency strings)
+HFT_BAR_RESOLUTIONS = ["100ms", "1s"]   # 100-millisecond, 1-second grids
+
+# Volume bar configuration (alternative to time bars)
+HFT_VOLUME_BAR_SIZE_BTC   = 1.0     # BTC per volume bar
+HFT_DOLLAR_BAR_SIZE_USD   = 50_000  # USD notional per dollar bar
+HFT_TICK_BAR_SIZE          = 500     # trades per tick bar
+
+# HFT feature rolling windows (in number of bars at each resolution)
+HFT_ROLLING_WINDOWS   = [10, 50, 200]    # short / medium / long
+HFT_KYLE_LAMBDA_WINDOW = 50              # bars for Kyle's lambda regression
+
+# Inter-arrival time anomaly thresholds
+HFT_GAP_THRESHOLD_MS       = 5000   # >5s gap → flag as reconnection
+HFT_DUPLICATE_WINDOW_MS    = 0      # trades with 0ms gap → potential duplicates
+
+# Bio-market coupling resolution
+HFT_COUPLING_RESOLUTION    = "100ms"     # ABM time-step target
+HFT_BIO_IBI_PRECISION_MS   = 1           # R-R interval precision
+
+# ──────────────────────────── Stage 2b: Event-Driven Micro Pipeline ──
+# Flash crash detection parameters (from 1-min klines)
+FLASH_CRASH_DROP_PCT       = 3.0     # % drop threshold
+FLASH_CRASH_WINDOW_MIN     = 5       # minutes to measure the drop
+FLASH_CRASH_RECOVERY_MIN   = 30      # minutes to check for recovery
+FLASH_CRASH_RECOVERY_PCT   = 50.0    # % of drop recovered = "flash" vs "trend"
+FLASH_CRASH_MIN_SEPARATION_HR = 4    # hours between events (dedup)
+
+# Event window for tick download
+EVENT_WINDOW_BEFORE_MIN    = 30      # minutes before crash to download
+EVENT_WINDOW_AFTER_MIN     = 30      # minutes after crash to download
+
+# Micro-pipeline directories
+EVENT_CATALOG_PATH  = PROCESSED_DIR / "tardis" / "event_catalog.csv"
+EVENT_RAW_DIR       = RAW_DIR / "tardis" / "events"          # aggtrades + bookticker per event
+EVENT_MICRO_DIR     = PROCESSED_DIR / "tardis" / "micro"     # merged micro features
+EVENT_DAG_DIR       = PROCESSED_DIR / "tardis" / "dag_validation"
+
+# Micro-feature configuration
+MICRO_RESOLUTIONS_MS       = [10, 100, 1000]   # 10ms, 100ms, 1s bins
+MICRO_OFI_WINDOW_MS        = 100               # OFI aggregation window
+MICRO_VOLATILITY_WINDOW_S  = 60                # 1-min realized vol
+MICRO_KYLE_WINDOW          = 50                # bars for Kyle's lambda
+MICRO_VPIN_WINDOW          = 50                # VPIN bucket count
+MICRO_SPREAD_ZSCORE_THR    = 3.0               # spread > 3sigma = spike
+
+# Binance Vision bookTicker column layout
+BOOKTICKER_COLS = [
+    "best_bid_price", "best_bid_qty",
+    "best_ask_price", "best_ask_qty",
+    "transact_time",  # ms epoch
+]
+
 
 def ensure_dirs():
     """Create all required output directories."""
@@ -128,5 +187,21 @@ def ensure_dirs():
               TARDIS_RAW_DIR,
               PROCESSED_DIR / "wesad",
               PROCESSED_DIR / "dreamer",
-              PROCESSED_DIR / "tardis"]:
+              PROCESSED_DIR / "tardis",
+              HFT_TICK_DIR,
+              HFT_BARS_DIR,
+              HFT_FEATURES_DIR,
+              EVENT_RAW_DIR,
+              EVENT_MICRO_DIR,
+              EVENT_DAG_DIR]:
+        d.mkdir(parents=True, exist_ok=True)
+    """Create all required output directories."""
+    for d in [INTERIM_DIR, PROCESSED_DIR, REPORTS_DIR, VALIDATION_DIR,
+              TARDIS_RAW_DIR,
+              PROCESSED_DIR / "wesad",
+              PROCESSED_DIR / "dreamer",
+              PROCESSED_DIR / "tardis",
+              HFT_TICK_DIR,
+              HFT_BARS_DIR,
+              HFT_FEATURES_DIR]:
         d.mkdir(parents=True, exist_ok=True)

@@ -1,0 +1,771 @@
+{
+  "metadata": {
+    "n_subjects": 15,
+    "elapsed_sec": 337.5
+  },
+  "test1_window_invariance": {
+    "scale_analysis": {
+      "2.5": {
+        "theta_mean": 0.137897,
+        "half_life_mean": 5.83,
+        "half_life_corrected_mean": 5.86,
+        "n_mean_reverting": 15,
+        "n_total": 15,
+        "theta_std": 0.047416,
+        "half_life_std": 2.63
+      },
+      "5.0": {
+        "theta_mean": 0.074218,
+        "half_life_mean": 10.73,
+        "half_life_corrected_mean": 10.84,
+        "n_mean_reverting": 15,
+        "n_total": 15,
+        "theta_std": 0.02368,
+        "half_life_std": 4.52
+      },
+      "10.0": {
+        "theta_mean": 0.031599,
+        "half_life_mean": 25.59,
+        "half_life_corrected_mean": 26.28,
+        "n_mean_reverting": 15,
+        "n_total": 15,
+        "theta_std": 0.010847,
+        "half_life_std": 11.09
+      },
+      "20.0": {
+        "theta_mean": 0.01908,
+        "half_life_mean": 41.93,
+        "half_life_corrected_mean": 43.71,
+        "n_mean_reverting": 15,
+        "n_total": 15,
+        "theta_std": 0.006456,
+        "half_life_std": 17.57
+      }
+    },
+    "scale_test": {
+      "slope": 0.9793,
+      "intercept": 0.863,
+      "r_squared": 0.9899,
+      "p_value": 0.0051,
+      "verdict": "ARTIFACT",
+      "detail": "Half-life scales with window size (slope=0.979). The estimated θ is a smoothing artifact."
+    },
+    "per_subject_invariance": {
+      "S2": {
+        "slope": 1.122,
+        "r2": 0.991,
+        "half_lives": {
+          "2.5": 2.8,
+          "5.0": 7.0,
+          "10.0": 15.8,
+          "20.0": 28.3
+        }
+      },
+      "S3": {
+        "slope": 1.095,
+        "r2": 0.964,
+        "half_lives": {
+          "2.5": 4.3,
+          "5.0": 10.1,
+          "10.0": 28.1,
+          "20.0": 38.8
+        }
+      },
+      "S4": {
+        "slope": 0.846,
+        "r2": 0.991,
+        "half_lives": {
+          "2.5": 4.7,
+          "5.0": 9.4,
+          "10.0": 17.3,
+          "20.0": 27.0
+        }
+      },
+      "S5": {
+        "slope": 0.807,
+        "r2": 0.941,
+        "half_lives": {
+          "2.5": 6.6,
+          "5.0": 7.8,
+          "10.0": 15.8,
+          "20.0": 33.9
+        }
+      },
+      "S6": {
+        "slope": 0.815,
+        "r2": 0.98,
+        "half_lives": {
+          "2.5": 4.6,
+          "5.0": 7.9,
+          "10.0": 16.9,
+          "20.0": 23.3
+        }
+      },
+      "S7": {
+        "slope": 1.095,
+        "r2": 0.96,
+        "half_lives": {
+          "2.5": 6.8,
+          "5.0": 15.4,
+          "10.0": 44.4,
+          "20.0": 59.7
+        }
+      },
+      "S8": {
+        "slope": 1.009,
+        "r2": 0.985,
+        "half_lives": {
+          "2.5": 3.9,
+          "5.0": 7.0,
+          "10.0": 18.1,
+          "20.0": 29.1
+        }
+      },
+      "S9": {
+        "slope": 0.974,
+        "r2": 0.989,
+        "half_lives": {
+          "2.5": 4.0,
+          "5.0": 6.6,
+          "10.0": 15.9,
+          "20.0": 28.4
+        }
+      },
+      "S10": {
+        "slope": 1.067,
+        "r2": 0.998,
+        "half_lives": {
+          "2.5": 5.8,
+          "5.0": 11.2,
+          "10.0": 26.0,
+          "20.0": 51.7
+        }
+      },
+      "S11": {
+        "slope": 1.05,
+        "r2": 0.971,
+        "half_lives": {
+          "2.5": 5.6,
+          "5.0": 8.3,
+          "10.0": 24.7,
+          "20.0": 43.9
+        }
+      },
+      "S13": {
+        "slope": 1.09,
+        "r2": 0.983,
+        "half_lives": {
+          "2.5": 3.9,
+          "5.0": 7.2,
+          "10.0": 20.5,
+          "20.0": 34.1
+        }
+      },
+      "S14": {
+        "slope": 0.935,
+        "r2": 0.982,
+        "half_lives": {
+          "2.5": 13.2,
+          "5.0": 19.9,
+          "10.0": 48.3,
+          "20.0": 85.0
+        }
+      },
+      "S15": {
+        "slope": 0.861,
+        "r2": 0.993,
+        "half_lives": {
+          "2.5": 4.6,
+          "5.0": 7.8,
+          "10.0": 16.4,
+          "20.0": 26.1
+        }
+      },
+      "S16": {
+        "slope": 0.94,
+        "r2": 0.993,
+        "half_lives": {
+          "2.5": 10.4,
+          "5.0": 20.2,
+          "10.0": 43.5,
+          "20.0": 70.6
+        }
+      },
+      "S17": {
+        "slope": 0.996,
+        "r2": 0.977,
+        "half_lives": {
+          "2.5": 6.3,
+          "5.0": 15.1,
+          "10.0": 32.4,
+          "20.0": 48.9
+        }
+      }
+    }
+  },
+  "test2_model_comparison": {
+    "per_subject": [
+      {
+        "sid": "S2",
+        "H_estimated": 0.6836,
+        "acf_decay_slope": -0.6329,
+        "acf_decay_r2": 0.15,
+        "loglik_ou": -296.49,
+        "loglik_fou": -413.97,
+        "bic_ou": 607.18,
+        "bic_fou": 849.25,
+        "delta_bic": -242.06,
+        "model_verdict": "STANDARD_OU",
+        "n": 1215
+      },
+      {
+        "sid": "S3",
+        "H_estimated": 0.6641,
+        "acf_decay_slope": -0.6717,
+        "acf_decay_r2": 0.2641,
+        "loglik_ou": -88.85,
+        "loglik_fou": -206.38,
+        "bic_ou": 192.03,
+        "bic_fou": 434.27,
+        "delta_bic": -242.24,
+        "model_verdict": "STANDARD_OU",
+        "n": 1298
+      },
+      {
+        "sid": "S4",
+        "H_estimated": 0.8481,
+        "acf_decay_slope": -0.3039,
+        "acf_decay_r2": 0.0505,
+        "loglik_ou": -168.47,
+        "loglik_fou": -427.55,
+        "bic_ou": 351.26,
+        "bic_fou": 876.57,
+        "delta_bic": -525.31,
+        "model_verdict": "STANDARD_OU",
+        "n": 1284
+      },
+      {
+        "sid": "S5",
+        "H_estimated": 0.6417,
+        "acf_decay_slope": -0.7167,
+        "acf_decay_r2": 0.153,
+        "loglik_ou": -40.55,
+        "loglik_fou": -133.4,
+        "bic_ou": 95.36,
+        "bic_fou": 288.19,
+        "delta_bic": -192.83,
+        "model_verdict": "STANDARD_OU",
+        "n": 1251
+      },
+      {
+        "sid": "S6",
+        "H_estimated": 0.9239,
+        "acf_decay_slope": -0.1523,
+        "acf_decay_r2": 0.0095,
+        "loglik_ou": -293.35,
+        "loglik_fou": -643.0,
+        "bic_ou": 601.21,
+        "bic_fou": 1307.77,
+        "delta_bic": -706.56,
+        "model_verdict": "STANDARD_OU",
+        "n": 1414
+      },
+      {
+        "sid": "S7",
+        "H_estimated": 0.8401,
+        "acf_decay_slope": -0.3199,
+        "acf_decay_r2": 0.0349,
+        "loglik_ou": -80.55,
+        "loglik_fou": -294.31,
+        "bic_ou": 175.01,
+        "bic_fou": 609.48,
+        "delta_bic": -434.48,
+        "model_verdict": "STANDARD_OU",
+        "n": 1047
+      },
+      {
+        "sid": "S8",
+        "H_estimated": 0.7799,
+        "acf_decay_slope": -0.4401,
+        "acf_decay_r2": 0.0867,
+        "loglik_ou": -153.53,
+        "loglik_fou": -321.55,
+        "bic_ou": 321.06,
+        "bic_fou": 664.09,
+        "delta_bic": -343.04,
+        "model_verdict": "STANDARD_OU",
+        "n": 1093
+      },
+      {
+        "sid": "S9",
+        "H_estimated": 0.7846,
+        "acf_decay_slope": -0.4309,
+        "acf_decay_r2": 0.0747,
+        "loglik_ou": -238.85,
+        "loglik_fou": -400.41,
+        "bic_ou": 491.59,
+        "bic_fou": 821.67,
+        "delta_bic": -330.07,
+        "model_verdict": "STANDARD_OU",
+        "n": 1044
+      },
+      {
+        "sid": "S10",
+        "H_estimated": 0.7198,
+        "acf_decay_slope": -0.5603,
+        "acf_decay_r2": 0.1376,
+        "loglik_ou": -71.8,
+        "loglik_fou": -208.94,
+        "bic_ou": 157.6,
+        "bic_fou": 438.88,
+        "delta_bic": -281.28,
+        "model_verdict": "STANDARD_OU",
+        "n": 1099
+      },
+      {
+        "sid": "S11",
+        "H_estimated": 0.7114,
+        "acf_decay_slope": -0.5773,
+        "acf_decay_r2": 0.2094,
+        "loglik_ou": 65.94,
+        "loglik_fou": -55.38,
+        "bic_ou": -117.97,
+        "bic_fou": 131.62,
+        "delta_bic": -249.58,
+        "model_verdict": "STANDARD_OU",
+        "n": 1046
+      },
+      {
+        "sid": "S13",
+        "H_estimated": 0.7817,
+        "acf_decay_slope": -0.4367,
+        "acf_decay_r2": 0.1891,
+        "loglik_ou": -93.89,
+        "loglik_fou": -265.8,
+        "bic_ou": 201.81,
+        "bic_fou": 552.64,
+        "delta_bic": -350.83,
+        "model_verdict": "STANDARD_OU",
+        "n": 1107
+      },
+      {
+        "sid": "S14",
+        "H_estimated": 0.9232,
+        "acf_decay_slope": -0.1535,
+        "acf_decay_r2": 0.0084,
+        "loglik_ou": 179.99,
+        "loglik_fou": -109.28,
+        "bic_ou": -345.95,
+        "bic_fou": 239.6,
+        "delta_bic": -585.55,
+        "model_verdict": "STANDARD_OU",
+        "n": 1109
+      },
+      {
+        "sid": "S15",
+        "H_estimated": 0.8857,
+        "acf_decay_slope": -0.2287,
+        "acf_decay_r2": 0.04,
+        "loglik_ou": -173.93,
+        "loglik_fou": -407.39,
+        "bic_ou": 361.76,
+        "bic_fou": 835.65,
+        "delta_bic": -473.88,
+        "model_verdict": "STANDARD_OU",
+        "n": 1050
+      },
+      {
+        "sid": "S16",
+        "H_estimated": 0.8462,
+        "acf_decay_slope": -0.3075,
+        "acf_decay_r2": 0.068,
+        "loglik_ou": 213.96,
+        "loglik_fou": -22.27,
+        "bic_ou": -413.87,
+        "bic_fou": 65.61,
+        "delta_bic": -479.48,
+        "model_verdict": "STANDARD_OU",
+        "n": 1126
+      },
+      {
+        "sid": "S17",
+        "H_estimated": 0.6597,
+        "acf_decay_slope": -0.6805,
+        "acf_decay_r2": 0.2729,
+        "loglik_ou": 45.12,
+        "loglik_fou": -62.34,
+        "bic_ou": -76.09,
+        "bic_fou": 145.92,
+        "delta_bic": -222.01,
+        "model_verdict": "STANDARD_OU",
+        "n": 1184
+      }
+    ],
+    "aggregate": {
+      "H_mean": 0.7796,
+      "H_std": 0.093,
+      "delta_bic_mean": -377.28,
+      "delta_bic_std": 146.3,
+      "n_fOU_preferred": 0,
+      "n_OU_preferred": 15,
+      "n_inconclusive": 0,
+      "verdict": "STANDARD_OU_SUFFICIENT",
+      "detail": "15/15 subjects show standard OU is sufficient. No need for fractional extension."
+    }
+  },
+  "test3_nonstationary": {
+    "nonstationary_subjects": [
+      {
+        "subject_id": "S13",
+        "n_valid_windows": 1107,
+        "pct_valid": 100.0,
+        "max_dropout_windows": 0,
+        "stress_effect_sigma": 1.832,
+        "stress_effect_zscore": 0.14,
+        "phase_means": {
+          "baseline": -0.022229113542186082,
+          "stress": 1.8095202942962711,
+          "amusement": -0.057597022766168106,
+          "meditation": -0.8960388931586991
+        },
+        "phase_trends": {
+          "baseline": {
+            "slope": 8.4e-05,
+            "p_value": 0.8465,
+            "r2": 0.0002,
+            "has_trend": false
+          },
+          "stress": {
+            "slope": -0.013936,
+            "p_value": 0.0,
+            "r2": 0.3422,
+            "has_trend": true
+          },
+          "amusement": {
+            "slope": 0.000637,
+            "p_value": 0.8204,
+            "r2": 0.0007,
+            "has_trend": false
+          },
+          "meditation": {
+            "slope": -0.001625,
+            "p_value": 0.1054,
+            "r2": 0.0165,
+            "has_trend": false
+          }
+        },
+        "diagnosis": "WITHIN_PHASE_DRIFT",
+        "explanation": "Significant linear trend in ['stress']. The protocol subtraction removes only the mean, but a linear trend remains.",
+        "is_extreme_stress": false
+      },
+      {
+        "subject_id": "S14",
+        "n_valid_windows": 1109,
+        "pct_valid": 100.0,
+        "max_dropout_windows": 0,
+        "stress_effect_sigma": 2.705,
+        "stress_effect_zscore": 1.06,
+        "phase_means": {
+          "baseline": -0.7718331987038557,
+          "stress": 1.932908742972912,
+          "amusement": -0.27315093649956484,
+          "meditation": -0.579441129533153
+        },
+        "phase_trends": {
+          "baseline": {
+            "slope": 0.000951,
+            "p_value": 0.0,
+            "r2": 0.0748,
+            "has_trend": false
+          },
+          "stress": {
+            "slope": -0.009715,
+            "p_value": 0.0,
+            "r2": 0.4228,
+            "has_trend": true
+          },
+          "amusement": {
+            "slope": 0.000423,
+            "p_value": 0.7692,
+            "r2": 0.0012,
+            "has_trend": false
+          },
+          "meditation": {
+            "slope": 0.00038,
+            "p_value": 0.331,
+            "r2": 0.0059,
+            "has_trend": false
+          }
+        },
+        "diagnosis": "WITHIN_PHASE_DRIFT",
+        "explanation": "Significant linear trend in ['stress']. The protocol subtraction removes only the mean, but a linear trend remains.",
+        "is_extreme_stress": false
+      },
+      {
+        "subject_id": "S15",
+        "n_valid_windows": 1050,
+        "pct_valid": 100.0,
+        "max_dropout_windows": 0,
+        "stress_effect_sigma": 0.252,
+        "stress_effect_zscore": -1.52,
+        "phase_means": {
+          "baseline": 0.36920735472339344,
+          "stress": 0.6209259010962133,
+          "amusement": -0.3393279599448621,
+          "meditation": -1.1097159978417253
+        },
+        "phase_trends": {
+          "baseline": {
+            "slope": 0.000651,
+            "p_value": 0.2724,
+            "r2": 0.0051,
+            "has_trend": false
+          },
+          "stress": {
+            "slope": -0.008347,
+            "p_value": 0.0,
+            "r2": 0.2172,
+            "has_trend": true
+          },
+          "amusement": {
+            "slope": -0.000705,
+            "p_value": 0.8426,
+            "r2": 0.0005,
+            "has_trend": false
+          },
+          "meditation": {
+            "slope": -0.005915,
+            "p_value": 0.0,
+            "r2": 0.1782,
+            "has_trend": true
+          }
+        },
+        "diagnosis": "EXTREME_STRESS_RESPONSE",
+        "explanation": "Extreme stress effect (0.25σ, z=-1.5). Protocol subtraction may underfit because stress response has within-phase nonlinear dynamics (onset/adaptation curve).",
+        "is_extreme_stress": true
+      }
+    ],
+    "stationary_subjects": [
+      "S2",
+      "S3",
+      "S4",
+      "S5",
+      "S6",
+      "S7",
+      "S8",
+      "S9",
+      "S10",
+      "S11",
+      "S16",
+      "S17"
+    ],
+    "verdict": "EXTREME_RESPONDERS",
+    "detail": "1/3 are extreme stress responders. Their nonstationarity is PHYSIOLOGICALLY EXPLAINED (stress response overshoots the mean-per-phase model). They should NOT be excluded — they are informative outliers. The OU law still holds (15/15 mean-reverting), but these subjects have nonlinear onset dynamics."
+  },
+  "test4_bias_correction": {
+    "per_subject": [
+      {
+        "sid": "S2",
+        "theta_raw": 0.0994981884528996,
+        "theta_corrected": 0.0990850867769183,
+        "half_life_raw": 6.966430156545684,
+        "half_life_corrected": 6.99547432521816,
+        "is_mr_raw": true,
+        "is_mr_corrected": true,
+        "bias_pct": 0.4,
+        "n": 1214
+      },
+      {
+        "sid": "S3",
+        "theta_raw": 0.06857178685195064,
+        "theta_corrected": 0.06811358743834683,
+        "half_life_raw": 10.108343567836128,
+        "half_life_corrected": 10.176342292752514,
+        "is_mr_raw": true,
+        "is_mr_corrected": true,
+        "bias_pct": 0.7,
+        "n": 1297
+      },
+      {
+        "sid": "S4",
+        "theta_raw": 0.07401422521012066,
+        "theta_corrected": 0.07356375184740076,
+        "half_life_raw": 9.365053523051198,
+        "half_life_corrected": 9.42240115754015,
+        "is_mr_raw": true,
+        "is_mr_corrected": true,
+        "bias_pct": 0.6,
+        "n": 1283
+      },
+      {
+        "sid": "S5",
+        "theta_raw": 0.08830462580231731,
+        "theta_corrected": 0.08787655690424287,
+        "half_life_raw": 7.849500230165242,
+        "half_life_corrected": 7.887737127835497,
+        "is_mr_raw": true,
+        "is_mr_corrected": true,
+        "bias_pct": 0.5,
+        "n": 1250
+      },
+      {
+        "sid": "S6",
+        "theta_raw": 0.08785639231535518,
+        "theta_corrected": 0.0874767526670509,
+        "half_life_raw": 7.889547502382475,
+        "half_life_corrected": 7.923787285499304,
+        "is_mr_raw": true,
+        "is_mr_corrected": true,
+        "bias_pct": 0.4,
+        "n": 1413
+      },
+      {
+        "sid": "S7",
+        "theta_raw": 0.04503139150841047,
+        "theta_corrected": 0.04439572628329118,
+        "half_life_raw": 15.392533016229065,
+        "half_life_corrected": 15.612925805897197,
+        "is_mr_raw": true,
+        "is_mr_corrected": true,
+        "bias_pct": 1.4,
+        "n": 1046
+      },
+      {
+        "sid": "S8",
+        "theta_raw": 0.09910287827731049,
+        "theta_corrected": 0.09864253819931774,
+        "half_life_raw": 6.994218458725035,
+        "half_life_corrected": 7.026858728628492,
+        "is_mr_raw": true,
+        "is_mr_corrected": true,
+        "bias_pct": 0.5,
+        "n": 1092
+      },
+      {
+        "sid": "S9",
+        "theta_raw": 0.10580835570788213,
+        "theta_corrected": 0.10534567600234393,
+        "half_life_raw": 6.550968266377753,
+        "half_life_corrected": 6.579740212066444,
+        "is_mr_raw": true,
+        "is_mr_corrected": true,
+        "bias_pct": 0.4,
+        "n": 1043
+      },
+      {
+        "sid": "S10",
+        "theta_raw": 0.061953551850287794,
+        "theta_corrected": 0.06139422639996981,
+        "half_life_raw": 11.188175009480515,
+        "half_life_corrected": 11.290103666169594,
+        "is_mr_raw": true,
+        "is_mr_corrected": true,
+        "bias_pct": 0.9,
+        "n": 1098
+      },
+      {
+        "sid": "S11",
+        "theta_raw": 0.08329473864758134,
+        "theta_corrected": 0.08276831205996675,
+        "half_life_raw": 8.321620210523013,
+        "half_life_corrected": 8.374547738242516,
+        "is_mr_raw": true,
+        "is_mr_corrected": true,
+        "bias_pct": 0.6,
+        "n": 1045
+      },
+      {
+        "sid": "S13",
+        "theta_raw": 0.0965737263559466,
+        "theta_corrected": 0.09611235310013092,
+        "half_life_raw": 7.1773887859020595,
+        "half_life_corrected": 7.211842788177466,
+        "is_mr_raw": true,
+        "is_mr_corrected": true,
+        "bias_pct": 0.5,
+        "n": 1106
+      },
+      {
+        "sid": "S14",
+        "theta_raw": 0.03482567291517515,
+        "theta_corrected": 0.03419794459274332,
+        "half_life_raw": 19.903339190264692,
+        "half_life_corrected": 20.268679559970646,
+        "is_mr_raw": true,
+        "is_mr_corrected": true,
+        "bias_pct": 1.8,
+        "n": 1108
+      },
+      {
+        "sid": "S15",
+        "theta_raw": 0.08835552401852638,
+        "theta_corrected": 0.08784557794803598,
+        "half_life_raw": 7.8449784352431235,
+        "half_life_corrected": 7.890518757471986,
+        "is_mr_raw": true,
+        "is_mr_corrected": true,
+        "bias_pct": 0.6,
+        "n": 1049
+      },
+      {
+        "sid": "S16",
+        "theta_raw": 0.03429655945211709,
+        "theta_corrected": 0.0336769058328783,
+        "half_life_raw": 20.21039986613462,
+        "half_life_corrected": 20.582270354636773,
+        "is_mr_raw": true,
+        "is_mr_corrected": true,
+        "bias_pct": 1.8,
+        "n": 1125
+      },
+      {
+        "sid": "S17",
+        "theta_raw": 0.04578117966352206,
+        "theta_corrected": 0.04522103049952424,
+        "half_life_raw": 15.140439491825443,
+        "half_life_corrected": 15.327982863354645,
+        "is_mr_raw": true,
+        "is_mr_corrected": true,
+        "bias_pct": 1.2,
+        "n": 1183
+      }
+    ],
+    "aggregate": {
+      "theta_raw_mean": 0.074218,
+      "theta_corrected_mean": 0.073714,
+      "mean_bias_pct": 0.8,
+      "n_mr_raw": 15,
+      "n_mr_corrected": 15,
+      "cv_raw": 0.3191,
+      "cv_corrected": 0.3221,
+      "verdict": "ROBUST",
+      "detail": "All 15/15 subjects remain mean-reverting after bias correction. Mean bias is 0.8%. The universal mean-reversion claim is robust."
+    }
+  },
+  "final_verdict": {
+    "tests": {
+      "Window Invariance": {
+        "verdict": "ARTIFACT",
+        "detail": "Half-life scales with window size (slope=0.979). The estimated θ is a smoothing artifact.",
+        "passed": false
+      },
+      "OU vs fOU": {
+        "verdict": "STANDARD_OU_SUFFICIENT",
+        "detail": "15/15 subjects show standard OU is sufficient. No need for fractional extension.",
+        "passed": true
+      },
+      "Non-stationary Subjects": {
+        "verdict": "EXTREME_RESPONDERS",
+        "detail": "1/3 are extreme stress responders. Their nonstationarity is PHYSIOLOGICALLY EXPLAINED (stress response overshoots the mean-per-phase model). They should NOT be excluded — they are informative outliers. The OU law still holds (15/15 mean-reverting), but these subjects have nonlinear onset dynamics.",
+        "passed": true
+      },
+      "Bias Correction": {
+        "verdict": "ROBUST",
+        "detail": "All 15/15 subjects remain mean-reverting after bias correction. Mean bias is 0.8%. The universal mean-reversion claim is robust.",
+        "passed": true
+      }
+    },
+    "overall": "NEEDS_REVISION",
+    "overall_detail": "Failed tests: ['Window Invariance']. Revise before claiming candidate law."
+  }
+}

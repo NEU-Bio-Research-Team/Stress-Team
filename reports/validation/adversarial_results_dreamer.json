@@ -1,0 +1,244 @@
+{
+  "test_name": "adversarial_subject_removal",
+  "backend": "pytorch",
+  "grl_lambda": 1.0,
+  "standard_bal_acc_mean": 0.5415,
+  "adversarial_bal_acc_mean": 0.5376,
+  "delta": -0.004,
+  "per_subject_standard": [
+    {
+      "subject": "S01_preprocessed",
+      "bal_acc": 0.5882567837576539,
+      "f1": 0.3210555250137438
+    },
+    {
+      "subject": "S02_preprocessed",
+      "bal_acc": 0.5617801296720062,
+      "f1": 0.5491237387148168
+    },
+    {
+      "subject": "S03_preprocessed",
+      "bal_acc": 0.6052366638519274,
+      "f1": 0.5372714486638537
+    },
+    {
+      "subject": "S04_preprocessed",
+      "bal_acc": 0.4671243048833722,
+      "f1": 0.5045170257123002
+    },
+    {
+      "subject": "S05_preprocessed",
+      "bal_acc": 0.5954991644115011,
+      "f1": 0.6486486486486487
+    },
+    {
+      "subject": "S06_preprocessed",
+      "bal_acc": 0.49711419003019497,
+      "f1": 0.42776288352695857
+    },
+    {
+      "subject": "S07_preprocessed",
+      "bal_acc": 0.6358541342616597,
+      "f1": 0.6339375629405841
+    },
+    {
+      "subject": "S08_preprocessed",
+      "bal_acc": 0.5563741679942259,
+      "f1": 0.44562522139567834
+    },
+    {
+      "subject": "S09_preprocessed",
+      "bal_acc": 0.5664316562334852,
+      "f1": 0.6739792809262645
+    },
+    {
+      "subject": "S10_preprocessed",
+      "bal_acc": 0.39348094848035464,
+      "f1": 0.09701126898579128
+    },
+    {
+      "subject": "S11_preprocessed",
+      "bal_acc": 0.5217799123454292,
+      "f1": 0.466626936829559
+    },
+    {
+      "subject": "S12_preprocessed",
+      "bal_acc": 0.5165895663838797,
+      "f1": 0.4390555201021059
+    },
+    {
+      "subject": "S13_preprocessed",
+      "bal_acc": 0.5589849960254372,
+      "f1": 0.5065082059988681
+    },
+    {
+      "subject": "S14_preprocessed",
+      "bal_acc": 0.581654017470211,
+      "f1": 0.4382284382284382
+    },
+    {
+      "subject": "S15_preprocessed",
+      "bal_acc": 0.5554453554385881,
+      "f1": 0.5302220972729829
+    },
+    {
+      "subject": "S16_preprocessed",
+      "bal_acc": 0.5269678714859438,
+      "f1": 0.5036674816625917
+    },
+    {
+      "subject": "S17_preprocessed",
+      "bal_acc": 0.5016758455718736,
+      "f1": 0.5048851333509374
+    },
+    {
+      "subject": "S18_preprocessed",
+      "bal_acc": 0.5137310722118534,
+      "f1": 0.4909190974133187
+    },
+    {
+      "subject": "S19_preprocessed",
+      "bal_acc": 0.5131267851896947,
+      "f1": 0.302158273381295
+    },
+    {
+      "subject": "S20_preprocessed",
+      "bal_acc": 0.6195088228765907,
+      "f1": 0.6349124613800206
+    },
+    {
+      "subject": "S21_preprocessed",
+      "bal_acc": 0.5506732626160091,
+      "f1": 0.6173243053934159
+    },
+    {
+      "subject": "S22_preprocessed",
+      "bal_acc": 0.5402222111353511,
+      "f1": 0.5058107360265633
+    },
+    {
+      "subject": "S23_preprocessed",
+      "bal_acc": 0.48748249299719887,
+      "f1": 0.4062861104691472
+    }
+  ],
+  "per_subject_adversarial": [
+    {
+      "subject": "S01_preprocessed",
+      "bal_acc": 0.5837630679987109,
+      "f1": 0.3116185359301545
+    },
+    {
+      "subject": "S02_preprocessed",
+      "bal_acc": 0.5947868993135011,
+      "f1": 0.5728886498117267
+    },
+    {
+      "subject": "S03_preprocessed",
+      "bal_acc": 0.5817058920914153,
+      "f1": 0.5370144148546299
+    },
+    {
+      "subject": "S04_preprocessed",
+      "bal_acc": 0.44688644688644685,
+      "f1": 0.42417582417582417
+    },
+    {
+      "subject": "S05_preprocessed",
+      "bal_acc": 0.6318428403220983,
+      "f1": 0.7037782249049854
+    },
+    {
+      "subject": "S06_preprocessed",
+      "bal_acc": 0.4785935018670329,
+      "f1": 0.39915586373228823
+    },
+    {
+      "subject": "S07_preprocessed",
+      "bal_acc": 0.6571686047947065,
+      "f1": 0.6952247191011236
+    },
+    {
+      "subject": "S08_preprocessed",
+      "bal_acc": 0.5615969801119272,
+      "f1": 0.5923713235294118
+    },
+    {
+      "subject": "S09_preprocessed",
+      "bal_acc": 0.5334888428091643,
+      "f1": 0.6140819964349377
+    },
+    {
+      "subject": "S10_preprocessed",
+      "bal_acc": 0.4420651402714381,
+      "f1": 0.14786291875240662
+    },
+    {
+      "subject": "S11_preprocessed",
+      "bal_acc": 0.5167491169333165,
+      "f1": 0.6051236749116607
+    },
+    {
+      "subject": "S12_preprocessed",
+      "bal_acc": 0.574061542823717,
+      "f1": 0.5323238206173558
+    },
+    {
+      "subject": "S13_preprocessed",
+      "bal_acc": 0.5085155007949126,
+      "f1": 0.3720757519494987
+    },
+    {
+      "subject": "S14_preprocessed",
+      "bal_acc": 0.4918079181206334,
+      "f1": 0.30354957160342716
+    },
+    {
+      "subject": "S15_preprocessed",
+      "bal_acc": 0.6286936203360376,
+      "f1": 0.5632146357399542
+    },
+    {
+      "subject": "S16_preprocessed",
+      "bal_acc": 0.4245707831325301,
+      "f1": 0.27523602033405953
+    },
+    {
+      "subject": "S17_preprocessed",
+      "bal_acc": 0.5028950637887554,
+      "f1": 0.4402939375382731
+    },
+    {
+      "subject": "S18_preprocessed",
+      "bal_acc": 0.5746218527609797,
+      "f1": 0.4074714631615358
+    },
+    {
+      "subject": "S19_preprocessed",
+      "bal_acc": 0.51002891697607,
+      "f1": 0.588351822503962
+    },
+    {
+      "subject": "S20_preprocessed",
+      "bal_acc": 0.5054379994081089,
+      "f1": 0.6630851880276285
+    },
+    {
+      "subject": "S21_preprocessed",
+      "bal_acc": 0.5658138033242757,
+      "f1": 0.6666666666666666
+    },
+    {
+      "subject": "S22_preprocessed",
+      "bal_acc": 0.5838410868359027,
+      "f1": 0.5775193798449613
+    },
+    {
+      "subject": "S23_preprocessed",
+      "bal_acc": 0.46498015873015874,
+      "f1": 0.2391810144253141
+    }
+  ],
+  "verdict": "ROBUST",
+  "interpretation": "Adversarial model performance (0.538) \u2248 standard (0.542), \u0394=-0.004. Model genuinely learns stress, not subject identity."
+}

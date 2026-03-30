@@ -19,6 +19,26 @@
 4. Stress signal is in cardiac TIMING (HRV), not EEG/ECG morphology
 5. Lab stress (TSST) ≠ trading stress — coupling function needs explicit design
 
-## Planned scripts
+## Scripts
 
-Scripts will be numbered 26+ continuing from Bio Stage.
+### HFT Reindex Pipeline (Scripts 00–03)
+
+| Script | Purpose | Input | Output |
+|--------|---------|-------|--------|
+| `00_reindex_ticks.py` | Parse raw .csv.gz → ms-resolution parquet | `data/raw/tardis/trades/*.csv.gz` | `data/processed/tardis/ticks/<date>.parquet` |
+| `01_build_multiresolution_bars.py` | Aggregate ticks → time/volume/dollar/tick bars | tick parquets | `data/processed/tardis/bars/<type>/<date>.parquet` |
+| `02_hft_feature_engineering.py` | Compute HFT microstructure features | bar parquets | `data/processed/tardis/hft_features/<res>/<date>.parquet` |
+| `03_bio_market_alignment.py` | Build bio σ(t) ↔ market coupling layer | WESAD features + HFT features | `data/processed/tardis/hft_features/bio_market_alignment/` |
+
+Run order: `00 → 01 → 02 → 03`
+
+```bash
+python scripts/stage2_economics/00_reindex_ticks.py
+python scripts/stage2_economics/01_build_multiresolution_bars.py
+python scripts/stage2_economics/02_hft_feature_engineering.py
+python scripts/stage2_economics/03_bio_market_alignment.py
+```
+
+### Future scripts (26+)
+
+ABM simulator scripts will be numbered 26+ continuing from Bio Stage.

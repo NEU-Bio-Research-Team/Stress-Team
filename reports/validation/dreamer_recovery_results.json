@@ -1,0 +1,135 @@
+{
+  "1_original_stress": {
+    "normalization": "none",
+    "target": "stress",
+    "subject_probe": {
+      "probe_accuracy": 0.9092,
+      "chance_level": 0.0435,
+      "encoding_ratio": 20.9,
+      "n_classes": 23
+    },
+    "models": {
+      "LogisticRegression": {
+        "bal_acc": 0.5411,
+        "f1": 0.4856,
+        "auc": 0.5598,
+        "std": 0.0531
+      },
+      "RandomForest": {
+        "bal_acc": 0.538,
+        "f1": 0.4891,
+        "auc": 0.5523,
+        "std": 0.075
+      }
+    },
+    "class_balance": "42.7% positive"
+  },
+  "2_znorm_stress": {
+    "normalization": "within_subject_zscore",
+    "target": "stress",
+    "subject_probe": {
+      "probe_accuracy": 0.1153,
+      "chance_level": 0.0435,
+      "encoding_ratio": 2.7,
+      "n_classes": 23
+    },
+    "models": {
+      "LogisticRegression": {
+        "bal_acc": 0.5629,
+        "f1": 0.5116,
+        "auc": 0.5869,
+        "std": 0.0699
+      },
+      "RandomForest": {
+        "bal_acc": 0.5749,
+        "f1": 0.4977,
+        "auc": 0.5963,
+        "std": 0.0775
+      }
+    },
+    "class_balance": "42.7% positive"
+  },
+  "3_znorm_arousal": {
+    "normalization": "within_subject_zscore",
+    "target": "arousal_binary",
+    "subject_probe": {
+      "probe_accuracy": 0.1153,
+      "chance_level": 0.0435,
+      "encoding_ratio": 2.7,
+      "n_classes": 23
+    },
+    "models": {
+      "LogisticRegression": {
+        "bal_acc": 0.5054,
+        "f1": 0.6412,
+        "auc": 0.5031,
+        "std": 0.0943
+      },
+      "RandomForest": {
+        "bal_acc": 0.4988,
+        "f1": 0.7728,
+        "auc": 0.5083,
+        "std": 0.0769
+      }
+    },
+    "class_balance": "76.7% positive"
+  },
+  "4_znorm_valence": {
+    "normalization": "within_subject_zscore",
+    "target": "valence_binary",
+    "subject_probe": {
+      "probe_accuracy": 0.1153,
+      "chance_level": 0.0435,
+      "encoding_ratio": 2.7,
+      "n_classes": 23
+    },
+    "models": {
+      "LogisticRegression": {
+        "bal_acc": 0.6004,
+        "f1": 0.643,
+        "auc": 0.6328,
+        "std": 0.0609
+      },
+      "RandomForest": {
+        "bal_acc": 0.5912,
+        "f1": 0.6273,
+        "auc": 0.619,
+        "std": 0.072
+      }
+    },
+    "class_balance": "58.9% positive"
+  },
+  "5_raw_arousal": {
+    "normalization": "none",
+    "target": "arousal_binary",
+    "subject_probe": {
+      "probe_accuracy": 0.9092,
+      "chance_level": 0.0435,
+      "encoding_ratio": 20.9,
+      "n_classes": 23
+    },
+    "models": {
+      "LogisticRegression": {
+        "bal_acc": 0.5207,
+        "f1": 0.6614,
+        "auc": 0.5454,
+        "std": 0.0722
+      },
+      "RandomForest": {
+        "bal_acc": 0.5064,
+        "f1": 0.7064,
+        "auc": 0.5391,
+        "std": 0.0747
+      }
+    },
+    "class_balance": "76.7% positive"
+  },
+  "_summary": {
+    "best_experiment": "4_znorm_valence",
+    "best_bal_acc": 0.6004,
+    "decision": "PARTIAL_RECOVERY",
+    "action": "Marginal improvement. Consider PSD features or raw EEG CNN.",
+    "original_baseline": 0.5411,
+    "improvement": 0.0593
+  }
+}

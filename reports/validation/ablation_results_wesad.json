@@ -1,0 +1,57 @@
+{
+  "ecg_only_decision": "STRONG_SIGNAL",
+  "full_decision": "STRONG_SIGNAL",
+  "ecg_best_bal_acc": 0.731866506197049,
+  "full_best_bal_acc": 0.7629007339227016,
+  "ablation": [
+    {
+      "dropped": "hr_mean",
+      "bal_acc": 0.7628036029750572,
+      "delta": -9.713094764440822e-05,
+      "f1": 0.4431068078839178,
+      "impact": "NEGLIGIBLE"
+    },
+    {
+      "dropped": "hr_std",
+      "bal_acc": 0.7616253674099382,
+      "delta": -0.0012753665127633873,
+      "f1": 0.44190843800752605,
+      "impact": "NEGLIGIBLE"
+    },
+    {
+      "dropped": "rmssd",
+      "bal_acc": 0.7618281988619875,
+      "delta": -0.0010725350607141415,
+      "f1": 0.4412272608374837,
+      "impact": "NEGLIGIBLE"
+    },
+    {
+      "dropped": "sdnn",
+      "bal_acc": 0.7622258309299601,
+      "delta": -0.0006749029927415329,
+      "f1": 0.4426328780733667,
+      "impact": "NEGLIGIBLE"
+    },
+    {
+      "dropped": "eda_mean",
+      "bal_acc": 0.7687579895074992,
+      "delta": 0.005857255584797549,
+      "f1": 0.46108386529239354,
+      "impact": "NEGLIGIBLE"
+    },
+    {
+      "dropped": "eda_std",
+      "bal_acc": 0.7494086190294358,
+      "delta": -0.01349211489326585,
+      "f1": 0.4350791805687926,
+      "impact": "MODERATE"
+    },
+    {
+      "dropped": "eda_slope",
+      "bal_acc": 0.763096999586752,
+      "delta": 0.00019626566405039902,
+      "f1": 0.44453440513070197,
+      "impact": "NEGLIGIBLE"
+    }
+  ]
+}

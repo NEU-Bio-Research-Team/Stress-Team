@@ -1,0 +1,351 @@
+{
+  "recovery_config": {
+    "normalize": true,
+    "target": "valence",
+    "best_acc": 0.6004,
+    "decision": "PARTIAL_RECOVERY"
+  },
+  "adversarial_grl": {
+    "test_name": "adversarial_subject_removal",
+    "backend": "pytorch",
+    "grl_lambda": 1.0,
+    "standard_bal_acc_mean": 0.6004,
+    "adversarial_bal_acc_mean": 0.5915,
+    "delta": -0.0088,
+    "per_subject_standard": [
+      {
+        "subject": "S01",
+        "bal_acc": 0.7165791734964293,
+        "f1": 0.7359959809093193
+      },
+      {
+        "subject": "S02",
+        "bal_acc": 0.4956420454262632,
+        "f1": 0.5986813186813187
+      },
+      {
+        "subject": "S03",
+        "bal_acc": 0.6241667676994278,
+        "f1": 0.6344647519582245
+      },
+      {
+        "subject": "S04",
+        "bal_acc": 0.6804310847079595,
+        "f1": 0.747938040635687
+      },
+      {
+        "subject": "S05",
+        "bal_acc": 0.6316200260411529,
+        "f1": 0.6770809046397762
+      },
+      {
+        "subject": "S06",
+        "bal_acc": 0.5023768564478466,
+        "f1": 0.5563618771165941
+      },
+      {
+        "subject": "S07",
+        "bal_acc": 0.6928806511974139,
+        "f1": 0.7308653191006133
+      },
+      {
+        "subject": "S08",
+        "bal_acc": 0.5641362197928654,
+        "f1": 0.6416275430359938
+      },
+      {
+        "subject": "S09",
+        "bal_acc": 0.5803430990250064,
+        "f1": 0.607429718875502
+      },
+      {
+        "subject": "S10",
+        "bal_acc": 0.5974367555692857,
+        "f1": 0.5463470978920012
+      },
+      {
+        "subject": "S11",
+        "bal_acc": 0.6149004905261497,
+        "f1": 0.6878471450788713
+      },
+      {
+        "subject": "S12",
+        "bal_acc": 0.5065566406503081,
+        "f1": 0.5204267499349466
+      },
+      {
+        "subject": "S13",
+        "bal_acc": 0.6471424157628827,
+        "f1": 0.6443579766536965
+      },
+      {
+        "subject": "S14",
+        "bal_acc": 0.6817831029787551,
+        "f1": 0.7143204473620228
+      },
+      {
+        "subject": "S15",
+        "bal_acc": 0.5907964574697524,
+        "f1": 0.688573883161512
+      },
+      {
+        "subject": "S16",
+        "bal_acc": 0.565234056736538,
+        "f1": 0.6184550363935196
+      },
+      {
+        "subject": "S17",
+        "bal_acc": 0.6035658838532767,
+        "f1": 0.6666666666666666
+      },
+      {
+        "subject": "S18",
+        "bal_acc": 0.6153075080858208,
+        "f1": 0.6543560606060606
+      },
+      {
+        "subject": "S19",
+        "bal_acc": 0.5562241522813789,
+        "f1": 0.5627136471206942
+      },
+      {
+        "subject": "S20",
+        "bal_acc": 0.6531888631914755,
+        "f1": 0.6987136086662153
+      },
+      {
+        "subject": "S21",
+        "bal_acc": 0.6167908985121385,
+        "f1": 0.6611842105263158
+      },
+      {
+        "subject": "S22",
+        "bal_acc": 0.5244274242557792,
+        "f1": 0.6045133348529746
+      },
+      {
+        "subject": "S23",
+        "bal_acc": 0.5470316855899247,
+        "f1": 0.5891016200294551
+      }
+    ],
+    "per_subject_adversarial": [
+      {
+        "subject": "S01",
+        "bal_acc": 0.6222302454382,
+        "f1": 0.7190357439733999
+      },
+      {
+        "subject": "S02",
+        "bal_acc": 0.5322632991035207,
+        "f1": 0.63638330088687
+      },
+      {
+        "subject": "S03",
+        "bal_acc": 0.6172928442022987,
+        "f1": 0.6466053220591893
+      },
+      {
+        "subject": "S04",
+        "bal_acc": 0.745215639187054,
+        "f1": 0.7813822284908322
+      },
+      {
+        "subject": "S05",
+        "bal_acc": 0.6192936337272387,
+        "f1": 0.7041083916083916
+      },
+      {
+        "subject": "S06",
+        "bal_acc": 0.5070455987555433,
+        "f1": 0.5931472657136374
+      },
+      {
+        "subject": "S07",
+        "bal_acc": 0.6510336203863745,
+        "f1": 0.7330045035384946
+      },
+      {
+        "subject": "S08",
+        "bal_acc": 0.5697692339306264,
+        "f1": 0.6889912097111762
+      },
+      {
+        "subject": "S09",
+        "bal_acc": 0.5902202452174486,
+        "f1": 0.6577614002763703
+      },
+      {
+        "subject": "S10",
+        "bal_acc": 0.6050048791012647,
+        "f1": 0.5584415584415584
+      },
+      {
+        "subject": "S11",
+        "bal_acc": 0.5912637472021265,
+        "f1": 0.6952259164535379
+      },
+      {
+        "subject": "S12",
+        "bal_acc": 0.4744247822011826,
+        "f1": 0.5328276842853756
+      },
+      {
+        "subject": "S13",
+        "bal_acc": 0.6231182625812938,
+        "f1": 0.6335802469135803
+      },
+      {
+        "subject": "S14",
+        "bal_acc": 0.6391966500662153,
+        "f1": 0.6519507186858317
+      },
+      {
+        "subject": "S15",
+        "bal_acc": 0.5502903671525664,
+        "f1": 0.7384905660377359
+      },
+      {
+        "subject": "S16",
+        "bal_acc": 0.5724236476310397,
+        "f1": 0.6394682557873023
+      },
+      {
+        "subject": "S17",
+        "bal_acc": 0.5635223074092557,
+        "f1": 0.6023809523809524
+      },
+      {
+        "subject": "S18",
+        "bal_acc": 0.6345307754981113,
+        "f1": 0.7126537785588752
+      },
+      {
+        "subject": "S19",
+        "bal_acc": 0.5624935268008475,
+        "f1": 0.5674320401161256
+      },
+      {
+        "subject": "S20",
+        "bal_acc": 0.6263983067251783,
+        "f1": 0.5788516497791634
+      },
+      {
+        "subject": "S21",
+        "bal_acc": 0.5948229984428106,
+        "f1": 0.6248789932236205
+      },
+      {
+        "subject": "S22",
+        "bal_acc": 0.5539471425721721,
+        "f1": 0.5667166416791605
+      },
+      {
+        "subject": "S23",
+        "bal_acc": 0.5594723511785742,
+        "f1": 0.5824847250509165
+      }
+    ],
+    "verdict": "ROBUST",
+    "interpretation": "Adversarial model performance (0.592) \u2248 standard (0.600), \u0394=-0.009. Model genuinely learns stress, not subject identity."
+  },
+  "feature_ablation": {
+    "baseline_acc": 0.6004023898190095,
+    "band_ablation": {
+      "delta": {
+        "dropped_features": 14,
+        "remaining_features": 56,
+        "bal_acc": 0.6046,
+        "delta": 0.0042,
+        "impact": "NEGLIGIBLE"
+      },
+      "theta": {
+        "dropped_features": 14,
+        "remaining_features": 56,
+        "bal_acc": 0.6016,
+        "delta": 0.0012,
+        "impact": "NEGLIGIBLE"
+      },
+      "alpha": {
+        "dropped_features": 14,
+        "remaining_features": 56,
+        "bal_acc": 0.5955,
+        "delta": -0.0049,
+        "impact": "NEGLIGIBLE"
+      },
+      "beta": {
+        "dropped_features": 14,
+        "remaining_features": 56,
+        "bal_acc": 0.5811,
+        "delta": -0.0193,
+        "impact": "MODERATE"
+      },
+      "gamma": {
+        "dropped_features": 14,
+        "remaining_features": 56,
+        "bal_acc": 0.5912,
+        "delta": -0.0092,
+        "impact": "HELPS_TO_DROP"
+      }
+    }
+  },
+  "learning_curve": {
+    "curve": [
+      {
+        "n_train_subjects": 3,
+        "balanced_accuracy_mean": 0.5365294360849087,
+        "balanced_accuracy_std": 0.011666684806017473,
+        "f1_mean": 0.5907571327926899,
+        "f1_std": 0.018559270870297392,
+        "n_repeats": 5
+      },
+      {
+        "n_train_subjects": 5,
+        "balanced_accuracy_mean": 0.5664905176613088,
+        "balanced_accuracy_std": 0.012357195377236568,
+        "f1_mean": 0.6210046858713825,
+        "f1_std": 0.013538419731634846,
+        "n_repeats": 5
+      },
+      {
+        "n_train_subjects": 10,
+        "balanced_accuracy_mean": 0.5926624084887309,
+        "balanced_accuracy_std": 0.01177940030682552,
+        "f1_mean": 0.6427480945746108,
+        "f1_std": 0.0060407090428495,
+        "n_repeats": 5
+      },
+      {
+        "n_train_subjects": 15,
+        "balanced_accuracy_mean": 0.5868970203225174,
+        "balanced_accuracy_std": 0.010085525913269482,
+        "f1_mean": 0.6392400079183013,
+        "f1_std": 0.008056175219196954,
+        "n_repeats": 5
+      },
+      {
+        "n_train_subjects": 20,
+        "balanced_accuracy_mean": 0.57860221558355,
+        "balanced_accuracy_std": 0.033448631246963574,
+        "f1_mean": 0.6209739935227775,
+        "f1_std": 0.04507941230954948,
+        "n_repeats": 5
+      }
+    ],
+    "train_sizes": [
+      3,
+      5,
+      10,
+      15,
+      20
+    ]
+  },
+  "_summary": {
+    "overall_verdict": "GENUINE_SIGNAL",
+    "genuine_checks_passed": 2,
+    "total_checks": 3,
+    "message": "Recovered signal passes 2/3 checks. DREAMER is viable for deep model.",
+    "adversarial_verdict": "ROBUST",
+    "has_critical_band": false
+  }
+}

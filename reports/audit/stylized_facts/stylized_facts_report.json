@@ -1,0 +1,82 @@
+{
+  "total_facts": 5,
+  "passed": 5,
+  "failed": 0,
+  "details": [
+    {
+      "name": "SF-1 Fat Tails",
+      "excess_kurtosis": 330.7956489364228,
+      "skewness": -1.7177260624698307,
+      "jarque_bera_stat": 10991904335.305496,
+      "jarque_bera_pval": 0.0,
+      "hill_tail_index": 2.5259402179719195,
+      "normality_rejected": true,
+      "pass": true,
+      "note": "Kurtosis=330.80 (> 3.0)"
+    },
+    {
+      "name": "SF-2 Volatility Clustering",
+      "acf_abs_returns": {
+        "1": 0.40277906093818694,
+        "5": 0.32027614435412105,
+        "10": 0.2939202707855997,
+        "20": 0.2674088848360017,
+        "50": 0.23408539276827142
+      },
+      "acf_squared_returns": {
+        "1": 0.09625066906417606,
+        "5": 0.03275261705054992,
+        "10": 0.02142006180675249,
+        "20": 0.015427365786303935,
+        "50": 0.00912850437437249
+      },
+      "standard_error": 0.0006440819332628283,
+      "significant_lags": 5,
+      "total_lags_checked": 5,
+      "pass": true,
+      "note": "5/5 lags significant"
+    },
+    {
+      "name": "SF-3 Leverage Effect",
+      "leverage_correlations": {
+        "1": -0.022008730715463398,
+        "5": -0.008603702334507858,
+        "10": -0.0036002238255446284
+      },
+      "vol_after_negative": 0.0009517569401032404,
+      "vol_after_positive": 0.0009129521445123874,
+      "asymmetry_ratio": 1.0425047411100328,
+      "negative_corr_count": 3,
+      "pass": true,
+      "note": "Asymmetry ratio = 1.043"
+    },
+    {
+      "name": "SF-4 Volume-Volatility Correlation",
+      "corr_absret_vol": 0.3379057040035711,
+      "corr_sqret_vol": 0.10172620427404852,
+      "corr_absret_logvol": 0.3538783513929736,
+      "pass": true,
+      "note": "corr(|r|, V) = 0.3379"
+    },
+    {
+      "name": "SF-5 Absence of Return ACF",
+      "return_acf": {
+        "1": -0.0023381070065498235,
+        "2": -0.022318124162688992,
+        "5": -0.001498642692064295,
+        "10": 0.009700829249899318,
+        "20": 0.003942648658633103
+      },
+      "standard_error": 0.0006440819332628283,
+      "economic_threshold": 0.05,
+      "econ_insignificant": 5,
+      "stat_insignificant": 0,
+      "total_lags": 5,
+      "max_abs_acf": 0.022318124162688992,
+      "abs_return_acf_lag1": 0.40277906093818694,
+      "return_vs_absreturn_acf_ratio": 0.05541033863738678,
+      "pass": true,
+      "note": "max|ACF|=0.0223 (threshold 0.05); 5/5 economically insignificant; 0/5 statistically insignificant (SE=0.000644); |r| ACF\u2081=0.403 >> return ACF (ratio=0.055)"
+    }
+  ]
+}

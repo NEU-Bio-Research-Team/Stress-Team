@@ -65,6 +65,10 @@ LIQUIDATION_COLS = [
     "original_quantity", "price", "average_price",
     "order_status", "time", "filled_quantity",
 ]
+BOOKTICKER_COLS = [
+    "symbol", "best_bid_price", "best_bid_qty",
+    "best_ask_price", "best_ask_qty", "transact_time",
+]
 
 
 # ────────────────────────── helpers ──────────────────────────────────
@@ -239,6 +243,38 @@ def _transform_liquidations(df: pd.DataFrame) -> pd.DataFrame:
         out["side"] = df["side"].str.lower()
     else:
         out["side"] = df.iloc[:, 1].str.lower()
+
+    return out
+
+
+def _transform_bookticker(df: pd.DataFrame) -> pd.DataFrame:
+    """Convert Binance bookTicker -> standardized BBO format."""
+    out = pd.DataFrame()
+
+    # Detect column layout
+    if "transact_time" in df.columns:
+        ts_col = "transact_time"
+    elif "time" in df.columns:
+        ts_col = "time"
+    else:
+        # Positional: symbol, bid_px, bid_qty, ask_px, ask_qty, time
+        ts_col = 5
+
+    if isinstance(ts_col, int):
+        out["timestamp"] = df.iloc[:, ts_col].astype(np.int64) * 1000  # ms -> us
+    else:
+        out["timestamp"] = df[ts_col].astype(np.int64) * 1000
+
+    for label, idx, named in [
+        ("best_bid_price", 1, "best_bid_price"),
+        ("best_bid_qty", 2, "best_bid_qty"),
+        ("best_ask_price", 3, "best_ask_price"),
+        ("best_ask_qty", 4, "best_ask_qty"),
+    ]:
+        if named in df.columns:
+            out[label] = df[named].astype(float)
+        else:
+            out[label] = df.iloc[:, idx].astype(float)
 
     return out
 
@@ -423,6 +459,96 @@ def fetch_aggtrades(
         print(f"({day_ok}/{len(days)} days)")
 
     print(f"\n[binance-vision] aggTrades done – {saved} day-files")
+    return saved
+
+
+def fetch_bookticker(
+    symbol: str = TARDIS_SYMBOL,
+    start_date: str = TARDIS_START_DATE,
+    end_date: str = TARDIS_END_DATE,
+    output_dir: Optional[Path] = None,
+    exchange_label: str = "binance-futures",
+) -> int:
+    """
+    Download best-bid/offer (bookTicker) snapshots from data.binance.vision.
+
+    NOTE: bookTicker availability for Futures may be limited.
+    This function tries daily ZIPs first; if unavailable it returns 0.
+    """
+    output_dir = output_dir or (TARDIS_RAW_DIR / "bookticker")
+    output_dir.mkdir(parents=True, exist_ok=True)
+
+    months = _month_range(start_date, end_date)
+    print(f"[binance-vision] Downloading bookTicker for {symbol}")
+    print(f"  Range : {start_date} -> {end_date}  ({len(months)} months)")
+    print(f"  Output: {output_dir}\n")
+
+    saved = 0
+
+    for month in months:
+        m_start, m_end = _month_bounds(month, start_date, end_date)
+        days = _date_range(m_start, m_end)
+
+        existing = [d for d in days
+                    if _out_path(output_dir, exchange_label, "bookticker",
+                                 d, symbol).exists()]
+        if len(existing) == len(days):
+            print(f"  {month}: already complete ({len(days)} files)")
+            saved += len(days)
+            continue
+
+        # Try monthly ZIP
+        url = (f"{BASE_URL}/monthly/bookTicker/{symbol}/"
+               f"{symbol}-bookTicker-{month}.zip")
+        print(f"  {month}: ", end="", flush=True)
+        zb = _download_zip(url)
+
+        if zb is not None:
+            df = _csv_from_zip(zb, col_names=BOOKTICKER_COLS)
+            if df is not None and not df.empty:
+                transformed = _transform_bookticker(df)
+                transformed["_date"] = pd.to_datetime(
+                    transformed["timestamp"], unit="us"
+                ).dt.strftime("%Y-%m-%d")
+                for d in days:
+                    out = _out_path(output_dir, exchange_label, "bookticker",
+                                    d, symbol)
+                    if out.exists():
+                        saved += 1
+                        continue
+                    day_df = transformed[transformed["_date"] == d].drop(
+                        columns=["_date"])
+                    if day_df.empty:
+                        continue
+                    day_df.to_csv(out, index=False, compression="gzip")
+                    saved += 1
+                print(f"monthly OK ({len(days)} days)")
+                continue
+
+        # Daily fallback
+        print("monthly N/A -> daily ", end="", flush=True)
+        day_ok = 0
+        for d in days:
+            out = _out_path(output_dir, exchange_label, "bookticker",
+                            d, symbol)
+            if out.exists():
+                saved += 1
+                day_ok += 1
+                continue
+            durl = (f"{BASE_URL}/daily/bookTicker/{symbol}/"
+                    f"{symbol}-bookTicker-{d}.zip")
+            db = _download_zip(durl)
+            if db is not None:
+                ddf = _csv_from_zip(db, col_names=BOOKTICKER_COLS)
+                if ddf is not None and not ddf.empty:
+                    day_t = _transform_bookticker(ddf)
+                    day_t.to_csv(out, index=False, compression="gzip")
+                    saved += 1
+                    day_ok += 1
+            time.sleep(0.1)
+        print(f"({day_ok}/{len(days)} days)")
+
+    print(f"\n[binance-vision] bookTicker done - {saved} day-files")
     return saved
 
 
