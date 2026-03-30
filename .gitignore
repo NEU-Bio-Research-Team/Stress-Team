@@ -2,7 +2,8 @@
 .Rhistory
 .RData
 .Ruserdata
-
+.pdf
+.png
 # Python cache/bytecode
 __pycache__/
 *.pyc
