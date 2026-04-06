@@ -1,81 +1,125 @@
 ```mermaid
 graph TD
-    %% Khối 1: Trạng thái thị trường & Kích hoạt ban đầu
-    subgraph Market_State
-        P_t["Giá (P_t) ↓"]
-        Vol_t["Biến động (Vol_t) ↑"]
-    end
-
-    %% Khối 2: Tác nhân Ổn định (Vòng lặp Âm)
-    subgraph Stabilizers
-        Value_T["Value Traders / Fundamentalists"]
-        Exo_Liq["Exogenous Liquidity Injection (Cứu trợ)"]
-    end
-
-    %% Khối 3: Biến Nhiễu - Yếu tố Cơ học
+    %% ==========================================
+    %% LAYER 0: CONFOUNDERS
+    %% ==========================================
     subgraph Confounders
-        Inv_t["Inventory Constraint (Ω_t) ↑"]
-        PnL_t["Tổn thất/Loss (π_t) ↑"]
+        Theta_i["Đặc tính cá nhân θ_i<br/>(heterogeneity)"] 
+        ToD["Thời gian trong ngày<br/>TimeOfDay"]
+        Leverage["Mức đòn bẩy<br/>Leverage"]
+        PortfolioLimit["Giới hạn vị thế<br/>PortfolioLimit_MM"]
     end
 
-    %% Khối 4: Yếu tố Sinh lý - Nội sinh
-    subgraph Bio_Stage
-        Stress_t["Physiological Stress (σ_t) ↑"]
+    Theta_i --> Sigma_t
+    Theta_i --> GammaMM_t
+    Theta_i --> GammaMom_t
+    Theta_i --> Tau_t
+    Theta_i --> Ithr_t
+
+    ToD --> Sigma_t
+    ToD --> Vol_t
+
+    Leverage --> GammaMom_t
+    Leverage --> OrderSize_t
+
+    PortfolioLimit --> GammaMM_t
+    PortfolioLimit --> QuoteDepth_t
+
+    %% ==========================================
+    %% LAYER 1: EXOGENOUS & PAST
+    %% ==========================================
+    News_t["News_t"] --> Uncert_t["Uncertainty_t"]
+    Vol_tminus1["Volatility_{t-1}"] --> Uncert_t
+    BaseStress["BaselineStress_i"] --> Sigma_t["LatentStress_t"]
+
+    BaseGammaMM["BaselineRiskAversion_MM"] --> GammaMM_t
+    BaseGammaMom["BaselineRiskAversion_Mom"] --> GammaMom_t
+
+    %% ==========================================
+    %% LAYER 2: STRESS → BEHAVIOR
+    %% ==========================================
+    Sigma_t --> GammaMM_t
+    Sigma_t --> GammaMom_t
+    Sigma_t --> Tau_t["ReactionTime_t"]
+    Sigma_t --> Ithr_t["InattentionThreshold_t"]
+    Sigma_t --> Part_t["LiquidityParticipation_t"]
+
+    %% ==========================================
+    %% LAYER 2b: INATTENTION LOGIC
+    %% ==========================================
+    subgraph InattentionLogic
+        SignalInput["Tín hiệu thị trường"] --> Check{"Xác suất chú ý<br/>f(σ, Ithr_t)"}
+        Check -->|Bỏ qua| Drop["Drop signal → No trade"]
+        Check -->|Chú ý| SigProc_t2["SignalProcessing_t2 → Trade"]
     end
 
-    %% Khối 5: Hành vi Vi mô (Stage 2 ABM)
-    subgraph Microstructure
-        Alpha["Aggressiveness (α_t) ↓"]
-        Gamma["Cancellation Rate (γ_t) ↑"]
-        Spread["Bid-Ask Spread (Δx_t) ↑"]
-    end
+    %% ==========================================
+    %% LAYER 3: INVENTORY & MM DYNAMICS
+    %% ==========================================
+    OF_tminus1["OrderFlow_{t-1}"] --> Inv_t["Inventory_MM_t"]
+    Inv_t --> GammaMM_t
+    Inv_t --> Inv_tplus["Inventory_MM_{t+1}"]
 
-    %% Khối 6: Độ sâu Thị trường & Giá t+1
-    subgraph Resolution
-        Liq_t["Market Liquidity (Depth) ↓↓"]
-        Net_D["Net Order Flow (Demand) ↓↓"]
-        P_t1["Giá (P_{t+1}) ↓↓"]
-    end
+    GammaMM_t --> QuoteSpread_t["QuoteSpread_t"]
+    GammaMM_t --> QuoteDepth_t["QuoteDepth_t"]
 
-    %% --- ĐƯỜNG DẪN NHÂN QUẢ ---
-
-    P_t -->|Định giá thấp| Value_T
-    Value_T -->|Mua vào gom hàng| Net_D
-    Net_D -->|Lực đỡ| P_t1
-    P_t1 -.->|Bình ổn giá| P_t
-
-    P_t -->|Giảm giá trị Portfolio| PnL_t
-    Inv_t -->|Khuếch đại rủi ro| PnL_t
-    Inv_t -->|Ép bán tháo| Net_D
+    GammaMom_t --> OrderSize_t["OrderSize_t"]
+    Tau_t --> OrderTiming_t["OrderTiming_t"]
     
-    Vol_t -->|Trigger| Stress_t
-    PnL_t -->|Trigger: max| Stress_t
+    SigProc_t2 --> OF_t["OrderFlow_t"]   
+    Part_t --> OrderArrival_t["OrderArrival_t"]
+
+    %% ==========================================
+    %% LAYER 4: MARKET & DEPTH 
+    %% ==========================================
+    %% QuoteDepth tác động Depth và Spread
+    QuoteDepth_t --> Spread_t["BidAskSpread_t"]
+    QuoteDepth_t -->|adds| Depth_tplus["Depth_{t+1}"]
     
-    Stress_t -->|Giảm quy mô đặt lệnh| Alpha
-    Stress_t -->|Hoảng loạn rút lệnh| Gamma
-    Stress_t -->|Mở rộng biên độ| Spread
+    QuoteSpread_t --> Spread_t
+    Depth_t["Depth_t"] --> Spread_t
+    Depth_t --> Depth_tplus
 
-    Alpha -->|Thiếu cầu chủ động| Net_D
-    Gamma -->|Bốc hơi thanh khoản| Liq_t
-    Spread -->|Tăng chi phí| Liq_t
+    %% THÊM MỚI (ĐIỂM SỐ 4): Spread rộng làm giảm lượng lệnh mới nhảy vào thị trường
+    Spread_t --> OrderArrival_t
+
+    OrderArrival_t --> OF_t
+    OrderSize_t --> OF_t
+    OrderTiming_t --> OF_t
     
-    Liq_t -->|Trượt giá cao| P_t1
-    Net_D -->|Áp lực bán ròng| P_t1
-
-    P_t1 == "Vol ↑, P ↓" ===> Vol_t
-    P_t1 == "Loss ↑" ===> PnL_t
-
-    Exo_Liq ==>|Bơm thanh khoản| Liq_t
-    Exo_Liq ==>|Hấp thụ nguồn cung| Net_D
-
-    %% Styling
-    classDef crash fill:#ffe6e6,stroke:#cc0000,stroke-width:2px;
-    classDef rescue fill:#e6ffe6,stroke:#008000,stroke-width:2px;
-    classDef bio fill:#e6e6ff,stroke:#0000cc,stroke-width:2px;
-    classDef confounder fill:#fff2e6,stroke:#e67300,stroke-width:2px;
+    OrderSize_t -->|consumes| Depth_tplus
     
-    class P_t1,Vol_t,Liq_t,Net_D,PnL_t crash;
-    class Value_T,Exo_Liq rescue;
-    class Stress_t bio;
-    class Inv_t confounder;
-```
+    OF_t --> Midprice_t["Midprice_t"]
+
+    %% ==========================================
+    %% LAYER 5: RETURNS & VOLATILITY
+    %% ==========================================
+    Midprice_t --> Returns_t["Returns_t"]
+    Returns_t --> Vol_t["Volatility_t"]
+
+    %% ==========================================
+    %% LAYER 6: FEEDBACK LOOP
+    %% ==========================================
+    Vol_t --> Uncert_tplus["Uncertainty_{t+1}"]
+    Uncert_tplus --> Sigma_tplus["LatentStress_{t+1}"]
+    
+    Sigma_tplus --> GammaMM_tplus["GammaMM_{t+1}"]
+    Sigma_tplus --> GammaMom_tplus["GammaMom_{t+1}"]
+
+    %% ==========================================
+    %% STYLE DEFINITIONS & COLOR CODING
+    %% ==========================================
+    classDef conf fill:#d4f8d4,stroke:#2e7d32,stroke-width:2px;
+    classDef stress fill:#ffd6d6,stroke:#c62828,stroke-width:2px;
+    classDef action fill:#d6e4ff,stroke:#1565c0,stroke-width:2px;
+    classDef market fill:#f3e5f5,stroke:#6a1b9a,stroke-width:2px;
+    classDef output fill:#fff3cd,stroke:#f9a825,stroke-width:2px;
+    classDef attention fill:#ffe0b2,stroke:#ef6c00,stroke-width:2px;
+
+    class Theta_i,ToD,Leverage,PortfolioLimit conf
+    class Sigma_t,Sigma_tplus,Uncert_t,Uncert_tplus,BaseStress,News_t stress
+    class GammaMM_t,GammaMom_t,GammaMM_tplus,GammaMom_tplus,Tau_t,Ithr_t,Part_t,OrderSize_t,OrderTiming_t,OrderArrival_t,BaseGammaMM,BaseGammaMom action
+    class SignalInput,Check,Drop,SigProc_t2 attention
+    class Depth_t,Depth_tplus,QuoteSpread_t,QuoteDepth_t,Spread_t,Inv_t,Inv_tplus,OF_t,OF_tminus1,Midprice_t market
+    class Returns_t,Vol_t,Vol_tminus1 output
+    ```
