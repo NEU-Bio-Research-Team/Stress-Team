@@ -1,3 +1,4 @@
+```mermaid
 graph LR
     %% ==========================================
     %% THỜI ĐIỂM t-1 (QUÁ KHỨ - BÓC TÁCH CỤ THỂ PnL)
@@ -109,3 +110,4 @@ graph LR
     class P_t,LOB_t market;
     class Solvency gate;
     class Dead dead;
+    ```
