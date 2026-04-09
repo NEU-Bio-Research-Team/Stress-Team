@@ -75,7 +75,7 @@ graph LR
 
     subgraph Time_t_plus_1 ["Kỳ t+1 (Tương lai)"]
         direction TB
-        Price_t1["Giá Đóng cửa (P_{t+1})<br/>[Crash Result]"]
+        Price_t1["Giá Đóng cửa (P_{t+1})<br/>[Future State]"]
         LOB_Final -->|"Sụp đổ Thanh khoản (Vacuum)"| Price_t1
     end
 
@@ -93,6 +93,7 @@ graph LR
     classDef outcome fill:#d1e7dd,stroke:#198754,stroke-width:4px,color:#000;
     classDef gate fill:#212529,stroke:#dc3545,stroke-width:3px,color:#fff;
     classDef dead fill:#6c757d,stroke:#212529,stroke-width:2px,color:#fff,stroke-dasharray: 4 4;
+    classDef future_state fill:#e9ecef,stroke:#adb5bd,stroke-width:2px,color:#000,stroke-dasharray: 5 5;
     
     %% GÁN MÀU (CLASS ASSIGNMENTS)
     class W_t1,Inv_t1,Vol_t1 confounder;
@@ -102,7 +103,8 @@ graph LR
     class Spread_t,Alpha_t,Gamma_t,Lambda_t mediator;
     class Exp_t,Act_t,Omega_t,Limit_t,Supply_t mind_calc;
     class Event_t,P_t,LOB_t market;
-    class LOB_Final,Price_t1 outcome;
+    class LOB_Final outcome;
+    class Price_t1 future_state;
     class Solvency gate;
     class Dead dead;
 ```

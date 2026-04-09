@@ -78,7 +78,7 @@ graph LR
 
     subgraph Time_t_plus_1 ["Kỳ t+1 (Tương lai)"]
         direction TB
-        Price_t1["Giá Đóng cửa mới (P_{t+1})<br/>[Outcome - Y]"]
+        Price_t1["Giá Đóng cửa mới (P_{t+1})<br/>[Future State]"]
         Exec_t -->|"Matching Engine"| Price_t1
     end
 
@@ -98,6 +98,7 @@ graph LR
     classDef gate fill:#212529,stroke:#dc3545,stroke-width:3px,color:#fff;
     classDef cog_gate fill:#cfe2ff,stroke:#0d6efd,stroke-width:3px,color:#000;
     classDef dead fill:#6c757d,stroke:#212529,stroke-width:2px,color:#fff,stroke-dasharray: 4 4;
+    classDef future_state fill:#e9ecef,stroke:#adb5bd,stroke-width:2px,color:#000,stroke-dasharray: 5 5;
     
     %% GÁN MÀU (CLASS ASSIGNMENTS)
     class W_t1,Inv_t1,Vol_t1 confounder;
@@ -108,7 +109,8 @@ graph LR
     class Exp_t,Omega_t,Demand_t mind_calc;
     class I_thr cog_gate;
     class P_t,P_hat,LOB_t market;
-    class Exec_t,Price_t1 outcome;
+    class Exec_t outcome;
+    class Price_t1 future_state;
     class Solvency gate;
     class Dead,Drop_Signal dead;
 ```
