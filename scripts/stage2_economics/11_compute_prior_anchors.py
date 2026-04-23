@@ -58,6 +58,15 @@ def phase_quantiles(series: pd.Series) -> dict:
     return {f"p{int(q*100):02d}": round(float(s.quantile(q)), 8) for q in QUANTILES}
 
 
+def phase_nonzero_quantiles(series: pd.Series) -> dict:
+    """Compute quantiles after excluding exact zero-filled bins."""
+    s = series.dropna()
+    s = s[s != 0]
+    if s.empty:
+        return {f"p{int(q*100):02d}": None for q in QUANTILES}
+    return {f"p{int(q*100):02d}": round(float(s.quantile(q)), 8) for q in QUANTILES}
+
+
 def phase_stats(series: pd.Series) -> dict:
     """Compute mean/std/median for a series."""
     s = series.dropna()
@@ -120,7 +129,7 @@ def main():
 
         # OFI percentiles
         if "ofi" in df.columns:
-            anchors["ofi_percentiles_per_phase"][phase] = phase_quantiles(pdf["ofi"])
+            anchors["ofi_percentiles_per_phase"][phase] = phase_nonzero_quantiles(pdf["ofi"])
 
         # Trade intensity (Poisson λ proxy)
         if "trade_intensity" in df.columns:

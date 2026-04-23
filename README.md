@@ -38,18 +38,19 @@ The documentation currently targets a richer event-level contract than the check
 | `drop_1s_pct` | Yes | Computed | Heuristic crash summary | Rolling 1-second sum of `drop_velocity_pct_per_100ms` | No |
 | `drop_from_local_pct` | Yes | Computed | Heuristic local dislocation proxy | Drawdown from rolling local reference price over recent bins | No |
 | `delta_from_news_ms` | Yes | Partially computed | Event-study standard | Offset to matched news timestamp when a timestamp-level news catalog exists; currently often empty because the catalog is missing | No |
-| `mid_price` | Yes | Missing in current outputs | Market microstructure standard | `(best_bid_price + best_ask_price) / 2` from `bookTicker` snapshots or L2 book | Yes |
-| `spread_bps` | Yes | Missing in current outputs | Market microstructure standard | `(best_ask - best_bid) / mid_price * 10000` | Yes |
-| `touch_depth` | Yes | Missing in current outputs | Market microstructure standard | `best_bid_qty + best_ask_qty` at the touch | Yes |
-| `depth_imbalance` | Yes | Missing in current outputs | Literature-grounded | `(best_bid_qty - best_ask_qty) / (best_bid_qty + best_ask_qty)` | Yes |
+| `mid_price` | Yes | Proxy computed in gridded output | Market microstructure standard when real, heuristic fallback today | Real target is `(best_bid_price + best_ask_price) / 2`; current fallback from script 12 is `close` | Yes |
+| `spread_bps` | Yes | Proxy computed in gridded output | Market microstructure standard when real, proxy fallback today | Real target is `(best_ask - best_bid) / mid_price * 10000`; current fallback from script 12 rescales `amihud_illiq * close * 10000` | Yes |
+| `touch_depth` | Yes | Proxy computed in gridded output | Market microstructure standard when real, proxy fallback today | Real target is `best_bid_qty + best_ask_qty`; current fallback from script 12 is winsorized inverse absolute `kyle_lambda` | Yes |
+| `depth_imbalance` | Yes | Proxy computed in gridded output | Literature-grounded when real, proxy fallback today | Real target is `(best_bid_qty - best_ask_qty) / (best_bid_qty + best_ask_qty)`; current fallback from script 12 is clipped `ofi / (trade_intensity * 100)` | Yes |
 
 ### Current Reading Of The Pipeline
 
 At the moment, the implemented event pipeline is strongest on trade-side features and crash dynamics. In practical terms:
 
 - the current outputs already support a useful trade-only event study,
-- the remaining schema gap is concentrated in BBO-dependent features,
-- and the weakest current variables are not the microstructure features, but the exploratory composites like `order_flow_toxicity` and `leverage_proxy`.
+- the gridded CSV now includes transparent fallback proxies for the missing BBO fields,
+- true BBO data is still preferable and should overwrite those proxies when available,
+- and the weakest current variables are still the exploratory composites like `order_flow_toxicity` and `leverage_proxy`.
 
 ### What Is Missing Beyond BBO
 
@@ -61,8 +62,8 @@ The repo is not blocked only by missing BBO. These gaps also matter:
 | Direct leverage measurement | Missing | `leverage_proxy` is only a heuristic; direct measures would come from funding, open interest, or liquidation data |
 | Canonical order-book OFI | Missing | Current `ofi` is signed trade imbalance, not queue-dynamics OFI from order-book updates |
 | Canonical VPIN | Missing | Current implementation is a useful time-bar proxy, not full volume-bucket VPIN |
-| Export of extra trade-side features | Missing from final CSV | Script 06 computes `volume`, `dollar_volume`, `trade_count`, `buy_ratio`, `vwap`, `log_return`, `realized_vol_10`, `realized_vol_200`, `roll_spread_*`, `ofi_autocorr_20`, but script 09 does not export them |
-| Robust Phase-1 anchor logic | Needs refinement | When anchors are computed on the gridded file, zero-filled bins can make OFI quantiles collapse toward zero |
+| Export of extra trade-side features | Fixed in current `Event_Dynamics_100ms.csv` | Script 09 now exports `volume`, `dollar_volume`, `buy_ratio`, `vwap`, `log_return`, `realized_vol_10`, `realized_vol_200`, and `ofi_autocorr_20` |
+| Robust Phase-1 anchor logic | Partially fixed | Script 11 now excludes exact zero-filled OFI bins when building phase quantiles |
 
 ### How Missing BBO Can Be Obtained
 
@@ -72,6 +73,7 @@ The missing BBO features are in scope of the existing design and do not require 
 |------|------|------|
 | Binance Vision `bookTicker` daily archives | Use [scripts/stage2_economics/05_download_event_ticks.py](scripts/stage2_economics/05_download_event_ticks.py) to download event windows with `aggTrades + bookTicker`, then rerun scripts 06, 09, 10, 11 | `mid_price`, `spread_bps`, `touch_depth`, `depth_imbalance`, plus any BBO-derived cross-features |
 | Tardis order-book feeds (`incremental_book_L2`) | Rebuild best bid / ask snapshots from order-book updates when Binance `bookTicker` coverage is unavailable or incomplete | Same BBO fields as above, potentially with richer queue-depth features |
+| Trade-only fallback proxy path | Use [scripts/stage2_economics/12_bbo_proxies.py](scripts/stage2_economics/12_bbo_proxies.py) after script 10 to append proxy BBO columns to the gridded CSV | Proxy `mid_price`, `spread_bps`, `touch_depth`, `depth_imbalance` for Phase 1 and Phase 3 unblocking |
 
 If `bookTicker` is unavailable for a given period, the recommended fallback is not to fabricate BBO values from trades. The correct fallback is to reconstruct the touch from an order-book feed or explicitly run the analysis as a trade-only proxy pipeline.
 
@@ -146,6 +148,7 @@ scripts/
     08_refine_event_timestamps.py
     09_produce_confounder_outputs.py
     10_augment_dynamics_features.py
+    12_bbo_proxies.py
     11_compute_prior_anchors.py
 
 src/
@@ -208,6 +211,7 @@ python scripts/stage2_economics/06_micro_feature_engineering.py
 python scripts/stage2_economics/08_refine_event_timestamps.py
 python scripts/stage2_economics/09_produce_confounder_outputs.py
 python scripts/stage2_economics/10_augment_dynamics_features.py
+python scripts/stage2_economics/12_bbo_proxies.py
 python scripts/stage2_economics/11_compute_prior_anchors.py
 ```
 
