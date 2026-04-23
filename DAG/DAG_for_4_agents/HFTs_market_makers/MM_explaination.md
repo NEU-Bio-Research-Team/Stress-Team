@@ -82,18 +82,22 @@ Sơ đồ DAG được mã hóa màu theo **Causal Inference**:
 
 → **Biến Treatment trung tâm**
 
-### Solvency Gate
-- Nếu:
+### Solvency Gate (DAG v2 — Margin Call)
+- Điều kiện thanh lý bắt buộc (thay thế W ≤ 0 cũ):
 \[
-W_{t-1} \le 0
+W_{t-1} \le \frac{|I_{t-1}| \cdot \bar{P}}{L}
 \]
-→ Agent bị loại khỏi hệ thống
+- Trong đó: $L$ = leverage ratio, $\bar{P}$ = giá trung bình vị thế, $|I|$ = notional mở
+- **Cơ sở**: Khi sử dụng đòn bẩy L, agent bị margin call trước khi tài sản ròng về 0. Rủi ro thanh lý bắt buộc kích hoạt cortisol bùng nổ (Prospect Theory — Kahneman & Tversky, 1979), đẩy stress từ "bình thường" sang "hoảng loạn" gần như tức thì.
+→ Agent bị **thanh lý bắt buộc** và loại khỏi hệ thống
 
 ---
 
 ## 4. Giai đoạn t: Cơ chế phòng vệ độc hại
 
 Stress kích hoạt 4 mediator:
+
+> **Ghi chú DAG v2 (Dual Scenario Protocol):** Hướng tác động của mediators phụ thuộc scenario stress response. **Scenario A (Fear)**: σ↑ → γ↑ (risk-averse, rút thanh khoản). **Scenario B (Anger)**: σ↑ → γ↓ (risk-seeking, overcommit). Simulation chạy CẢ 2. Xem chi tiết: `DAG/risk_aversion_direction_decision.md`
 
 ### 1. Mở rộng biên độ
 \[

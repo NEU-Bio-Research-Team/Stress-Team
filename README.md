@@ -1,363 +1,298 @@
-# Algorithmic Panic — Workspace
+# COMOSA / Algorithmic Panic - BTC Flash Crash Microstructure Research
 
-> **"Endogenous Stress as State Variable in Financial Markets"**  
-> Nghiên cứu mối quan hệ nhân quả giữa stress sinh lý và hành vi thị trường tài chính thông qua hệ thống ghép nối sinh-kỹ thuật (bio-technical coupled system).
+> LLM-Elicited Behavioral Priors for Heterogeneous Agent Simulation of BTC Flash Crash Dynamics with Causal Learning.
 
----
+This workspace is the market-only branch of the original project. The runnable code now focuses on BTCUSDT futures microstructure, flash crash event extraction, event-level feature engineering, and causal-analysis inputs for COMOSA. The old bio, WESAD, DREAMER, and PyTorch-heavy pipeline is no longer part of the active code path.
 
-## Mục lục
+## Feature Audit At A Glance
 
-1. [Tổng quan nghiên cứu](#1-tổng-quan-nghiên-cứu)
-2. [Trạng thái hiện tại](#2-trạng-thái-hiện-tại)
-3. [Thiết lập môi trường (Setup)](#3-thiết-lập-môi-trường-setup)
-4. [Cấu trúc workspace](#4-cấu-trúc-workspace)
-5. [Hướng dẫn tái tạo kết quả (Reproduce)](#5-hướng-dẫn-tái-tạo-kết-quả-reproduce)
-6. [Hệ thống tài liệu](#6-hệ-thống-tài-liệu)
-7. [Kết quả chính của Bio Stage](#7-kết-quả-chính-của-bio-stage)
+The documentation currently targets a richer event-level contract than the checked-in `Event_Dynamics_100ms.csv` always contains. The table below separates:
 
----
+- features required by the current COMOSA market-only docs,
+- whether the feature is already produced by code today,
+- whether the variable is literature-grounded, a reasonable proxy, or a heuristic composite,
+- and whether it depends on BBO / book state.
 
-## 1. Tổng quan nghiên cứu
+### Event-Level Feature Contract
 
-Nghiên cứu gồm 7 stages, được thiết kế trong tài liệu gốc:  
-[`Algorithmic Panic  Full Analysis & Dataset Audit.md`](Algorithmic%20Panic%20%20Full%20Analysis%20%26%20Dataset%20Audit.md)
+| Feature | Needed by docs | Current code status | Scientific status | How it is computed or sourced | Needs BBO? |
+|------|------|------|------|------|------|
+| `event_id` | Yes | Computed | Metadata | Event identifier from event catalog and refined timestamp pipeline | No |
+| `date` | Yes | Computed | Metadata | Event date copied from catalog | No |
+| `timestamp_ms` | Yes | Computed | Metadata | 100ms bin timestamp from event micro bars, then regularized by script 10 | No |
+| `timestamp_utc` | Yes | Computed | Metadata | UTC conversion of `timestamp_ms` | No |
+| `time_from_drop_start_ms` | Yes | Computed | Event-study alignment | `timestamp_ms - drop_start_ms` | No |
+| `phase` | Yes | Computed | Event-study heuristic | `pre / drop / recovery / post` split around start, bottom, and 50% retrace recovery marker | No |
+| `close` | Yes | Computed | Market microstructure standard | Last trade price in each fixed-width bin from `aggTrades` | No |
+| `ofi` | Yes | Computed | Proxy | Sum of signed trade volume in bin using Binance `is_buyer_maker` side inference; useful but not full queue-based OFI | No |
+| `trade_intensity` | Yes | Computed | Market microstructure standard | `trade_count / bin_seconds` | No |
+| `amihud_illiq` | Yes | Computed | Literature-grounded | `abs(log_return) / dollar_volume` | No |
+| `kyle_lambda` | Yes | Computed | Literature-grounded proxy | Rolling slope-like estimator `Cov(dp, signed_volume) / Var(signed_volume)` | No |
+| `vpin` | Yes | Computed | Proxy | Rolling imbalance ratio using buy vs sell trade volume on time bars; not canonical volume-bucket VPIN | No |
+| `realized_vol_50` | Yes | Computed | Literature-grounded | Rolling `sqrt(sum(log_return^2))` over 50 bins | No |
+| `leverage_proxy` | Yes | Computed | Heuristic proxy | `abs(drop_velocity) * abs(panic_acceleration) / realized_vol_50`; intended as margin-call stress proxy, not direct leverage measurement | No |
+| `order_flow_toxicity` | Yes | Computed | Heuristic composite | Equal-weight z-score composite of sell pressure from OFI, VPIN, Amihud, and realized volatility | No |
+| `velocity_pct_per_100ms` | Yes | Computed | Kinematic transform | Per-bin percent return rescaled to 100ms units | No |
+| `drop_velocity_pct_per_100ms` | Yes | Computed | Kinematic transform | Negative part of velocity, expressed as positive downward speed | No |
+| `panic_acceleration_pct_per_100ms2` | Yes | Computed | Kinematic transform | First difference of velocity, rescaled to 100ms squared units | No |
+| `drop_1s_pct` | Yes | Computed | Heuristic crash summary | Rolling 1-second sum of `drop_velocity_pct_per_100ms` | No |
+| `drop_from_local_pct` | Yes | Computed | Heuristic local dislocation proxy | Drawdown from rolling local reference price over recent bins | No |
+| `delta_from_news_ms` | Yes | Partially computed | Event-study standard | Offset to matched news timestamp when a timestamp-level news catalog exists; currently often empty because the catalog is missing | No |
+| `mid_price` | Yes | Missing in current outputs | Market microstructure standard | `(best_bid_price + best_ask_price) / 2` from `bookTicker` snapshots or L2 book | Yes |
+| `spread_bps` | Yes | Missing in current outputs | Market microstructure standard | `(best_ask - best_bid) / mid_price * 10000` | Yes |
+| `touch_depth` | Yes | Missing in current outputs | Market microstructure standard | `best_bid_qty + best_ask_qty` at the touch | Yes |
+| `depth_imbalance` | Yes | Missing in current outputs | Literature-grounded | `(best_bid_qty - best_ask_qty) / (best_bid_qty + best_ask_qty)` | Yes |
 
-| Stage | Tên | Trạng thái |
-|-------|-----|------------|
-| 0 | Causal Model Construction (DAG) | Lý thuyết |
-| **1** | **Stress Inference Engine (Bio Stage)** | **✅ CLOSED — 25 scripts, 5 phases** |
-| 2 | Market Simulator (ABM) | Data curation xong, ABM chưa bắt đầu |
-| 3 | Bio → Behavior Coupling | Chưa triển khai |
-| 4 | Feedback Dynamical System | Chưa triển khai |
-| 5 | Evidence Engine | Chưa triển khai |
-| 6 | Policy Analysis | Chưa triển khai |
+### Current Reading Of The Pipeline
 
-**Stage 1 (Bio Stage)** đã hoàn tất toàn bộ: data engineering, scientific validation, deep model exploration, advisor hypotheses, và stochastic law discovery. Kết quả chi tiết nằm trong [`reports/BIO_STAGE_CLOSING.md`](reports/BIO_STAGE_CLOSING.md).
+At the moment, the implemented event pipeline is strongest on trade-side features and crash dynamics. In practical terms:
 
----
+- the current outputs already support a useful trade-only event study,
+- the remaining schema gap is concentrated in BBO-dependent features,
+- and the weakest current variables are not the microstructure features, but the exploratory composites like `order_flow_toxicity` and `leverage_proxy`.
 
-## 2. Trạng thái hiện tại
+### What Is Missing Beyond BBO
 
-Bio Stage đã trả lời được các câu hỏi cốt lõi:
+The repo is not blocked only by missing BBO. These gaps also matter:
 
-| Câu hỏi | Kết quả | Bằng chứng |
-|---------|---------|------------|
-| Stress có phát hiện được từ ECG? | ✅ Có, bal_acc=0.763, hr_mean d=1.55 | Script 10 |
-| Tín hiệu có phải là confound? | ✅ Không — GRL Δ=+0.014 (ROBUST) | Script 12 |
-| Deep learning có vượt LogReg? | ❌ Không — LogReg 0.763 > CNN 0.686 | Script 17 |
-| σ(t) tuân theo quy luật gì? | OU mean-reversion (15/15 subjects) | Script 24 |
-| θ là hằng số sinh lý? | ❌ Không — artifact do window size | Script 25 |
+| Gap | Current status | Why it matters |
+|------|------|------|
+| Timestamp-level news catalog | Missing | `delta_from_news_ms` stays empty without `data/processed/tardis/news/news_events_utc.csv` |
+| Direct leverage measurement | Missing | `leverage_proxy` is only a heuristic; direct measures would come from funding, open interest, or liquidation data |
+| Canonical order-book OFI | Missing | Current `ofi` is signed trade imbalance, not queue-dynamics OFI from order-book updates |
+| Canonical VPIN | Missing | Current implementation is a useful time-bar proxy, not full volume-bucket VPIN |
+| Export of extra trade-side features | Missing from final CSV | Script 06 computes `volume`, `dollar_volume`, `trade_count`, `buy_ratio`, `vwap`, `log_return`, `realized_vol_10`, `realized_vol_200`, `roll_spread_*`, `ofi_autocorr_20`, but script 09 does not export them |
+| Robust Phase-1 anchor logic | Needs refinement | When anchors are computed on the gridded file, zero-filled bins can make OFI quantiles collapse toward zero |
 
-→ Workspace sẵn sàng cho Stage 2 (ABM). Xem chi tiết tại [`reports/BIO_STAGE_CLOSING.md § IV`](reports/BIO_STAGE_CLOSING.md).
+### How Missing BBO Can Be Obtained
 
----
+The missing BBO features are in scope of the existing design and do not require inventing new formulas. They can be recovered in either of these ways:
 
-## 3. Thiết lập môi trường (Setup)
+| Source | How to use it | Expected outputs |
+|------|------|------|
+| Binance Vision `bookTicker` daily archives | Use [scripts/stage2_economics/05_download_event_ticks.py](scripts/stage2_economics/05_download_event_ticks.py) to download event windows with `aggTrades + bookTicker`, then rerun scripts 06, 09, 10, 11 | `mid_price`, `spread_bps`, `touch_depth`, `depth_imbalance`, plus any BBO-derived cross-features |
+| Tardis order-book feeds (`incremental_book_L2`) | Rebuild best bid / ask snapshots from order-book updates when Binance `bookTicker` coverage is unavailable or incomplete | Same BBO fields as above, potentially with richer queue-depth features |
 
-### 3.1 Yêu cầu hệ thống
+If `bookTicker` is unavailable for a given period, the recommended fallback is not to fabricate BBO values from trades. The correct fallback is to reconstruct the touch from an order-book feed or explicitly run the analysis as a trade-only proxy pipeline.
 
-| Thành phần | Yêu cầu |
-|-----------|---------|
-| **Python** | 3.10+ (tested: 3.10 trên Anaconda) |
-| **GPU** | NVIDIA GPU + CUDA 12.1 (cho scripts 12, 16–25 dùng PyTorch) |
-| **RAM** | ≥ 8 GB |
-| **Disk** | ~15 GB (datasets + processed output) |
+## What This Repo Contains
 
-### 3.2 Tạo conda environment
+The repository is organized around three linked goals:
+
+| Phase | Goal | Status in this repo |
+|------|------|---------------------|
+| Phase 1 | Prepare empirical anchors for offline LLM prompting | Script support is present via scripts 10 and 11; the prompt-execution layer is not implemented here |
+| Phase 2 | Build BTC flash crash event data from raw market feeds | Implemented |
+| Phase 3 | Validate causal structure and export DAG-oriented artifacts | Implemented |
+
+In practical terms, the codebase currently does four things well:
+
+- fetches BTC futures data from Binance Vision or Tardis,
+- audits and preprocesses raw market data,
+- constructs event-level flash crash datasets at 10ms / 100ms / 1s resolution,
+- exports artifacts used for DAG validation and Phase-1 prior calibration.
+
+## Source Of Truth
+
+If you are new to the workspace, read these files first:
+
+1. `Comosa-Plan-Rewritten.md` - high-level research specification for the market-only COMOSA path.
+2. `reports/DATA_PIPELINE.md` - lineage from raw BTC data to event-level outputs.
+3. `config/settings.py` - central paths, thresholds, and pipeline constants.
+4. `DAG/` - conceptual DAG notes and per-agent diagrams.
+
+Important note: some files under `DAG/` still use older bio-technical language. The executable source code and `Comosa-Plan-Rewritten.md` are the source of truth for the current scope.
+
+## Environment Setup
+
+Create a clean Python environment and install the minimal dependencies:
 
 ```powershell
-# Tạo environment
 conda create -n stress python=3.10 -y
 conda activate stress
-
-# Cài dependencies cơ bản
 pip install -r requirements.txt
-
-# Cài PyTorch với CUDA 12.1 (BẮT BUỘC cho Phase 2–4)
-pip install torch --index-url https://download.pytorch.org/whl/cu121
-
-# Xác nhận PyTorch + GPU
-python -c "import torch; print(f'PyTorch {torch.__version__}, CUDA={torch.cuda.is_available()}')"
 ```
 
-> **Lưu ý Windows:** Nếu gặp `UnicodeEncodeError` khi chạy scripts, set biến môi trường:
-> ```powershell
-> $env:PYTHONIOENCODING = "utf-8"
-> ```
+Optional environment variable for paid Tardis downloads:
 
-### 3.3 Chuẩn bị datasets (BẮT BUỘC)
-
-Ba datasets cần được đặt đúng vị trí trong `data/raw/` **trước khi chạy bất kỳ script nào**:
-
-#### Dataset 1: WESAD
-
-- **Nguồn:** [UCI Machine Learning Repository](https://archive.ics.uci.edu/dataset/465/wesad+wearable+stress+and+affect+detection) hoặc [Zenodo](https://zenodo.org/records/7610964)
-- **Tải about:** File `WESAD.zip` (~2.5 GB)
-- **Giải nén vào:** `data/raw/wesad/` sao cho đường dẫn cuối cùng là:
-
-```
-data/raw/wesad/
-└── WESAD_extracted/
-    └── WESAD/
-        ├── S2/
-        │   ├── S2.pkl              ← File chính (chest + wrist)
-        │   └── S2_respiban.txt     ← Fallback nếu .pkl lỗi
-        ├── S3/
-        ├── S4/
-        ├── ...
-        └── S17/
+```powershell
+$env:TARDIS_API_KEY = "your_key_here"
 ```
 
-> **Quan trọng:** Pipeline đọc từ `data/raw/wesad/WESAD_extracted/WESAD/SXX/SXX.pkl`. Nếu đường dẫn khác, sửa `WESAD_RAW_DIR` trong `config/settings.py`.
+If `TARDIS_API_KEY` is not set, the fetch pipeline defaults to Binance Vision.
 
-#### Dataset 2: DREAMER
+## Repository Layout
 
-- **Nguồn:** [DREAMER Dataset](https://zenodo.org/records/546113) (cần request access)
-- **Tải về:** File `DREAMER.mat` (~1.2 GB)
-- **Đặt tại:**
+```text
+config/
+  settings.py                    Central configuration for paths and thresholds
 
+scripts/
+  phase1_data_engineering/
+    00_fetch_tardis.py           Download BTC futures data
+    03_audit_tardis.py           Run T1-T15 audit checks
+    06_preprocess_tardis.py      Daily preprocessing pipeline
+    07_extract_features.py       Aggregate processed parquet into market_features.csv
+    09_stylized_facts.py         Validate stylized facts on BTC returns
+
+  stage2_economics/
+    00_reindex_ticks.py          Raw trades -> ms parquet
+    01_build_multiresolution_bars.py
+    02_hft_feature_engineering.py
+    04_detect_flash_crashes.py   Detect flash crash events
+    05_download_event_ticks.py   Download event windows (aggTrades + bookTicker)
+    06_micro_feature_engineering.py
+    07_dag_validation.py         Structural break, Granger, IRF analyses
+    08_refine_event_timestamps.py
+    09_produce_confounder_outputs.py
+    10_augment_dynamics_features.py
+    11_compute_prior_anchors.py
+
+src/
+  analysis/ audit/ data/ features/ preprocessing/ utils/
+
+data/
+  raw/tardis/                    Raw downloads
+  processed/tardis/              Main generated artifacts
+
+reports/
+  DATA_PIPELINE.md               Pipeline lineage documentation
+  audit/                         Audit outputs
+  validation/                    Currently empty in this branch
+
+DAG/
+  DAG.md
+  Explanation_DAG.md
+  DAG_for_4_agents/
 ```
-data/raw/dreamer/
-└── DREAMER.mat
-```
 
-#### Dataset 3: Tardis BTC (tự động tải)
+## Recommended Workflows
 
-Dữ liệu BTC futures được tải tự động bởi Script 00 từ Binance Vision (miễn phí, không cần API key):
+There are three distinct workflows in the repo. Use the one that matches your goal.
 
-```
-data/raw/tardis/                   ← Script 00 tự tạo và populate
-```
+### 1. Daily Market Pipeline
 
-> **Tùy chọn:** Nếu muốn dùng Tardis.dev API (mất phí, dữ liệu đầy đủ hơn):
-> ```powershell
-> $env:TARDIS_API_KEY = "your_key_here"
-> python scripts/phase1_data_engineering/00_fetch_tardis.py --source tardis
-> ```
-
-### 3.4 Kiểm tra setup
-
-Sau khi chuẩn bị xong, verify:
+Use this path if you want a lightweight market-data build, audit, and stylized-facts check.
 
 ```powershell
 conda activate stress
 
-# Kiểm tra Python + PyTorch + GPU
-python -c "import torch; print(f'PyTorch {torch.__version__}, CUDA={torch.cuda.is_available()}, GPU={torch.cuda.get_device_name(0) if torch.cuda.is_available() else ''}')"
-
-# Kiểm tra datasets đã có
-python -c "from config.settings import WESAD_RAW_DIR; print('WESAD:', WESAD_RAW_DIR.exists())"
-python -c "from config.settings import RAW_DIR; print('DREAMER:', (RAW_DIR / 'dreamer' / 'DREAMER.mat').exists())"
-
-# Kiểm tra dependencies
-python -c "import numpy, pandas, scipy, sklearn, matplotlib; print('All core deps OK')"
-```
-
-Kết quả mong đợi:
-```
-PyTorch 2.5.1+cu121, CUDA=True, GPU=NVIDIA GeForce RTX 3050 Laptop GPU
-WESAD: True
-DREAMER: True
-All core deps OK
-```
-
----
-
-## 4. Cấu trúc workspace
-
-```
-NCKH/
-├── README.md                                              ← File này
-├── Algorithmic Panic  Full Analysis & Dataset Audit.md    ← Tài liệu nghiên cứu gốc (7 stages)
-├── requirements.txt                                       ← Python dependencies
-│
-├── config/
-│   └── settings.py              # Cấu hình tập trung (paths, constants, thresholds)
-│
-├── src/                         # Source package
-│   ├── data/                    #   Data loaders (WESAD .pkl, DREAMER .mat, Tardis API)
-│   ├── audit/                   #   Dataset audit checks (W1-W12, D1-D12, T1-T15, CA1-CA6)
-│   ├── preprocessing/           #   Signal processing (ECG, EDA, EEG, market bars)
-│   ├── features/                #   Feature extraction (HRV, EDA, DE, market)
-│   ├── validation/              #   ML validation (LOSOCV, GRL, shortcuts, scaling)
-│   ├── analysis/                #   Stylized facts analysis
-│   └── utils/                   #   IO helpers, plotting
-│
-├── scripts/                     # 25 runner scripts, chia theo phase
-│   ├── phase1_data_engineering/ #   Scripts 00-09: audit, preprocess, features, alignment
-│   ├── phase2_validation/       #   Scripts 10-15: baselines, shortcuts, GRL, minimal model
-│   ├── phase3_deep_models/      #   Scripts 16-18: DREAMER recovery, WESAD CNN, post-validation
-│   ├── phase3_improvements/     #   Scripts 19-22: threshold, connectivity, R-R, label ceiling
-│   ├── phase4_representation/   #   Scripts 23-25: transfer, OU process, final validation
-│   ├── stage2_economics/        #   (chưa triển khai — placeholder cho ABM)
-│   ├── README.md                #   ← Cấu trúc scripts + thứ tự chạy chi tiết
-│   └── RUN_CHECKLIST.md         #   ← Checklist chạy Phase 3+ (có troubleshooting)
-│
-├── data/
-│   ├── raw/                     # ⚠ CẦN TỰ CHUẨN BỊ (xem §3.3)
-│   │   ├── wesad/               #   WESAD_extracted/WESAD/S2..S17/*.pkl
-│   │   ├── dreamer/             #   DREAMER.mat
-│   │   └── tardis/              #   Tự tải bởi Script 00
-│   ├── interim/                 # Dữ liệu trung gian
-│   └── processed/               # Output đã xử lý
-│       ├── wesad/               #   15 × .npz (17,367 windows)
-│       ├── dreamer/             #   23 × .npz (85,744 windows)
-│       └── tardis/              #   Daily parquet + flash_crashes.csv + stylized_facts.json
-│
-├── reports/                     # Kết quả phân tích
-│   ├── BIO_STAGE_CLOSING.md     #   ← BÁO CÁO TỔNG KẾT BIO STAGE
-│   ├── PROGRESS.md              #   ← Log tiến trình chi tiết (1600+ dòng)
-│   ├── audit/                   #   Audit reports (CSV)
-│   ├── alignment/               #   Cross-dataset alignment (JSON)
-│   └── validation/              #   21 JSON + 2 MD validation reports
-│
-└── notebooks/                   # (trống — dành cho exploration)
-```
-
----
-
-## 5. Hướng dẫn tái tạo kết quả (Reproduce)
-
-### 5.1 Phase 1 — Data Engineering (Scripts 00–09)
-
-Audit datasets → preprocess signals → extract features → validate alignment + stylized facts.
-
-```powershell
-conda activate stress
-
-# Tải BTC data (Binance Vision, miễn phí)
-python scripts/phase1_data_engineering/00_fetch_tardis.py
-
-# Audit cả 3 datasets
-python scripts/phase1_data_engineering/01_audit_wesad.py
-python scripts/phase1_data_engineering/02_audit_dreamer.py
+python scripts/phase1_data_engineering/00_fetch_tardis.py --mode klines
 python scripts/phase1_data_engineering/03_audit_tardis.py
-
-# Preprocess
-python scripts/phase1_data_engineering/04_preprocess_wesad.py
-python scripts/phase1_data_engineering/05_preprocess_dreamer.py
 python scripts/phase1_data_engineering/06_preprocess_tardis.py
-
-# Features, alignment, stylized facts
 python scripts/phase1_data_engineering/07_extract_features.py
-python scripts/phase1_data_engineering/08_alignment_check.py
 python scripts/phase1_data_engineering/09_stylized_facts.py
 ```
 
-**Output:** `data/processed/` (3 datasets) + `reports/audit/` + `reports/alignment/`
+Typical outputs from this path:
 
-### 5.2 Phase 2 — Scientific Validation (Scripts 10–15)
+- `data/processed/tardis/btc_features_1min.parquet`
+- `data/processed/market_features.csv`
+- `data/processed/tardis/stylized_facts.json`
+- `reports/audit/tardis_audit.csv`
 
-Prove signal → detect shortcuts → adversarial test → minimal model → validity reports.
+### 2. Core Event-Driven Flash Crash Pipeline
 
-```powershell
-python scripts/phase2_validation/10_learnability_baselines.py
-python scripts/phase2_validation/11_subject_classifier_probe.py
-python scripts/phase2_validation/12_adversarial_grl.py          # Cần PyTorch + GPU
-python scripts/phase2_validation/13_minimal_model.py
-python scripts/phase2_validation/14_dreamer_ica_check.py
-python scripts/phase2_validation/15_generate_validity_report.py
-```
+Use this path if you want the main COMOSA dataset for event-level analysis.
 
-**Output:** `reports/validation/baseline_results_*.json`, `adversarial_results_*.json`, `model_validity_report_*.md`
-
-### 5.3 Phase 3 — Deep Model Exploration (Scripts 16–18)
-
-DREAMER recovery (z-norm + valence) → WESAD raw ECG CNN → post-recovery validation.
+Important: `00_fetch_tardis.py` defaults to `--mode klines`. For the event pipeline you typically want raw trade data.
 
 ```powershell
-python scripts/phase3_deep_models/16_dreamer_recovery.py           # ~15-30 min
-python scripts/phase3_deep_models/17_wesad_deep_model.py           # ~30-60 min, GPU
-python scripts/phase3_deep_models/18_dreamer_post_recovery_validation.py  # ~30-60 min
+conda activate stress
+
+python scripts/phase1_data_engineering/00_fetch_tardis.py --mode aggtrades
+python scripts/stage2_economics/00_reindex_ticks.py
+python scripts/stage2_economics/04_detect_flash_crashes.py
+python scripts/stage2_economics/05_download_event_ticks.py
+python scripts/stage2_economics/06_micro_feature_engineering.py
+python scripts/stage2_economics/08_refine_event_timestamps.py
+python scripts/stage2_economics/09_produce_confounder_outputs.py
+python scripts/stage2_economics/10_augment_dynamics_features.py
+python scripts/stage2_economics/11_compute_prior_anchors.py
 ```
 
-**Output:** `reports/validation/dreamer_recovery_results.json`, `deep_model_results_wesad.json`
+Key outputs from this path:
 
-> **Troubleshooting Phase 3+:** Xem [`scripts/RUN_CHECKLIST.md`](scripts/RUN_CHECKLIST.md) — có hướng dẫn xử lý CUDA OOM, decision tree cho kết quả, và checklist từng bước.
+- `data/processed/tardis/event_catalog.csv`
+- `data/processed/tardis/event_catalog_tick_refined.csv`
+- `data/processed/tardis/confounder_outputs/Event_Dynamics_100ms.csv`
+- `data/processed/tardis/confounder_outputs/Event_Dynamics_100ms_gridded.csv`
+- `data/processed/tardis/confounder_outputs/Flash_Crash_Events_Labeled.csv`
+- `data/processed/tardis/confounder_outputs/Empirical_Benchmarks.json`
+- `data/processed/tardis/confounder_outputs/prior_anchors.json`
 
-### 5.4 Phase 3+ — Advisor Hypotheses (Scripts 19–22)
+### 3. Optional HFT Bar And Diagnostics Pipeline
 
-Threshold optimization → DREAMER connectivity → R-R interval model → label noise ceiling.
+Use this path if you want bar-based microstructure features or DAG-oriented diagnostics beyond the event CSV.
 
 ```powershell
-python scripts/phase3_improvements/19_cnn_threshold_optimization.py   # ~20 min, GPU
-python scripts/phase3_improvements/20_dreamer_connectivity.py          # ~15 min
-python scripts/phase3_improvements/21_rr_interval_model.py             # ~30 min, GPU
-python scripts/phase3_improvements/22_dreamer_label_noise_ceiling.py   # ~5 min
+conda activate stress
+
+python scripts/stage2_economics/01_build_multiresolution_bars.py
+python scripts/stage2_economics/02_hft_feature_engineering.py
+python scripts/stage2_economics/07_dag_validation.py
 ```
 
-**Output:** `reports/validation/threshold_optimization_results.json`, `rr_interval_results.json`, `dreamer_label_noise_ceiling.json`
+Outputs from this path include:
 
-### 5.5 Phase 4 — Stochastic Law Discovery (Scripts 23–25)
+- `data/processed/tardis/bars/`
+- `data/processed/tardis/hft_features/`
+- `data/processed/tardis/dag_validation/granger_results.csv`
+- `data/processed/tardis/dag_validation/impulse_responses.csv`
+- `data/processed/tardis/dag_validation/crash_anatomy.csv`
+- `data/processed/tardis/dag_validation/dag_validation_summary.json`
 
-Cross-dataset representation transfer → OU process identification → 4 robustness tests.
+## Current Checked-In Artifacts
 
-```powershell
-python scripts/phase4_representation/23_representation_transfer.py       # ~20 min, GPU
-python scripts/phase4_representation/24_stress_process_identification.py # ~5 min
-python scripts/phase4_representation/25_final_validation.py              # ~10 min
-```
+The repository already contains generated outputs under `data/processed/tardis/`, including:
 
-**Output:** `reports/validation/stress_process_identification.json`, `final_validation.json`
+- `btc_features_1min.parquet`
+- `event_catalog.csv`
+- `event_catalog_tick_refined.csv`
+- `flash_crashes.csv`
+- `stylized_facts.json`
+- `confounder_outputs/Event_Dynamics_100ms.csv`
+- `confounder_outputs/Flash_Crash_Events_Labeled.csv`
+- `confounder_outputs/Empirical_Benchmarks.json`
+- `dag_validation/granger_results.csv`
+- `dag_validation/impulse_responses.csv`
+- `dag_validation/crash_anatomy.csv`
+- `dag_validation/regime_statistics.csv`
 
-> **Thứ tự chạy là TUYỆT ĐỐI — mỗi phase phụ thuộc vào output của phase trước.** Cấu trúc scripts chi tiết hơn nằm trong [`scripts/README.md`](scripts/README.md).
+Some outputs are generated on demand and may not be committed in every branch, especially:
 
----
+- `Event_Dynamics_100ms_gridded.csv`
+- `prior_anchors.json`
+- `market_features.csv`
 
-## 6. Hệ thống tài liệu
+## Important Script Notes
 
-Workspace có 4 tầng tài liệu, từ tổng quan đến chi tiết:
+- `scripts/phase1_data_engineering/00_fetch_tardis.py` supports both Binance Vision and Tardis. Binance Vision is the free default.
+- `scripts/stage2_economics/00_reindex_ticks.py` expects raw trade files under `data/raw/tardis/trades/`.
+- `scripts/stage2_economics/05_download_event_ticks.py` downloads targeted event windows from Binance Vision, not from the earlier daily processed artifacts.
+- `scripts/stage2_economics/10_augment_dynamics_features.py` regularizes the 100ms event data for NOTEARS / LiNGAM style downstream use.
+- `scripts/stage2_economics/11_compute_prior_anchors.py` converts event-level empirical distributions into Phase-1 anchor statistics for offline LLM prompting.
 
-| Tài liệu | Đặc điểm | Đọc khi nào |
-|-----------|----------|-------------|
-| **README.md** (file này) | Setup, cấu trúc, hướng dẫn reproduce | Mới clone repo, muốn chạy lại |
-| [**reports/BIO_STAGE_CLOSING.md**](reports/BIO_STAGE_CLOSING.md) | Báo cáo tổng kết Bio Stage: 3 datasets, 5 phases (25 scripts), 10 confirmed claims, 8 falsified claims, 8 emergent insights, ABM specification, toàn bộ kết quả số | Muốn hiểu **Bio Stage đã chứng minh được gì** và **Stage 2 cần gì** |
-| [**scripts/README.md**](scripts/README.md) | Cấu trúc thư mục scripts, thứ tự thực thi, output locations | Muốn biết **chạy script nào, ở đâu** |
-| [**scripts/RUN_CHECKLIST.md**](scripts/RUN_CHECKLIST.md) | Checklist pre-flight, decision tree sau khi chạy, troubleshooting (CUDA OOM, Unicode, etc.) | Đang **chạy Phase 3+** và gặp lỗi hoặc cần interpret kết quả |
-| [**reports/PROGRESS.md**](reports/PROGRESS.md) | Log chi tiết 1600+ dòng: mỗi script làm gì, kết quả cụ thể, bugs đã fix | Muốn đọc **diary của quá trình phát triển** |
-| [**reports/validation/model_validity_report_wesad.md**](reports/validation/model_validity_report_wesad.md) | Paper-ready validation report cho WESAD (5 sections) | Viết paper, cần **bảng/số liệu cho validation section** |
-| [**reports/validation/model_validity_report_dreamer.md**](reports/validation/model_validity_report_dreamer.md) | Paper-ready validation report cho DREAMER (negative control) | Viết paper, cần **negative control evidence** |
-| [**Algorithmic Panic Full Analysis & Dataset Audit.md**](Algorithmic%20Panic%20%20Full%20Analysis%20%26%20Dataset%20Audit.md) | Tài liệu nghiên cứu gốc: 7 stages, audit checklists, falsification suite | Muốn hiểu **toàn bộ research design** từ đầu |
-| [**scripts/stage2_economics/README.md**](scripts/stage2_economics/README.md) | Inputs từ Bio Stage cho ABM, constraints, planned scripts | Bắt đầu **Stage 2** |
+## Research Positioning
 
-### Thứ tự đọc đề xuất cho người mới
+This branch stops at empirical calibration and causal-analysis preparation. The following are planned conceptually but are not implemented as runnable modules in the current repo:
 
-```
-1. README.md (file này)                    → Setup + tổng quan
-2. Algorithmic Panic Full Analysis.md      → Hiểu research design
-3. reports/BIO_STAGE_CLOSING.md            → Kết quả + insights + handoff
-4. scripts/README.md                       → Cấu trúc scripts nếu muốn reproduce
-```
+- the offline LLM prompt execution layer for archetype priors,
+- the heterogeneous-agent LOB simulator,
+- policy-intervention experiments on the simulator output.
 
----
+In other words, the current repository is strongest on data engineering, market microstructure feature construction, event labeling, and causal-analysis inputs.
 
-## 7. Kết quả chính của Bio Stage
+## Quick Start For New Readers
 
-> Chi tiết đầy đủ: [`reports/BIO_STAGE_CLOSING.md`](reports/BIO_STAGE_CLOSING.md)
+If you only want to understand the project without running everything:
 
-### Confirmed
+1. Read `Comosa-Plan-Rewritten.md`.
+2. Read `reports/DATA_PIPELINE.md`.
+3. Inspect `config/settings.py`.
+4. Open `data/processed/tardis/confounder_outputs/Event_Dynamics_100ms.csv`.
+5. Review `data/processed/tardis/dag_validation/dag_validation_summary.json`.
 
-- **Stress detection từ ECG-HRV là khả thi:** bal_acc = 0.763 (LogReg, 7 features), AUC = 0.913 (RRCNN1D, R-R intervals)
-- **Tín hiệu là sinh lý thực sự**, không phải confound subject identity (GRL adversarial Δ = +0.014)
-- **σ(t) tuân theo OU mean-reversion:** 15/15 subjects, tất cả window sizes, bias-corrected
-- **Standard OU đủ**, không cần fractional extension (ΔBIC = -377)
-- **BTC futures có đủ 5 Cont stylized facts** để làm calibration target cho ABM
+## Last Updated
 
-### Falsified
-
-- Deep learning KHÔNG vượt LogReg cho stress detection (tín hiệu quá đơn giản — 1 feature dominant)
-- θ = 0.074 KHÔNG phải hằng số sinh lý (window size artifact, slope = 0.979)
-- EEG connectivity KHÔNG transfer cross-subject với 14-channel consumer EEG
-- DREAMER accuracy = 0.600 = label noise ceiling (không thể cải thiện bằng model/features)
-
-### Handoff cho Stage 2
-
-ABM specification đề xuất:
-
-$$d\sigma_i = \theta_i(\mu_i - \sigma_i)dt + \eta_i dW_i$$
-
-Với $\theta_i$ phải calibrate tại ABM time-step (không fix tại 0.074), ~13% agents là extreme responders. Xem [`reports/BIO_STAGE_CLOSING.md § IV.3`](reports/BIO_STAGE_CLOSING.md) cho specification đầy đủ.
-
----
-
-*Cập nhật lần cuối: 2026-02-20*
+2026-04-23

@@ -103,12 +103,13 @@ Dưới áp lực tâm lý, kết hợp với bất lợi về độ trễ vật
 
 ---
 
-### Solvency Gate
+### Solvency Gate (DAG v2 — Margin Call)
 \[
-W_{t-1} \le 0
+W_{t-1} \le \frac{|I_{t-1}| \cdot \bar{P}}{L}
 \]
-
-→ Loại khỏi hệ thống
+- Trong đó: $L$ = leverage ratio, $\bar{P}$ = giá trung bình vị thế
+- **Cơ sở**: Noise trader bị adverse selection nặng nhất do delay vật lý ($\eta_L$). Kết hợp với đòn bẩy, thua lỗ từ slippage nhanh chóng vi phạm margin → thanh lý hàng loạt.
+→ **Thanh lý bắt buộc** và loại khỏi hệ thống
 
 ---
 
@@ -137,8 +138,13 @@ I_{thr}(\sigma)
 
 ### Giảm độ xông xáo
 \[
-\alpha_t \downarrow
+\alpha_t \downarrow \quad \text{(Scenario A — Fear)}
 \]
+\[
+\alpha_t \uparrow \quad \text{(Scenario B — Anger)}
+\]
+
+> **DAG v2 Note**: Hướng $\alpha$ phụ thuộc Dual Scenario Protocol. Xem `DAG/risk_aversion_direction_decision.md`
 
 ---
 

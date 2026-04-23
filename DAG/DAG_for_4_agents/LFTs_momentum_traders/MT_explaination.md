@@ -105,12 +105,13 @@ Khi thị trường rung lắc:
 
 ---
 
-### Solvency Gate
+### Solvency Gate (DAG v2 — Margin Call)
 \[
-W_{t-1} \le 0
+W_{t-1} \le \frac{|I_{t-1}| \cdot \bar{P}}{L}
 \]
-
-→ Bị loại khỏi hệ thống
+- Trong đó: $L$ = leverage ratio, $\bar{P}$ = giá trung bình vị thế
+- **Cơ sở**: Đòn bẩy cao làm momentum trader nhạy cảm hơn với thua lỗ. Giảm giá nhỏ ăn lẹm vào vốn chủ sở hữu, vi phạm giới hạn rủi ro tự động → kích hoạt thanh lý bắt buộc trước khi W = 0.
+→ Bị **thanh lý bắt buộc** và loại khỏi hệ thống
 
 ---
 
@@ -141,8 +142,13 @@ I_{thr}(\sigma)
 
 ### Giảm độ xông xáo
 \[
-\alpha_t \downarrow
+\alpha_t \downarrow \quad \text{(Scenario A — Fear)}
 \]
+\[
+\alpha_t \uparrow \quad \text{(Scenario B — Anger)}
+\]
+
+> **DAG v2 Note**: Hướng $\alpha$ phụ thuộc Dual Scenario Protocol. Xem `DAG/risk_aversion_direction_decision.md`
 
 ---
 

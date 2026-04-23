@@ -18,7 +18,7 @@ graph LR
         Vol_t1 -->|"Kích hoạt hoảng loạn"| Stress_t1
     end
 
-    Solvency{"Kiểm duyệt Phá sản<br/>(W_{t-1} > 0 ?)"}
+    Solvency{"Kiểm duyệt Margin Call<br/>(W ≤ |I|·P̄/L ?)"}
     W_t1 ==>|"Quyết định sinh tử"| Solvency
 
     subgraph Time_t ["Kỳ t (Hiện tại - Cơ chế Vi mô Momentum)"]

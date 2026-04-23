@@ -1,5 +1,5 @@
 """
-Plotting utilities for audits and EDA.
+Plotting utilities for audits and exploratory analysis.
 """
 import numpy as np
 from pathlib import Path
