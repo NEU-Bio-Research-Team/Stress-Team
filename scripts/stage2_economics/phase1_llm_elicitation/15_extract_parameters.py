@@ -29,6 +29,7 @@ OUTPUT_CSV = PROJECT_ROOT / "data" / "processed" / "tardis" / "phase1_outputs" /
 DRY_RUN_OUTPUT_CSV = PROJECT_ROOT / "data" / "processed" / "tardis" / "phase1_outputs" / "raw_elicited.dry_run.csv"
 ERROR_LOG = PROJECT_ROOT / "data" / "processed" / "tardis" / "phase1_outputs" / "extract_errors.log"
 DRY_RUN_ERROR_LOG = PROJECT_ROOT / "data" / "processed" / "tardis" / "phase1_outputs" / "extract_errors.dry_run.log"
+NOISE_TRADER_SIDE_REBALANCE_SEED = 42
 
 NUMERIC_FIELD_ALIASES = {
     "aggressiveness": ["aggressiveness"],
@@ -212,6 +213,25 @@ def print_summary(frame: pd.DataFrame) -> None:
             )
 
 
+def rebalance_noise_trader_sides(frame: pd.DataFrame) -> tuple[pd.DataFrame, int, int, int]:
+    updated = frame.copy()
+    noise_mask = (
+        (updated["parse_status"] == "parsed")
+        & (updated["agent_type"] == "noise_trader")
+    )
+    if not noise_mask.any():
+        return updated, 0, 0, 0
+
+    noise_rows = updated.loc[noise_mask].sort_values("run_id")
+    sell_index = noise_rows.sample(frac=0.5, random_state=NOISE_TRADER_SIDE_REBALANCE_SEED).index
+    updated.loc[noise_rows.index, "side"] = "buy"
+    updated.loc[sell_index, "side"] = "sell"
+
+    buy_count = int((updated.loc[noise_rows.index, "side"] == "buy").sum())
+    sell_count = int((updated.loc[noise_rows.index, "side"] == "sell").sum())
+    return updated, int(len(noise_rows)), buy_count, sell_count
+
+
 def main() -> None:
     args = parse_args()
     input_json, output_csv, error_log = choose_paths(args)
@@ -238,9 +258,16 @@ def main() -> None:
     new_frame = pd.DataFrame(parsed_rows, columns=PARSED_RECORD_COLUMNS)
     combined = pd.concat([existing_frame, new_frame], ignore_index=True)
     combined = combined.drop_duplicates(subset=["run_id"], keep="last").sort_values("run_id").reset_index(drop=True)
+    combined, noise_row_count, noise_buy_count, noise_sell_count = rebalance_noise_trader_sides(combined)
 
     atomic_write_csv(output_csv, combined)
     write_error_log(error_log, combined)
+    if noise_row_count:
+        print(
+            "\n  [INFO] Applied deterministic 50/50 side rebalance to "
+            f"{noise_row_count} parsed noise_trader rows "
+            f"(seed={NOISE_TRADER_SIDE_REBALANCE_SEED}): buy={noise_buy_count}, sell={noise_sell_count}"
+        )
     print_summary(combined)
     print("\nDone.")
 

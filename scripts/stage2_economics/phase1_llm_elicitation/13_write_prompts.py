@@ -113,6 +113,13 @@ NON_NEGATIVE_IMPUTED_COLUMNS = {
 }
 
 
+def format_percent_value(value: Any, decimals: int = 2) -> str:
+    numeric = safe_float(value, decimals=12)
+    if numeric is None:
+        return "null"
+    return f"{numeric:.{decimals}f}%"
+
+
 def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(description="Generate Phase 1 LLM elicitation prompts")
     parser.add_argument("--input-csv", type=Path, default=None,
@@ -401,6 +408,7 @@ def build_user_prompt(
 Phase: {phase}
 
 Empirical market state sampled from the event dynamics table:
+Note: fields ending in _pct below are already expressed in percentage points.
 - event_id: {int(row.get('event_id', -1))}
 - timestamp_ms: {int(row.get('timestamp_ms', -1))}
 - timestamp_utc: {row.get('timestamp_utc')}
@@ -409,8 +417,8 @@ Empirical market state sampled from the event dynamics table:
 - mid_price: {safe_float(row.get('mid_price'))}
 - moving_average_50: {safe_float(row.get('moving_average_50'))}
 - moving_average_200: {safe_float(row.get('moving_average_200'))}
-- price_vs_ma_50_pct: {safe_float(row.get('price_vs_ma_50_pct'))}
-- price_vs_ma_200_pct: {safe_float(row.get('price_vs_ma_200_pct'))}
+- price_vs_ma_50_pct: {format_percent_value(row.get('price_vs_ma_50_pct'))}
+- price_vs_ma_200_pct: {format_percent_value(row.get('price_vs_ma_200_pct'))}
 - current_inventory_units: 0.0
 - current_inventory_notional: 0.0
 - inventory_state: flat
@@ -425,7 +433,7 @@ Empirical market state sampled from the event dynamics table:
 - amihud_illiq: {safe_float(row.get('amihud_illiq'))}
 - leverage_proxy: {safe_float(row.get('leverage_proxy'))}
 - order_flow_toxicity: {safe_float(row.get('order_flow_toxicity'))}
-- drop_from_local_pct: {safe_float(row.get('drop_from_local_pct'))}
+- drop_from_local_pct: {format_percent_value(row.get('drop_from_local_pct'))}
 - delta_from_news_ms: {safe_float(row.get('delta_from_news_ms'))}
 
 Per-phase empirical anchors:
