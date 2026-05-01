@@ -40,6 +40,7 @@ DRY_RUN_INPUT_JSON = PROJECT_ROOT / "data" / "processed" / "tardis" / "phase1_ou
 OUTPUT_JSON = PROJECT_ROOT / "data" / "processed" / "tardis" / "phase1_outputs" / "raw_elicited.json"
 DRY_RUN_OUTPUT_JSON = PROJECT_ROOT / "data" / "processed" / "tardis" / "phase1_outputs" / "raw_elicited.dry_run.json"
 DEFAULT_MODEL_PATH = PROJECT_ROOT / "models" / "mistral-7b-instruct"
+JSON_ONLY_STOP_SEQUENCES = ["\nExplanation:", "\n\nExplanation:", "\n```", "```"]
 
 
 def parse_args() -> argparse.Namespace:
@@ -241,6 +242,8 @@ def build_vllm_runtime(args: argparse.Namespace) -> tuple[Any, Any, Any]:
     sampling_params = SamplingParams(
         temperature=args.temperature,
         max_tokens=args.max_tokens,
+        seed=args.seed,
+        stop=JSON_ONLY_STOP_SEQUENCES,
     )
     return tokenizer, llm, sampling_params
 

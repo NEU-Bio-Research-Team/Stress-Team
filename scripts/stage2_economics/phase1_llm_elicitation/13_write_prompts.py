@@ -52,6 +52,18 @@ ANCHORS_JSON = PROCESSED_DIR / "tardis" / "confounder_outputs" / "prior_anchors.
 OUTPUT_DIR = PROCESSED_DIR / "tardis" / "phase1_outputs"
 OUTPUT_JSON = OUTPUT_DIR / "phase1_prompts.json"
 DRY_RUN_OUTPUT_JSON = OUTPUT_DIR / "phase1_prompts.dry_run.json"
+RAW_SIGNAL_OVERLAY_COLUMNS = {
+    "ofi",
+    "trade_intensity",
+    "amihud_illiq",
+    "volume",
+    "dollar_volume",
+    "buy_ratio",
+    "vwap",
+    "log_return",
+}
+RAW_SIGNAL_TOLERANCE_MS = 50
+SIGNAL_POOL_MIN_ROWS = 5
 
 DEFAULT_RESPONSE_RULES = [
     "Return exactly one JSON object and no prose outside the JSON.",
@@ -70,6 +82,11 @@ MARKET_STATE_COLUMNS = {
     "timestamp_utc": "timestamp_utc",
     "time_from_drop_start_ms": "time_from_drop_start_ms",
     "close_sample": "close",
+    "mid_price_sample": "mid_price",
+    "moving_average_50_sample": "moving_average_50",
+    "moving_average_200_sample": "moving_average_200",
+    "price_vs_ma_50_pct_sample": "price_vs_ma_50_pct",
+    "price_vs_ma_200_pct_sample": "price_vs_ma_200_pct",
     "ofi_sample": "ofi",
     "trade_intensity_sample": "trade_intensity",
     "realized_vol_50_sample": "realized_vol_50",
@@ -108,6 +125,8 @@ def parse_args() -> argparse.Namespace:
                         help="Prompt count for each agent-phase pair")
     parser.add_argument("--seed", type=int, default=20260501,
                         help="Base seed used to deterministically sample rows")
+    parser.add_argument("--raw-signal-tolerance-ms", type=int, default=RAW_SIGNAL_TOLERANCE_MS,
+                        help="Nearest-neighbor tolerance used when overlaying raw signal columns onto gridded rows")
     parser.add_argument("--overwrite", action="store_true",
                         help="Ignore existing output and regenerate all run_ids")
     parser.add_argument("--dry-run", action="store_true",
@@ -134,13 +153,109 @@ def load_anchors(path: Path) -> dict[str, Any]:
     return anchors
 
 
-def load_market_state(path: Path) -> pd.DataFrame:
+def overlay_raw_signal_columns(gridded: pd.DataFrame, raw: pd.DataFrame, tolerance_ms: int) -> pd.DataFrame:
+    required_columns = {"event_id", "timestamp_ms"}
+    if not required_columns.issubset(gridded.columns) or not required_columns.issubset(raw.columns):
+        return gridded
+
+    overlay_columns = [column for column in RAW_SIGNAL_OVERLAY_COLUMNS if column in raw.columns]
+    if not overlay_columns:
+        return gridded
+
+    left = gridded.copy()
+    right = raw.copy()
+    left["event_id"] = pd.to_numeric(left["event_id"], errors="coerce")
+    left["timestamp_ms"] = pd.to_numeric(left["timestamp_ms"], errors="coerce")
+    right["event_id"] = pd.to_numeric(right["event_id"], errors="coerce")
+    right["timestamp_ms"] = pd.to_numeric(right["timestamp_ms"], errors="coerce")
+
+    left = left.sort_values(["event_id", "timestamp_ms"]).reset_index(drop=True)
+    right = right.sort_values(["event_id", "timestamp_ms"]).reset_index(drop=True)
+    right = right[["event_id", "timestamp_ms", *overlay_columns]].rename(
+        columns={column: f"{column}_raw" for column in overlay_columns}
+    )
+
+    merged = pd.merge_asof(
+        left,
+        right,
+        on="timestamp_ms",
+        by="event_id",
+        direction="nearest",
+        tolerance=tolerance_ms,
+    )
+    for column in overlay_columns:
+        raw_column = f"{column}_raw"
+        merged[column] = merged[raw_column].where(merged[raw_column].notna(), merged[column])
+        merged = merged.drop(columns=[raw_column])
+    return merged
+
+
+def enrich_market_state(df: pd.DataFrame) -> pd.DataFrame:
+    enriched = df.copy()
+    enriched["event_id"] = pd.to_numeric(enriched["event_id"], errors="coerce")
+    enriched["timestamp_ms"] = pd.to_numeric(enriched["timestamp_ms"], errors="coerce")
+    enriched = enriched.sort_values(["event_id", "timestamp_ms"]).reset_index(drop=True)
+
+    close = pd.to_numeric(enriched.get("close"), errors="coerce")
+    if "mid_price" not in enriched.columns:
+        enriched["mid_price"] = close
+    else:
+        enriched["mid_price"] = pd.to_numeric(enriched["mid_price"], errors="coerce").fillna(close)
+    enriched["close"] = close
+
+    enriched["moving_average_50"] = (
+        enriched.groupby("event_id", group_keys=False)["close"]
+        .transform(lambda series: series.rolling(window=50, min_periods=1).mean())
+    )
+    enriched["moving_average_200"] = (
+        enriched.groupby("event_id", group_keys=False)["close"]
+        .transform(lambda series: series.rolling(window=200, min_periods=1).mean())
+    )
+
+    for source_column, target_column in (
+        ("moving_average_50", "price_vs_ma_50_pct"),
+        ("moving_average_200", "price_vs_ma_200_pct"),
+    ):
+        baseline = pd.to_numeric(enriched[source_column], errors="coerce")
+        enriched[target_column] = np.where(
+            baseline.abs() > 1e-9,
+            (enriched["close"] / baseline - 1.0) * 100.0,
+            np.nan,
+        )
+
+    return enriched
+
+
+def load_market_state(path: Path, raw_signal_tolerance_ms: int) -> tuple[pd.DataFrame, str]:
     if not path.exists():
         raise FileNotFoundError(f"Market-state CSV not found: {path}")
     df = pd.read_csv(path)
+    merge_mode = "single_source"
+
+    if path.resolve() == INPUT_GRIDDED_CSV.resolve() and INPUT_FALLBACK_CSV.exists():
+        raw_df = pd.read_csv(INPUT_FALLBACK_CSV)
+        df = overlay_raw_signal_columns(df, raw_df, tolerance_ms=raw_signal_tolerance_ms)
+        merge_mode = "gridded_with_raw_signal_overlay"
+    elif path.resolve() == INPUT_FALLBACK_CSV.resolve():
+        merge_mode = "raw_only"
+    else:
+        merge_mode = "override_source"
+
     if "phase" not in df.columns:
         raise ValueError("Input CSV must contain a 'phase' column")
-    return df
+    return enrich_market_state(df), merge_mode
+
+
+def choose_sampling_pool(phase_df: pd.DataFrame) -> tuple[pd.DataFrame, str]:
+    signal_mask = (
+        pd.to_numeric(phase_df.get("ofi"), errors="coerce").fillna(0.0).abs() > 1e-6
+    ) | (
+        pd.to_numeric(phase_df.get("trade_intensity"), errors="coerce").fillna(0.0) > 1e-6
+    )
+    signal_rows = phase_df[signal_mask].copy()
+    if len(signal_rows) >= SIGNAL_POOL_MIN_ROWS:
+        return signal_rows, "signal_dense_phase_sample"
+    return phase_df, "observed_phase_sample"
 
 
 def phase_anchor_snapshot(anchors: dict[str, Any], phase: str) -> dict[str, Any]:
@@ -291,6 +406,14 @@ Empirical market state sampled from the event dynamics table:
 - timestamp_utc: {row.get('timestamp_utc')}
 - time_from_drop_start_ms: {safe_float(row.get('time_from_drop_start_ms'))}
 - close: {safe_float(row.get('close'))}
+- mid_price: {safe_float(row.get('mid_price'))}
+- moving_average_50: {safe_float(row.get('moving_average_50'))}
+- moving_average_200: {safe_float(row.get('moving_average_200'))}
+- price_vs_ma_50_pct: {safe_float(row.get('price_vs_ma_50_pct'))}
+- price_vs_ma_200_pct: {safe_float(row.get('price_vs_ma_200_pct'))}
+- current_inventory_units: 0.0
+- current_inventory_notional: 0.0
+- inventory_state: flat
 - ofi: {safe_float(row.get('ofi'))}
 - trade_intensity: {safe_float(row.get('trade_intensity'))}
 - realized_vol_50: {safe_float(row.get('realized_vol_50'))}
@@ -326,6 +449,7 @@ def build_prompt_record(
     anchor_snapshot: dict[str, Any],
     agent_doc: dict[str, Any],
     input_market_state_source: str,
+    input_market_state_mode: str,
     input_anchor_source: str,
     project_root: Path,
     sample_origin: str,
@@ -347,12 +471,16 @@ def build_prompt_record(
         "sample_source_phase": sample_source_phase,
         "sample_row_index": int(row.name),
         "input_market_state_source": input_market_state_source,
+        "input_market_state_mode": input_market_state_mode,
         "input_anchor_source": input_anchor_source,
         "prompt_path": agent_doc["prompt_path"].relative_to(project_root).as_posix(),
         "spec_path": agent_doc["spec_path"].relative_to(project_root).as_posix(),
         "stress_proxy": stress_proxy,
         "noise_trader_lambda_anchor": anchor_snapshot["noise_trader_lambda"],
         "order_size_pareto_alpha_anchor": anchor_snapshot["order_size_pareto_alpha"],
+        "current_inventory_units": 0.0,
+        "current_inventory_notional": 0.0,
+        "inventory_state": "flat",
         "system_prompt": system_prompt,
         "user_prompt": user_prompt,
         "messages": [
@@ -380,7 +508,10 @@ def main() -> None:
     output_json = args.output_json or (DRY_RUN_OUTPUT_JSON if args.dry_run else OUTPUT_JSON)
 
     anchors = load_anchors(args.anchors_json)
-    market_state = load_market_state(input_csv)
+    market_state, market_state_mode = load_market_state(
+        input_csv,
+        raw_signal_tolerance_ms=args.raw_signal_tolerance_ms,
+    )
     agent_docs = load_agent_documents(PROMPT_DETAILS_DIR)
     project_root = Path(__file__).resolve().parents[3]
     available_phases = set(market_state["phase"].dropna().astype(str).unique())
@@ -397,6 +528,7 @@ def main() -> None:
     print("Script 13: Generate Phase 1 Prompts")
     print("=" * 70)
     print(f"  Market state : {input_csv}")
+    print(f"  Merge mode   : {market_state_mode}")
     print(f"  Anchors      : {args.anchors_json}")
     print(f"  Prompt root  : {PROMPT_DETAILS_DIR}")
     print(f"  Output       : {output_json}")
@@ -411,6 +543,7 @@ def main() -> None:
             phase_df = market_state[market_state["phase"] == phase].copy().reset_index(drop=False)
             donor_phase = phase if not phase_df.empty else fallback_phase_for(phase, available_phases)
             donor_df = market_state[market_state["phase"] == donor_phase].copy().reset_index(drop=False)
+            sampling_df, observed_origin = choose_sampling_pool(donor_df)
 
             runs_for_phase = 1 if args.dry_run else args.runs_per_phase
             for run_number in range(runs_for_phase):
@@ -420,9 +553,9 @@ def main() -> None:
                 if len(records) >= target_total:
                     break
 
-                row_index = deterministic_index(donor_df, run_id, args.seed)
-                donor_row = donor_df.iloc[row_index]
-                sample_origin = "observed_phase_sample"
+                row_index = deterministic_index(sampling_df, run_id, args.seed)
+                donor_row = sampling_df.iloc[row_index]
+                sample_origin = observed_origin
                 row = donor_row
                 if phase_df.empty:
                     sample_origin = "anchor_imputed_phase_sample"
@@ -436,6 +569,7 @@ def main() -> None:
                     anchor_snapshot=anchor_snapshot,
                     agent_doc=agent_doc,
                     input_market_state_source=input_csv.name,
+                    input_market_state_mode=market_state_mode,
                     input_anchor_source=args.anchors_json.name,
                     project_root=project_root,
                     sample_origin=sample_origin,

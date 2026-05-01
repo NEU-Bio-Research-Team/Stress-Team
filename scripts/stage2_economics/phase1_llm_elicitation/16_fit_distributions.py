@@ -99,12 +99,16 @@ def fit_beta(values: np.ndarray, stats_module: Any | None) -> dict[str, Any]:
 
 def fit_gamma(values: np.ndarray, stats_module: Any | None) -> dict[str, Any]:
     clipped = np.clip(values.astype(float), EPSILON, None)
-    if stats_module is not None:
-        shape, _, scale = stats_module.gamma.fit(clipped, floc=0.0)
-        return {"dist": "gamma", "params": {"shape": round(float(shape), 6), "scale": round(float(scale), 6)}}
-
     mean = float(np.mean(clipped))
     var = float(np.var(clipped, ddof=1)) if len(clipped) > 1 else 0.0
+
+    if stats_module is not None and len(clipped) > 1 and var > 1e-10:
+        try:
+            shape, _, scale = stats_module.gamma.fit(clipped, floc=0.0)
+            return {"dist": "gamma", "params": {"shape": round(float(shape), 6), "scale": round(float(scale), 6)}}
+        except Exception:
+            pass
+
     if var <= 1e-10:
         shape = 100.0
         scale = mean / shape if mean > 0 else EPSILON
@@ -116,16 +120,19 @@ def fit_gamma(values: np.ndarray, stats_module: Any | None) -> dict[str, Any]:
 
 def fit_lognorm(values: np.ndarray, stats_module: Any | None) -> dict[str, Any]:
     clipped = np.clip(values.astype(float), EPSILON, None)
-    if stats_module is not None:
-        shape, loc, scale = stats_module.lognorm.fit(clipped, floc=0.0)
-        return {
-            "dist": "lognorm",
-            "params": {
-                "shape": round(float(shape), 6),
-                "loc": round(float(loc), 6),
-                "scale": round(float(scale), 6),
-            },
-        }
+    if stats_module is not None and len(clipped) > 1:
+        try:
+            shape, loc, scale = stats_module.lognorm.fit(clipped, floc=0.0)
+            return {
+                "dist": "lognorm",
+                "params": {
+                    "shape": round(float(shape), 6),
+                    "loc": round(float(loc), 6),
+                    "scale": round(float(scale), 6),
+                },
+            }
+        except Exception:
+            pass
 
     logged = np.log(clipped)
     shape = float(np.std(logged, ddof=1)) if len(logged) > 1 else 0.0

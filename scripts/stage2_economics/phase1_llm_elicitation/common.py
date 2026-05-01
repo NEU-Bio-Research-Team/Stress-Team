@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import json
+import re
 from pathlib import Path
 from typing import Any
 
@@ -22,10 +23,10 @@ AGENT_CONFIGS: dict[str, dict[str, Any]] = {
         "prompt_filename": "momentum_prompt.md",
         "spec_filename": "momentum_spec.md",
         "parameter_targets": [
-            "Aggressiveness should stay in [0, 1] and usually lean high for clear continuation.",
-            "Cancel probability should stay close to zero because this agent rarely aborts once committed.",
+            "Aggressiveness should stay in [0, 1] and move with continuation strength rather than collapse to one value.",
+            "Cancel probability should remain low when conviction is strong, but it should still reflect uncertainty in weaker setups.",
             "Inventory sensitivity should be positive and moderate because the agent is wealth-normalized.",
-            "Order type should usually be market.",
+            "Execution can favor market orders, but weak edges should still allow do_nothing instead of forced participation.",
         ],
         "fallback_priors": {
             "aggressiveness": {"dist": "beta", "params": {"alpha": 6.0, "beta": 2.0}},
@@ -46,10 +47,10 @@ AGENT_CONFIGS: dict[str, dict[str, Any]] = {
         "prompt_filename": "prompt-for-contrarian.md",
         "spec_filename": "detailed-info-of-contrarian.md",
         "parameter_targets": [
-            "Aggressiveness should rise with overshoot magnitude rather than act like a linear trend follower.",
+            "Aggressiveness should rise with overshoot magnitude, but small deviations should still map to light conviction or no trade.",
             "Inventory sensitivity should stay positive, with a higher default mean than the momentum trader.",
-            "Order type should usually be market because reversal windows are short.",
-            "Use drop_from_local_pct as the observable overshoot proxy when choosing conviction.",
+            "Use moving-average deviation together with drop_from_local_pct when choosing conviction.",
+            "Execution can lean market during sharp reversals without forcing the same order type in every response.",
         ],
         "fallback_priors": {
             "aggressiveness": {"dist": "beta", "params": {"alpha": 4.0, "beta": 3.0}},
@@ -72,10 +73,10 @@ AGENT_CONFIGS: dict[str, dict[str, Any]] = {
         "prompt_filename": "MM_Prompt.md",
         "spec_filename": "MM_Detailed.md",
         "parameter_targets": [
-            "Order type should be limit unless the market state makes standing down safer than quoting.",
+            "Order type should usually be limit, but the market state should decide whether quoting or standing down is safer.",
             "Inventory sensitivity should stay positive because the market maker must skew back toward flat inventory.",
             "Quote updates should respect the 25% depth cap and leverage-aware caution.",
-            "Event triggers should be thought of in the low single-digit bps range.",
+            "Event triggers should remain in the low single-digit bps range instead of collapsing to a fixed constant.",
         ],
         "fallback_priors": {
             "aggressiveness": {"dist": "beta", "params": {"alpha": 2.0, "beta": 6.0}},
@@ -99,9 +100,9 @@ AGENT_CONFIGS: dict[str, dict[str, Any]] = {
         "prompt_filename": "Noise_Trader_Prompt.md",
         "spec_filename": "Noise_Trader_Detailed.md",
         "parameter_targets": [
-            "Direction should stay mostly random and volatility-scaled instead of following OFI or moving averages.",
+            "Direction should stay approximately symmetric over many samples and remain volatility-scaled instead of following OFI or moving averages.",
             "Inventory sensitivity should stay positive and act as an absolute penalty, not a wealth-normalized one.",
-            "Order type should be market because the archetype is a blind taker.",
+            "Execution can favor market orders, but weak random draws should still allow do_nothing.",
             "Arrival rate comes from the phase anchor and should not be hallucinated.",
         ],
         "fallback_priors": {
@@ -132,6 +133,7 @@ PROMPT_RECORD_COLUMNS = [
     "sample_source_phase",
     "sample_row_index",
     "input_market_state_source",
+    "input_market_state_mode",
     "input_anchor_source",
     "prompt_path",
     "spec_path",
@@ -141,6 +143,14 @@ PROMPT_RECORD_COLUMNS = [
     "timestamp_utc",
     "time_from_drop_start_ms",
     "close_sample",
+    "mid_price_sample",
+    "moving_average_50_sample",
+    "moving_average_200_sample",
+    "price_vs_ma_50_pct_sample",
+    "price_vs_ma_200_pct_sample",
+    "current_inventory_units",
+    "current_inventory_notional",
+    "inventory_state",
     "ofi_sample",
     "trade_intensity_sample",
     "realized_vol_50_sample",
@@ -233,17 +243,39 @@ def load_json_records(path: Path) -> list[dict[str, Any]]:
     return data
 
 
+def sanitize_json_response(text: str) -> str:
+    if not isinstance(text, str):
+        return ""
+
+    cleaned = text.strip()
+    cleaned = re.sub(r"^```(?:json)?\s*", "", cleaned, flags=re.IGNORECASE)
+    cleaned = re.sub(r"\s*```$", "", cleaned)
+
+    start = cleaned.find("{")
+    end = cleaned.rfind("}")
+    if start >= 0:
+        if end >= start:
+            cleaned = cleaned[start:end + 1]
+        else:
+            cleaned = cleaned[start:]
+
+    if cleaned.count("{") == cleaned.count("}") + 1:
+        cleaned = cleaned + "}"
+    return cleaned
+
+
 def extract_json_object(text: str) -> tuple[dict[str, Any] | None, str | None]:
-    if not isinstance(text, str) or not text.strip():
+    normalized_text = sanitize_json_response(text)
+    if not normalized_text.strip():
         return None, "empty_response"
 
-    start = text.find("{")
+    start = normalized_text.find("{")
     if start < 0:
         return None, "missing_open_brace"
 
     decoder = json.JSONDecoder()
     try:
-        payload, _ = decoder.raw_decode(text[start:])
+        payload, _ = decoder.raw_decode(normalized_text[start:])
     except json.JSONDecodeError as exc:
         return None, str(exc)
 
