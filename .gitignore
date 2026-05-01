@@ -19,3 +19,5 @@ data/
 *.joblib
 *.npy
 *.npz
+.vscode/mcp.json
+.github

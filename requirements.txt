@@ -22,3 +22,13 @@ sortedcontainers>=2.4
 
 # ── Machine learning ──
 scikit-learn>=1.3
+
+# ── Phase 1 LLM elicitation ──
+# Install PyTorch separately so the CUDA wheel matches your host, for example:
+#   pip install torch torchvision --index-url https://download.pytorch.org/whl/cu121
+huggingface_hub>=0.24
+transformers>=4.44,<4.46
+accelerate>=0.34,<1.0
+peft>=0.12,<1.0
+bitsandbytes>=0.43,<0.44; platform_system == "Linux"
+vllm>=0.6,<0.7; platform_system == "Linux" and python_version >= "3.10"
