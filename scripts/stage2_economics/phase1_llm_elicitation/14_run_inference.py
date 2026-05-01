@@ -165,12 +165,12 @@ def mock_response(record: dict[str, Any], seed: int) -> str:
             side = "buy" if ofi > 0 else "sell"
             reasoning = "Directional flow is strong enough to justify a momentum trade."
     elif agent_type == "contrarian_trader":
-        aggressiveness = np.clip(0.35 + 6.0 * overshoot + 0.08 * rng.normal(), 0.05, 0.98)
+        aggressiveness = np.clip(0.18 + 1.6 * overshoot + 0.08 * rng.normal(), 0.05, 0.98)
         cancel_probability = np.clip(0.04 + 0.02 * rng.random(), 0.0, 0.2)
         inventory_sensitivity = np.clip(0.12 + 0.08 * rng.random(), 0.01, 0.6)
-        order_size_multiplier = np.clip(0.8 + 10.0 * overshoot + 0.15 * rng.normal(), 0.1, 5.0)
+        order_size_multiplier = np.clip(0.7 + 3.5 * overshoot + 0.15 * rng.normal(), 0.1, 5.0)
         order_type = "market"
-        if overshoot < 0.01 and stress < 1.1:
+        if overshoot < 0.10 and stress < 1.1:
             side = "do_nothing"
             reasoning = "The overshoot is below the activation threshold, so no trade."
         elif ofi <= 0:

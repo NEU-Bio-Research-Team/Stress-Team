@@ -62,13 +62,13 @@ When generating your JSON response, map the market state to parameters as follow
 **`side` — depends on phase FIRST, then drop_from_local_pct:**
 
 Phase "drop":
-- `drop_from_local_pct < 1.0` → **do_nothing** (below activation threshold)
-- `drop_from_local_pct` 1.0–2.5 → **buy** (moderate overshoot)
-- `drop_from_local_pct > 2.5` → **buy** (extreme overshoot, full conviction)
+- `drop_from_local_pct < 0.10` → **do_nothing** (below activation threshold)
+- `drop_from_local_pct` 0.10–0.35 → **buy** (moderate overshoot)
+- `drop_from_local_pct > 0.35` → **buy** (extreme overshoot, full conviction)
 
 Phase "recovery":
-- `drop_from_local_pct > 0.5` (still oversold) → **buy** (reversal in progress, add position)
-- `drop_from_local_pct <= 0.5` (price near MA) → **do_nothing** (reversal complete)
+- `drop_from_local_pct > 0.20` (still oversold) → **buy** (reversal in progress, add position)
+- `drop_from_local_pct <= 0.20` (price near MA) → **do_nothing** (reversal complete)
 - `price_vs_ma_50_pct > +0.5%` (price bounced ABOVE MA) → **sell** (fading the overshoot up)
 
 Phase "post":
@@ -83,13 +83,13 @@ Reminder: contrarian traders SELL rallies just as aggressively as they BUY dips.
 "Buying losers AND selling winners" — both directions are valid.
 
 **`cancel_probability` — reflects conviction uncertainty:**
-- `drop_from_local_pct < 1.0` → 0.0 (no position taken, nothing to cancel)
-- `drop_from_local_pct` 1.0–2.0 → 0.10–0.25 (uncertain whether overshoot is real)
-- `drop_from_local_pct > 2.5` → 0.02–0.08 (high conviction, low cancel)
+- `drop_from_local_pct < 0.10` → 0.0 (no position taken, nothing to cancel)
+- `drop_from_local_pct` 0.10–0.25 → 0.10–0.25 (uncertain whether overshoot is real)
+- `drop_from_local_pct > 0.35` → 0.02–0.08 (high conviction, low cancel)
 - If `order_flow_toxicity > 0.8` → add 0.10 to cancel probability (adverse selection risk)
 
 **`aggressiveness`:**
-- Scales with `drop_from_local_pct` via ESTAR: near 0 at 1%, near 0.9 at 5%+
-- Do NOT output 0.8+ aggressiveness when `drop_from_local_pct < 1%`
+- Scales with `drop_from_local_pct` via ESTAR: near 0 at 0.10%, near 0.9 at 0.60%+
+- Do NOT output 0.8+ aggressiveness when `drop_from_local_pct < 0.20%`
 
 **Important:** This is a reversal strategy. The market drop you observe in `drop` phase is your signal to BUY, but only if the deviation is large enough. If the market is in "recovery" phase (price already bouncing), the trade may be over — prefer **do_nothing** or **sell** to fade the recovery overshoot.

@@ -65,6 +65,13 @@ RAW_SIGNAL_OVERLAY_COLUMNS = {
 RAW_SIGNAL_TOLERANCE_MS = 50
 SIGNAL_POOL_MIN_ROWS = 5
 
+DEFAULT_MARKET_STATE_SOURCE_BY_AGENT = {
+    "momentum_trader": "raw",
+    "contrarian_trader": "raw",
+    "hft_market_maker": "gridded",
+    "noise_trader": "raw",
+}
+
 DEFAULT_RESPONSE_RULES = [
     "Return exactly one JSON object and no prose outside the JSON.",
     "Use only the provided market state, anchors, and role description.",
@@ -120,6 +127,16 @@ def format_percent_value(value: Any, decimals: int = 2) -> str:
     return f"{numeric:.{decimals}f}%"
 
 
+def rolling_drop_from_local_percent_points(close_series: pd.Series) -> pd.Series:
+    local_ref = close_series.rolling(window=10, min_periods=1).max()
+    values = np.where(
+        local_ref > 0,
+        (local_ref - close_series) / local_ref * 100.0,
+        np.nan,
+    )
+    return pd.Series(values, index=close_series.index)
+
+
 def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(description="Generate Phase 1 LLM elicitation prompts")
     parser.add_argument("--input-csv", type=Path, default=None,
@@ -139,14 +156,6 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--dry-run", action="store_true",
                         help="Generate only 3 prompt records and write a dry-run file")
     return parser.parse_args()
-
-
-def choose_input_csv(override: Path | None) -> Path:
-    if override is not None:
-        return override
-    if INPUT_GRIDDED_CSV.exists():
-        return INPUT_GRIDDED_CSV
-    return INPUT_FALLBACK_CSV
 
 
 def load_anchors(path: Path) -> dict[str, Any]:
@@ -218,6 +227,10 @@ def enrich_market_state(df: pd.DataFrame) -> pd.DataFrame:
         enriched.groupby("event_id", group_keys=False)["close"]
         .transform(lambda series: series.rolling(window=200, min_periods=1).mean())
     )
+    enriched["drop_from_local_pct_prompt"] = (
+        enriched.groupby("event_id", group_keys=False)["close"]
+        .transform(rolling_drop_from_local_percent_points)
+    )
 
     for source_column, target_column in (
         ("moving_average_50", "price_vs_ma_50_pct"),
@@ -251,6 +264,62 @@ def load_market_state(path: Path, raw_signal_tolerance_ms: int) -> tuple[pd.Data
     if "phase" not in df.columns:
         raise ValueError("Input CSV must contain a 'phase' column")
     return enrich_market_state(df), merge_mode
+
+
+def load_market_state_sources(
+    override: Path | None,
+    raw_signal_tolerance_ms: int,
+) -> dict[str, dict[str, Any]]:
+    if override is not None:
+        market_state, merge_mode = load_market_state(override, raw_signal_tolerance_ms)
+        return {
+            "override": {
+                "source_key": "override",
+                "source_path": override,
+                "mode": merge_mode,
+                "dataframe": market_state,
+            }
+        }
+
+    market_states: dict[str, dict[str, Any]] = {}
+    if INPUT_FALLBACK_CSV.exists():
+        raw_market_state, raw_mode = load_market_state(INPUT_FALLBACK_CSV, raw_signal_tolerance_ms)
+        market_states["raw"] = {
+            "source_key": "raw",
+            "source_path": INPUT_FALLBACK_CSV,
+            "mode": raw_mode,
+            "dataframe": raw_market_state,
+        }
+    if INPUT_GRIDDED_CSV.exists():
+        gridded_market_state, gridded_mode = load_market_state(INPUT_GRIDDED_CSV, raw_signal_tolerance_ms)
+        market_states["gridded"] = {
+            "source_key": "gridded",
+            "source_path": INPUT_GRIDDED_CSV,
+            "mode": gridded_mode,
+            "dataframe": gridded_market_state,
+        }
+    if not market_states:
+        raise FileNotFoundError(
+            f"Market-state CSV not found: expected {INPUT_GRIDDED_CSV} or {INPUT_FALLBACK_CSV}"
+        )
+    return market_states
+
+
+def resolve_market_state_for_agent(
+    agent_type: str,
+    market_states: dict[str, dict[str, Any]],
+) -> dict[str, Any]:
+    if "override" in market_states:
+        return market_states["override"]
+
+    preferred_source = DEFAULT_MARKET_STATE_SOURCE_BY_AGENT.get(agent_type, "raw")
+    if preferred_source in market_states:
+        return market_states[preferred_source]
+
+    for fallback_source in ("raw", "gridded"):
+        if fallback_source in market_states:
+            return market_states[fallback_source]
+    raise ValueError("No market-state sources are available for prompt generation")
 
 
 def choose_sampling_pool(phase_df: pd.DataFrame) -> tuple[pd.DataFrame, str]:
@@ -433,7 +502,7 @@ Note: fields ending in _pct below are already expressed in percentage points.
 - amihud_illiq: {safe_float(row.get('amihud_illiq'))}
 - leverage_proxy: {safe_float(row.get('leverage_proxy'))}
 - order_flow_toxicity: {safe_float(row.get('order_flow_toxicity'))}
-- drop_from_local_pct: {format_percent_value(row.get('drop_from_local_pct'))}
+- drop_from_local_pct: {format_percent_value(row.get('drop_from_local_pct_prompt'))}
 - delta_from_news_ms: {safe_float(row.get('delta_from_news_ms'))}
 
 Per-phase empirical anchors:
@@ -512,18 +581,23 @@ def build_prompt_record(
 def main() -> None:
     args = parse_args()
 
-    input_csv = choose_input_csv(args.input_csv)
     output_json = args.output_json or (DRY_RUN_OUTPUT_JSON if args.dry_run else OUTPUT_JSON)
 
     anchors = load_anchors(args.anchors_json)
-    market_state, market_state_mode = load_market_state(
-        input_csv,
+    market_states = load_market_state_sources(
+        args.input_csv,
         raw_signal_tolerance_ms=args.raw_signal_tolerance_ms,
     )
     agent_docs = load_agent_documents(PROMPT_DETAILS_DIR)
     project_root = Path(__file__).resolve().parents[3]
-    available_phases = set(market_state["phase"].dropna().astype(str).unique())
+    for payload in market_states.values():
+        payload["available_phases"] = set(payload["dataframe"]["phase"].dropna().astype(str).unique())
+    available_phases = set().union(*(payload["available_phases"] for payload in market_states.values()))
     missing_phases = [phase for phase in PHASES if phase not in available_phases]
+    agent_market_state = {
+        agent_type: resolve_market_state_for_agent(agent_type, market_states)
+        for agent_type in agent_docs
+    }
 
     existing_records = [] if args.overwrite else load_json_records(output_json)
     records = list(existing_records)
@@ -535,8 +609,18 @@ def main() -> None:
     print("=" * 70)
     print("Script 13: Generate Phase 1 Prompts")
     print("=" * 70)
-    print(f"  Market state : {input_csv}")
-    print(f"  Merge mode   : {market_state_mode}")
+    print("  Market states:")
+    for payload in market_states.values():
+        print(
+            f"    - {payload['source_key']:8s} {payload['source_path']} "
+            f"[{payload['mode']}] phases={sorted(payload['available_phases'])}"
+        )
+    print("  Agent sources:")
+    for agent_type, payload in agent_market_state.items():
+        print(
+            f"    - {agent_type:18s} -> {payload['source_path'].name} "
+            f"[{payload['mode']}]"
+        )
     print(f"  Anchors      : {args.anchors_json}")
     print(f"  Prompt root  : {PROMPT_DETAILS_DIR}")
     print(f"  Output       : {output_json}")
@@ -547,10 +631,13 @@ def main() -> None:
         print("         Missing phases will use anchor-imputed snapshots based on the closest available donor phase.")
 
     for agent_type, agent_doc in agent_docs.items():
+        selected_market_state = agent_market_state[agent_type]
+        agent_df = selected_market_state["dataframe"]
+        agent_available_phases = selected_market_state["available_phases"]
         for phase in PHASES:
-            phase_df = market_state[market_state["phase"] == phase].copy().reset_index(drop=False)
-            donor_phase = phase if not phase_df.empty else fallback_phase_for(phase, available_phases)
-            donor_df = market_state[market_state["phase"] == donor_phase].copy().reset_index(drop=False)
+            phase_df = agent_df[agent_df["phase"] == phase].copy().reset_index(drop=False)
+            donor_phase = phase if not phase_df.empty else fallback_phase_for(phase, agent_available_phases)
+            donor_df = agent_df[agent_df["phase"] == donor_phase].copy().reset_index(drop=False)
             sampling_df, observed_origin = choose_sampling_pool(donor_df)
 
             runs_for_phase = 1 if args.dry_run else args.runs_per_phase
@@ -576,8 +663,8 @@ def main() -> None:
                     row=row,
                     anchor_snapshot=anchor_snapshot,
                     agent_doc=agent_doc,
-                    input_market_state_source=input_csv.name,
-                    input_market_state_mode=market_state_mode,
+                    input_market_state_source=selected_market_state["source_path"].name,
+                    input_market_state_mode=selected_market_state["mode"],
                     input_anchor_source=args.anchors_json.name,
                     project_root=project_root,
                     sample_origin=sample_origin,

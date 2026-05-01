@@ -13,17 +13,17 @@ $trend\_signal = -sign(P_t - \hat{P}_t)$
 
 - $P_t > \hat{P}_t$ by threshold → overbought → **sell bias** (fading the rally)
 - $P_t < \hat{P}_t$ by threshold → oversold → **buy bias** (bottom-fishing)
-- Deviation below **edge_epsilon_bps (100bps/1%)** threshold → **no trade**
+- Deviation below **edge_epsilon_bps (10bps/0.10%)** threshold → **no trade**
 
 The expected price target reflects the belief in a return to the mean:
 $E_t[P] = \hat{P}_t$
-The agent calculates the expected edge based on the distance to this mean, filtered by the 1% rule (*Balsara et al., 2009*).
+The agent calculates the expected edge based on the distance to this mean, filtered by a microstructure-calibrated 10 bps rule for this 100 ms event dataset.
 
 #### Aggressiveness (ESTAR Logic)
 Unlike momentum traders, the contrarian’s aggressiveness is non-linear and follows an **Exponential Smooth Transition (ESTAR)** logic. The agent is passive during minor moves but becomes exponentially more aggressive as the price "overshoots" further from the mean.
 
-- **Low deviation (near 1%):** Minimal participation (small probe positions).
-- **Extreme deviation (5%+):** Maximum conviction; the agent leans heavily into the trade to capture the reversal apex.
+- **Low deviation (near 0.10%):** Minimal participation (small probe positions).
+- **Extreme deviation (0.60%+):** Maximum conviction; the agent leans heavily into the trade to capture the reversal apex.
 
 Aggressiveness scales with the standardized price deviation:
 $qty\_raw = Aggressiveness \times (1 - \exp(-\gamma \cdot (\Delta P)^2)) - \Omega_t$
@@ -66,7 +66,7 @@ The agent operates at a medium-frequency, allowing "overshoots" to deelop before
 
 ### Risk Controls
 The agent enforces four cascading risk layers:
-1. **Signal gating** — No trade if $|P_t - \hat{P}_t| < 1\%$ (Threshold-Gated 1% Filter).
+1. **Signal gating** — No trade if $|P_t - \hat{P}_t| < 0.10\%$ (threshold-gated microstructure filter).
 2. **Inventory gating** — $\Omega_t$ limits position size to avoid "catching a falling knife" indefinitely.
 3. **Liquidity gating** — Order size capped by available depth to manage price impact.
 4. **Solvency gating** — Agent defaults and is removed when $Wealth_t \le 0$ (*Bookstaber et al., 2014*).
@@ -84,7 +84,7 @@ The contrarian trader is the **primary stabilizer (Brake)** in the simulation.
 
 | Parameter | Source | Nature | Default / Range |
 | :--- | :--- | :--- | :--- |
-| **Activation Threshold** | *Balsara (2009)* | Fixed | 1.0% (100 bps) |
+| **Activation Threshold** | Dataset-calibrated | Fixed | 0.10% (10 bps) |
 | **Aggressiveness** | *ESTAR Logic* | Non-linear | Scaled by deviation |
 | **inventory_sensitivity_vg** | Phase 1 Elicitation | Gamma | Default 0.15 |
 | **ma_window_ticks** | Config | Long-term | 200 (range 100–500) |
@@ -99,5 +99,5 @@ The contrarian trader is the **primary stabilizer (Brake)** in the simulation.
 | Overreaction & Mean Reversion | *DeBondt & Thaler (1985)* |
 | Non-linear Transition (ESTAR) | *Terasvirta (1994); Wan (2022)* |
 | Contrarian Demand Function | *Liao et al. (2017)* |
-| 1% Filter & Whiplash Prevention | *Balsara et al. (2009)* |
+| Threshold Filter & Whiplash Prevention | *Balsara et al. (2009)*, rescaled to 100 ms event windows |
 | Inventory Risk & Solvency | *Bookstaber et al. (2014)* |

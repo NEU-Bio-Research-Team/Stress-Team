@@ -223,12 +223,12 @@ def contrarian_estar_params(phase_frame: pd.DataFrame) -> dict[str, Any] | None:
     usable = phase_frame.dropna(subset=["drop_from_local_pct_sample", "order_size_multiplier"])
     if usable.empty:
         return None
-    threshold = 1.0
+    threshold = 0.10
     top_cut = usable["order_size_multiplier"].quantile(0.75)
     high_commitment = usable[usable["order_size_multiplier"] >= top_cut]
     if high_commitment.empty:
         high_commitment = usable
-    max_commitment_pct = float(np.median(np.abs(high_commitment["drop_from_local_pct_sample"].to_numpy()))) * 100.0
+    max_commitment_pct = float(np.median(np.abs(high_commitment["drop_from_local_pct_sample"].to_numpy())))
     max_commitment_pct = max(max_commitment_pct, threshold)
     return {
         "dist": "non_linear_thresholds",
