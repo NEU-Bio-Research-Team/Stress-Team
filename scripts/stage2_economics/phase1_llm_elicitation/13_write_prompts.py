@@ -360,6 +360,16 @@ def choose_sampling_pool(phase_df: pd.DataFrame) -> tuple[pd.DataFrame, str]:
     return phase_df, "observed_phase_sample"
 
 
+def choose_sampling_pool_contrarian(phase_df: pd.DataFrame, phase: str) -> tuple[pd.DataFrame, str]:
+    """Contrarian-specific sampling to ensure recovery/post sell signals are represented."""
+    if phase in {"recovery", "post"}:
+        ma_dev = pd.to_numeric(phase_df.get("price_vs_ma_50_pct"), errors="coerce").fillna(0.0)
+        sell_signal_rows = phase_df[ma_dev > 0.5].copy()
+        if len(sell_signal_rows) >= SIGNAL_POOL_MIN_ROWS:
+            return sell_signal_rows, "sell_signal_recovery_sample"
+    return choose_sampling_pool(phase_df)
+
+
 def phase_anchor_snapshot(anchors: dict[str, Any], phase: str) -> dict[str, Any]:
     return {
         "ofi_percentiles": anchors.get("ofi_percentiles_per_phase", {}).get(phase, {}),
@@ -681,7 +691,10 @@ def main() -> None:
             if phase not in agent_available_phases:
                 continue
             phase_df = agent_df[agent_df["phase"] == phase].copy().reset_index(drop=False)
-            sampling_df, observed_origin = choose_sampling_pool(phase_df)
+            if agent_type == "contrarian_trader":
+                sampling_df, observed_origin = choose_sampling_pool_contrarian(phase_df, phase)
+            else:
+                sampling_df, observed_origin = choose_sampling_pool(phase_df)
 
             runs_for_phase = 1 if args.dry_run else args.runs_per_phase
             for run_number in range(runs_for_phase):

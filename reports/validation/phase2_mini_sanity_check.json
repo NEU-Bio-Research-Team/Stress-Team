@@ -14,31 +14,34 @@
       0.01,
       0.03,
       0.05,
+      0.06,
       0.1,
+      0.4,
+      0.5,
       0.6,
       0.65
     ],
     "cancel_probability_stats": [
       {
         "agent_type": "contrarian_trader",
-        "mean": 0.069,
-        "std": 0.045,
+        "mean": 0.067,
+        "std": 0.046,
         "min": 0.0,
         "max": 0.1,
-        "nunique": 4
+        "nunique": 5
       },
       {
         "agent_type": "hft_market_maker",
-        "mean": 0.227,
-        "std": 0.221,
+        "mean": 0.23,
+        "std": 0.219,
         "min": 0.1,
         "max": 0.65,
-        "nunique": 3
+        "nunique": 5
       },
       {
         "agent_type": "momentum_trader",
-        "mean": 0.064,
-        "std": 0.027,
+        "mean": 0.054,
+        "std": 0.017,
         "min": 0.0,
         "max": 0.1,
         "nunique": 3
@@ -77,21 +80,21 @@
     "side_by_agent": [
       {
         "agent_type": "contrarian_trader",
-        "buy": 0.953,
-        "do_nothing": 0.039,
-        "sell": 0.008
+        "buy": 0.461,
+        "do_nothing": 0.188,
+        "sell": 0.352
       },
       {
         "agent_type": "hft_market_maker",
-        "buy": 0.695,
-        "do_nothing": 0.039,
-        "sell": 0.266
+        "buy": 0.727,
+        "do_nothing": 0.016,
+        "sell": 0.258
       },
       {
         "agent_type": "momentum_trader",
-        "buy": 0.438,
+        "buy": 0.523,
         "do_nothing": 0.0,
-        "sell": 0.562
+        "sell": 0.477
       },
       {
         "agent_type": "noise_trader",
@@ -129,7 +132,7 @@
     {
       "gate": "market_maker_cancel_rate_reasonable",
       "pass": true,
-      "observed": 0.227,
+      "observed": 0.23,
       "expected": "[0.20, 0.40]"
     },
     {
@@ -140,8 +143,8 @@
     },
     {
       "gate": "contrarian_sell_floor",
-      "pass": false,
-      "observed": 0.008,
+      "pass": true,
+      "observed": 0.352,
       "expected": ">= 0.15"
     },
     {
@@ -173,8 +176,6 @@
     }
   ],
   "recommendations": [
-    "Contrarian sell-side is too low for a two-sided mean-reversion archetype. Current sell=0.008, target=0.200.",
-    "Suggested temporary rebalancing for mini simulation: buy=0.761, do_nothing=0.039, sell=0.200.",
-    "After rebalancing, run 50-100 mini simulation runs and compare stylized facts against empirical benchmarks in this report."
+    "Contrarian sell-side already meets target; keep current prior and proceed to mini simulation."
   ]
 }

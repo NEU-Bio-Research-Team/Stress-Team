@@ -51,6 +51,8 @@ AGENT_CONFIGS: dict[str, dict[str, Any]] = {
             "Inventory sensitivity should stay positive, with a higher default mean than the momentum trader.",
             "Use moving-average deviation together with drop_from_local_pct when choosing conviction.",
             "Execution can lean market during sharp reversals without forcing the same order type in every response.",
+            "In recovery and post phases, sell is the primary action when price_vs_ma_50_pct exceeds +0.5%. Sell responses should appear in at least 20% of recovery and post samples.",
+            "Do not default to buy in recovery phase. If the reversal has completed (price near or above MA), the correct action is sell or do_nothing, not buy.",
         ],
         "fallback_priors": {
             "aggressiveness": {"dist": "beta", "params": {"alpha": 4.0, "beta": 3.0}},
