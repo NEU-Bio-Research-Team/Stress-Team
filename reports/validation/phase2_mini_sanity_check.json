@@ -1,0 +1,180 @@
+{
+  "inputs": {
+    "elicited_csv": "/home/mluser/BRT-FDA/MinhQuang/Stress-Team/data/processed/tardis/phase1_outputs/raw_elicited.csv",
+    "gridded_csv": "/home/mluser/BRT-FDA/MinhQuang/Stress-Team/data/processed/tardis/confounder_outputs/Event_Dynamics_100ms_gridded.csv",
+    "min_parsed_rows": 400,
+    "contrarian_sell_floor": 0.15,
+    "contrarian_sell_target": 0.2,
+    "crash_threshold_pct": 3.0
+  },
+  "prior": {
+    "parsed_rows": 512,
+    "cancel_probability_unique": [
+      0.0,
+      0.01,
+      0.03,
+      0.05,
+      0.1,
+      0.6,
+      0.65
+    ],
+    "cancel_probability_stats": [
+      {
+        "agent_type": "contrarian_trader",
+        "mean": 0.069,
+        "std": 0.045,
+        "min": 0.0,
+        "max": 0.1,
+        "nunique": 4
+      },
+      {
+        "agent_type": "hft_market_maker",
+        "mean": 0.227,
+        "std": 0.221,
+        "min": 0.1,
+        "max": 0.65,
+        "nunique": 3
+      },
+      {
+        "agent_type": "momentum_trader",
+        "mean": 0.064,
+        "std": 0.027,
+        "min": 0.0,
+        "max": 0.1,
+        "nunique": 3
+      },
+      {
+        "agent_type": "noise_trader",
+        "mean": 0.033,
+        "std": 0.01,
+        "min": 0.01,
+        "max": 0.05,
+        "nunique": 3
+      }
+    ],
+    "order_type_by_agent": [
+      {
+        "agent_type": "contrarian_trader",
+        "limit": 0.0,
+        "market": 1.0
+      },
+      {
+        "agent_type": "hft_market_maker",
+        "limit": 1.0,
+        "market": 0.0
+      },
+      {
+        "agent_type": "momentum_trader",
+        "limit": 0.0,
+        "market": 1.0
+      },
+      {
+        "agent_type": "noise_trader",
+        "limit": 0.0,
+        "market": 1.0
+      }
+    ],
+    "side_by_agent": [
+      {
+        "agent_type": "contrarian_trader",
+        "buy": 0.953,
+        "do_nothing": 0.039,
+        "sell": 0.008
+      },
+      {
+        "agent_type": "hft_market_maker",
+        "buy": 0.695,
+        "do_nothing": 0.039,
+        "sell": 0.266
+      },
+      {
+        "agent_type": "momentum_trader",
+        "buy": 0.438,
+        "do_nothing": 0.0,
+        "sell": 0.562
+      },
+      {
+        "agent_type": "noise_trader",
+        "buy": 0.5,
+        "do_nothing": 0.0,
+        "sell": 0.5
+      }
+    ]
+  },
+  "empirical": {
+    "rows": 1236467,
+    "rows_observed": 1094425,
+    "observed_ratio": 0.885123,
+    "events": 66,
+    "returns_count": 1094359,
+    "kurtosis_excess": 8581.787979,
+    "acf_vol_lag1": 1.0,
+    "ofi_pre_mean": 0.26444,
+    "ofi_drop_mean": -2.698847,
+    "crash_rate_proxy": 0.000628
+  },
+  "gates": [
+    {
+      "gate": "parsed_rows_minimum",
+      "pass": true,
+      "observed": 512,
+      "expected": ">= 400"
+    },
+    {
+      "gate": "market_maker_limit_dominance",
+      "pass": true,
+      "observed": 1.0,
+      "expected": ">= 0.90"
+    },
+    {
+      "gate": "market_maker_cancel_rate_reasonable",
+      "pass": true,
+      "observed": 0.227,
+      "expected": "[0.20, 0.40]"
+    },
+    {
+      "gate": "noise_buy_sell_balance",
+      "pass": true,
+      "observed": 0.0,
+      "expected": "<= 0.10"
+    },
+    {
+      "gate": "contrarian_sell_floor",
+      "pass": false,
+      "observed": 0.008,
+      "expected": ">= 0.15"
+    },
+    {
+      "gate": "empirical_fat_tails_baseline",
+      "pass": true,
+      "observed": 8581.787979,
+      "expected": "> 3.0"
+    },
+    {
+      "gate": "empirical_vol_clustering_baseline",
+      "pass": true,
+      "observed": 1.0,
+      "expected": "> 0.10"
+    },
+    {
+      "gate": "empirical_ofi_drop_below_pre",
+      "pass": true,
+      "observed": {
+        "pre": 0.26444,
+        "drop": -2.698847
+      },
+      "expected": "ofi_drop < ofi_pre"
+    },
+    {
+      "gate": "empirical_crash_rate_proxy_reasonable",
+      "pass": true,
+      "observed": "pending_simulation_output",
+      "expected": "evaluate crash_rate_sim in [0.05, 0.40] after mini simulation"
+    }
+  ],
+  "recommendations": [
+    "Contrarian sell-side is too low for a two-sided mean-reversion archetype. Current sell=0.008, target=0.200.",
+    "Suggested temporary rebalancing for mini simulation: buy=0.761, do_nothing=0.039, sell=0.200.",
+    "After rebalancing, run 50-100 mini simulation runs and compare stylized facts against empirical benchmarks in this report."
+  ]
+}

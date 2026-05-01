@@ -151,6 +151,11 @@ def parse_args() -> argparse.Namespace:
                         help="Base seed used to deterministically sample rows")
     parser.add_argument("--raw-signal-tolerance-ms", type=int, default=RAW_SIGNAL_TOLERANCE_MS,
                         help="Nearest-neighbor tolerance used when overlaying raw signal columns onto gridded rows")
+    parser.add_argument(
+        "--overlay-raw-signals",
+        action="store_true",
+        help="Overlay raw flow columns onto gridded rows when gridded CSV is used",
+    )
     parser.add_argument("--overwrite", action="store_true",
                         help="Ignore existing output and regenerate all run_ids")
     parser.add_argument("--dry-run", action="store_true",
@@ -185,8 +190,8 @@ def overlay_raw_signal_columns(gridded: pd.DataFrame, raw: pd.DataFrame, toleran
     right["event_id"] = pd.to_numeric(right["event_id"], errors="coerce")
     right["timestamp_ms"] = pd.to_numeric(right["timestamp_ms"], errors="coerce")
 
-    left = left.sort_values(["event_id", "timestamp_ms"]).reset_index(drop=True)
-    right = right.sort_values(["event_id", "timestamp_ms"]).reset_index(drop=True)
+    left = left.sort_values(["timestamp_ms", "event_id"]).reset_index(drop=True)
+    right = right.sort_values(["timestamp_ms", "event_id"]).reset_index(drop=True)
     right = right[["event_id", "timestamp_ms", *overlay_columns]].rename(
         columns={column: f"{column}_raw" for column in overlay_columns}
     )
@@ -246,13 +251,21 @@ def enrich_market_state(df: pd.DataFrame) -> pd.DataFrame:
     return enriched
 
 
-def load_market_state(path: Path, raw_signal_tolerance_ms: int) -> tuple[pd.DataFrame, str]:
+def load_market_state(
+    path: Path,
+    raw_signal_tolerance_ms: int,
+    overlay_raw_signals: bool,
+) -> tuple[pd.DataFrame, str]:
     if not path.exists():
         raise FileNotFoundError(f"Market-state CSV not found: {path}")
     df = pd.read_csv(path)
     merge_mode = "single_source"
 
-    if path.resolve() == INPUT_GRIDDED_CSV.resolve() and INPUT_FALLBACK_CSV.exists():
+    if (
+        overlay_raw_signals
+        and path.resolve() == INPUT_GRIDDED_CSV.resolve()
+        and INPUT_FALLBACK_CSV.exists()
+    ):
         raw_df = pd.read_csv(INPUT_FALLBACK_CSV)
         df = overlay_raw_signal_columns(df, raw_df, tolerance_ms=raw_signal_tolerance_ms)
         merge_mode = "gridded_with_raw_signal_overlay"
@@ -269,9 +282,14 @@ def load_market_state(path: Path, raw_signal_tolerance_ms: int) -> tuple[pd.Data
 def load_market_state_sources(
     override: Path | None,
     raw_signal_tolerance_ms: int,
+    overlay_raw_signals: bool,
 ) -> dict[str, dict[str, Any]]:
     if override is not None:
-        market_state, merge_mode = load_market_state(override, raw_signal_tolerance_ms)
+        market_state, merge_mode = load_market_state(
+            override,
+            raw_signal_tolerance_ms,
+            overlay_raw_signals=overlay_raw_signals,
+        )
         return {
             "override": {
                 "source_key": "override",
@@ -283,7 +301,11 @@ def load_market_state_sources(
 
     market_states: dict[str, dict[str, Any]] = {}
     if INPUT_FALLBACK_CSV.exists():
-        raw_market_state, raw_mode = load_market_state(INPUT_FALLBACK_CSV, raw_signal_tolerance_ms)
+        raw_market_state, raw_mode = load_market_state(
+            INPUT_FALLBACK_CSV,
+            raw_signal_tolerance_ms,
+            overlay_raw_signals=overlay_raw_signals,
+        )
         market_states["raw"] = {
             "source_key": "raw",
             "source_path": INPUT_FALLBACK_CSV,
@@ -291,7 +313,11 @@ def load_market_state_sources(
             "dataframe": raw_market_state,
         }
     if INPUT_GRIDDED_CSV.exists():
-        gridded_market_state, gridded_mode = load_market_state(INPUT_GRIDDED_CSV, raw_signal_tolerance_ms)
+        gridded_market_state, gridded_mode = load_market_state(
+            INPUT_GRIDDED_CSV,
+            raw_signal_tolerance_ms,
+            overlay_raw_signals=overlay_raw_signals,
+        )
         market_states["gridded"] = {
             "source_key": "gridded",
             "source_path": INPUT_GRIDDED_CSV,
@@ -587,6 +613,7 @@ def main() -> None:
     market_states = load_market_state_sources(
         args.input_csv,
         raw_signal_tolerance_ms=args.raw_signal_tolerance_ms,
+        overlay_raw_signals=args.overlay_raw_signals,
     )
     agent_docs = load_agent_documents(PROMPT_DETAILS_DIR)
     project_root = Path(__file__).resolve().parents[3]
@@ -599,11 +626,25 @@ def main() -> None:
         for agent_type in agent_docs
     }
 
-    existing_records = [] if args.overwrite else load_json_records(output_json)
+    valid_agent_phase_pairs = {
+        (agent_type, phase)
+        for agent_type, payload in agent_market_state.items()
+        for phase in payload["available_phases"]
+    }
+
+    loaded_records = [] if args.overwrite else load_json_records(output_json)
+    existing_records = [
+        record for record in loaded_records
+        if (record.get("agent_type"), record.get("phase")) in valid_agent_phase_pairs
+    ]
+    dropped_existing_records = len(loaded_records) - len(existing_records)
     records = list(existing_records)
     seen_run_ids = existing_run_ids(records)
 
-    target_total = DRY_RUN_SAMPLES if args.dry_run else len(AGENT_CONFIGS) * len(PHASES) * args.runs_per_phase
+    target_total = DRY_RUN_SAMPLES if args.dry_run else sum(
+        len(agent_market_state[agent_type]["available_phases"]) * args.runs_per_phase
+        for agent_type in agent_docs
+    )
     generated_now = 0
 
     print("=" * 70)
@@ -625,20 +666,22 @@ def main() -> None:
     print(f"  Prompt root  : {PROMPT_DETAILS_DIR}")
     print(f"  Output       : {output_json}")
     print(f"  Existing     : {len(existing_records)} records")
+    if dropped_existing_records:
+        print(f"  [INFO] Dropped stale prompt records for missing phases: {dropped_existing_records}")
     print(f"  Available phases in CSV: {sorted(available_phases)}")
     if missing_phases:
         print(f"  [WARN] Missing CSV phases: {missing_phases}")
-        print("         Missing phases will use anchor-imputed snapshots based on the closest available donor phase.")
+        print("         Missing phases are excluded from prompt generation; no synthetic phase imputation is used.")
 
     for agent_type, agent_doc in agent_docs.items():
         selected_market_state = agent_market_state[agent_type]
         agent_df = selected_market_state["dataframe"]
         agent_available_phases = selected_market_state["available_phases"]
         for phase in PHASES:
+            if phase not in agent_available_phases:
+                continue
             phase_df = agent_df[agent_df["phase"] == phase].copy().reset_index(drop=False)
-            donor_phase = phase if not phase_df.empty else fallback_phase_for(phase, agent_available_phases)
-            donor_df = agent_df[agent_df["phase"] == donor_phase].copy().reset_index(drop=False)
-            sampling_df, observed_origin = choose_sampling_pool(donor_df)
+            sampling_df, observed_origin = choose_sampling_pool(phase_df)
 
             runs_for_phase = 1 if args.dry_run else args.runs_per_phase
             for run_number in range(runs_for_phase):
@@ -649,12 +692,8 @@ def main() -> None:
                     break
 
                 row_index = deterministic_index(sampling_df, run_id, args.seed)
-                donor_row = sampling_df.iloc[row_index]
+                row = sampling_df.iloc[row_index]
                 sample_origin = observed_origin
-                row = donor_row
-                if phase_df.empty:
-                    sample_origin = "anchor_imputed_phase_sample"
-                    row = impute_phase_row(donor_row, donor_phase=donor_phase, target_phase=phase, anchors=anchors)
                 anchor_snapshot = phase_anchor_snapshot(anchors, phase)
                 record = build_prompt_record(
                     agent_type=agent_type,
@@ -668,7 +707,7 @@ def main() -> None:
                     input_anchor_source=args.anchors_json.name,
                     project_root=project_root,
                     sample_origin=sample_origin,
-                    sample_source_phase=donor_phase,
+                    sample_source_phase=phase,
                 )
                 records.append(record)
                 seen_run_ids.add(run_id)

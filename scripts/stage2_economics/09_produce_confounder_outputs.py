@@ -35,15 +35,14 @@ OUTPUT_DIR   = PROCESSED_DIR / "tardis" / "confounder_outputs"
 NEWS_TIMING_PATH = PROCESSED_DIR / "tardis" / "news" / "news_events_utc.csv"
 OUTPUT_DYNAMICS_CSV = OUTPUT_DIR / "Event_Dynamics_100ms.csv"
 
-# Recovery threshold: 50% retrace of the drop = event end for timeline split.
-# Justification:
-#   - No academic consensus exists for recovery definition (noted in settings.py).
-#   - 50% retrace is the Fibonacci 0.618-approximation boundary used in Cont (2010,
-#     "Empirical properties of asset returns") to separate transient dislocations
-#     from permanent regime shifts.
-#   - SEC (2015) Circuit Breaker FAQ implicitly uses ~50% as "meaningful recovery".
-#   - Sensitivity: 0% (any bounce) → 66/66 events; 80% → 38/66 events.
-RECOVERY_TARGET = 0.50
+# Braun et al. (2018) define mini-flash-crash recovery using post-event retrace,
+# not a fixed Fibonacci-style price target. On a 100 ms grid we approximate their
+# trade-count recovery ratio with bar-count recovery_eta and require a short stable
+# run above the threshold before declaring the recovery boundary.
+RECOVERY_RATIO_TARGET = 0.20
+RECOVERY_STABILITY_BINS = 3
+PRE_EVENT_CONTEXT_MS = 60_000
+PRE_PEAK_LOOKBACK_MS = 5 * 60_000
 
 # ======================================================================
 # 1.  CURATED NEWS KNOWLEDGE BASE  (2020-06 → 2024-12)
@@ -174,6 +173,50 @@ def zscore_series(series):
     return (s - float(s.mean())) / std
 
 
+def find_pre_peak(dyn: pd.DataFrame, bottom_epoch: int, fallback_epoch: int, fallback_price: float) -> tuple[int, float]:
+    pre_bottom = dyn[dyn["timestamp_ms"] <= bottom_epoch].copy()
+    if pre_bottom.empty:
+        return fallback_epoch, float(fallback_price)
+
+    lookback_start = bottom_epoch - PRE_PEAK_LOOKBACK_MS
+    candidate = pre_bottom[pre_bottom["timestamp_ms"] >= lookback_start].copy()
+    if candidate.empty:
+        candidate = pre_bottom
+
+    candidate["close"] = pd.to_numeric(candidate["close"], errors="coerce")
+    candidate = candidate.dropna(subset=["close"])
+    if candidate.empty:
+        return fallback_epoch, float(fallback_price)
+
+    peak_row = candidate.sort_values(["close", "timestamp_ms"], ascending=[False, True]).iloc[0]
+    return int(peak_row["timestamp_ms"]), float(peak_row["close"])
+
+
+def detect_stable_recovery(
+    post_bottom: pd.DataFrame,
+    pre_peak_price: float,
+    bottom_price: float,
+    threshold: float = RECOVERY_RATIO_TARGET,
+    stability_bins: int = RECOVERY_STABILITY_BINS,
+) -> tuple[int | None, pd.Series]:
+    if post_bottom.empty:
+        return None, pd.Series(dtype=float)
+
+    close = pd.to_numeric(post_bottom["close"], errors="coerce")
+    drawdown = float(pre_peak_price) - float(bottom_price)
+    if not np.isfinite(drawdown) or drawdown <= 0:
+        return None, pd.Series(np.nan, index=post_bottom.index, dtype=float)
+
+    recovery_eta = (close - float(bottom_price)) / drawdown
+    stable_mask = recovery_eta >= threshold
+    stable_run = stable_mask.rolling(stability_bins, min_periods=stability_bins).sum().eq(stability_bins)
+    stable_indices = stable_run[stable_run].index.tolist()
+    if not stable_indices:
+        return None, recovery_eta
+    recovery_boundary_epoch = int(post_bottom.loc[stable_indices[0], "timestamp_ms"])
+    return recovery_boundary_epoch, recovery_eta
+
+
 def classify_news_confounder(event_date, news_lookup, window_hours=12):
     """
     Determine if a crash event has an identifiable news confounder.
@@ -272,6 +315,7 @@ def extract_event_dynamics(event_id, event_date, tick_start_ms, tick_bottom_ms,
         "price_drop_start_time_utc": pd.to_datetime(tick_start_ms),
         "price_bottom_time_utc": pd.to_datetime(tick_bottom_ms),
         "event_end_time_utc": pd.NaT,
+        "recovery_boundary_time_utc": pd.NaT,
         "drop_duration_ms": np.nan,
         "drop_duration_100ms": np.nan,
         "recovery_duration_ms": np.nan,
@@ -284,6 +328,10 @@ def extract_event_dynamics(event_id, event_date, tick_start_ms, tick_bottom_ms,
         "velocity_peak_pct_per_100ms": np.nan,
         "panic_accel_peak_pct_per_100ms2": np.nan,
         "peak_1s_drop_pct": np.nan,
+        "recovery_ratio_target": RECOVERY_RATIO_TARGET,
+        "recovery_stability_bins": RECOVERY_STABILITY_BINS,
+        "recovery_phase_observed": False,
+        "post_phase_observed": False,
     }
 
     fpath_100 = MICRO_100MS / f"event_{event_id:03d}_{event_date}_100ms.parquet"
@@ -309,14 +357,21 @@ def extract_event_dynamics(event_id, event_date, tick_start_ms, tick_bottom_ms,
     start_epoch = int(pd.Timestamp(tick_start_ms).timestamp() * 1000)
     bottom_epoch = int(pd.Timestamp(tick_bottom_ms).timestamp() * 1000)
 
-    # Dynamics centered around the crash, with recovery room after bottom.
-    mask = (
-        (df["timestamp_ms"] >= start_epoch - 60_000)
-        & (df["timestamp_ms"] <= bottom_epoch + 10 * 60_000)
-    )
+    # Keep pre-event context plus the full observed post-bottom path. Recovery is
+    # detected from the realized path instead of an arbitrary fixed horizon.
+    window_start_epoch = min(start_epoch - PRE_EVENT_CONTEXT_MS, bottom_epoch - PRE_PEAK_LOOKBACK_MS)
+    mask = df["timestamp_ms"] >= window_start_epoch
     dyn = df[mask].copy()
     if dyn.empty:
         dyn = df.copy()
+
+    start_epoch, start_price = find_pre_peak(
+        dyn,
+        bottom_epoch=bottom_epoch,
+        fallback_epoch=start_epoch,
+        fallback_price=float(tick_start_price),
+    )
+    timeline["price_drop_start_time_utc"] = pd.to_datetime(start_epoch, unit="ms")
 
     dyn["time_from_drop_start_ms"] = dyn["timestamp_ms"] - start_epoch
     step_scale = resolution_ms / 100.0
@@ -376,13 +431,22 @@ def extract_event_dynamics(event_id, event_date, tick_start_ms, tick_bottom_ms,
     # Crash timeline markers.
     bottom_idx = dyn["timestamp_ms"].sub(bottom_epoch).abs().idxmin()
     bottom_price = float(dyn.loc[bottom_idx, "close"])
-    start_price = float(tick_start_price)
-
     post_bottom = dyn[dyn["timestamp_ms"] >= bottom_epoch].copy()
-    recovery_level = bottom_price + RECOVERY_TARGET * (start_price - bottom_price)
-    reached = post_bottom[post_bottom["close"] >= recovery_level]
-    if not reached.empty:
-        end_epoch = int(reached.iloc[0]["timestamp_ms"])
+    recovery_boundary_epoch, recovery_eta = detect_stable_recovery(
+        post_bottom,
+        pre_peak_price=float(start_price),
+        bottom_price=bottom_price,
+    )
+    dyn["recovery_eta"] = np.nan
+    if not recovery_eta.empty:
+        dyn.loc[recovery_eta.index, "recovery_eta"] = recovery_eta.to_numpy()
+
+    has_post_bottom_rows = bool((dyn["timestamp_ms"] > bottom_epoch).any())
+    timeline["recovery_phase_observed"] = has_post_bottom_rows
+    if recovery_boundary_epoch is not None:
+        end_epoch = recovery_boundary_epoch
+        timeline["recovery_boundary_time_utc"] = pd.to_datetime(recovery_boundary_epoch, unit="ms")
+        timeline["post_phase_observed"] = bool((dyn["timestamp_ms"] > recovery_boundary_epoch).any())
     else:
         end_epoch = int(post_bottom["timestamp_ms"].iloc[-1]) if not post_bottom.empty else int(bottom_epoch)
 
@@ -422,10 +486,14 @@ def extract_event_dynamics(event_id, event_date, tick_start_ms, tick_bottom_ms,
     if dyn["drop_1s_pct"].notna().any():
         timeline["peak_1s_drop_pct"] = round(float(dyn["drop_1s_pct"].max()), 6)
 
-    dyn["phase"] = "post"
-    dyn.loc[dyn["timestamp_ms"] < start_epoch, "phase"] = "pre"
+    dyn["phase"] = "pre"
     dyn.loc[(dyn["timestamp_ms"] >= start_epoch) & (dyn["timestamp_ms"] <= bottom_epoch), "phase"] = "drop"
-    dyn.loc[(dyn["timestamp_ms"] > bottom_epoch) & (dyn["timestamp_ms"] <= end_epoch), "phase"] = "recovery"
+    if has_post_bottom_rows:
+        if recovery_boundary_epoch is None:
+            dyn.loc[dyn["timestamp_ms"] > bottom_epoch, "phase"] = "recovery"
+        else:
+            dyn.loc[(dyn["timestamp_ms"] > bottom_epoch) & (dyn["timestamp_ms"] <= recovery_boundary_epoch), "phase"] = "recovery"
+            dyn.loc[dyn["timestamp_ms"] > recovery_boundary_epoch, "phase"] = "post"
 
     if pd.notna(news_time_utc):
         news_epoch = int(pd.Timestamp(news_time_utc).timestamp() * 1000)
@@ -445,7 +513,7 @@ def extract_event_dynamics(event_id, event_date, tick_start_ms, tick_bottom_ms,
         "realized_vol_10", "realized_vol_200", "ofi_autocorr_20",
         "velocity_pct_per_100ms",
         "drop_velocity_pct_per_100ms", "panic_acceleration_pct_per_100ms2",
-        "drop_1s_pct", "drop_from_local_pct", "delta_from_news_ms",
+        "drop_1s_pct", "drop_from_local_pct", "recovery_eta", "delta_from_news_ms",
     ]
     keep_cols = [c for c in keep_cols if c in dyn.columns]
     dyn = dyn[keep_cols].copy()
@@ -715,11 +783,14 @@ def main():
         labeled_df = labeled_df.merge(
             timeline_df[[
                 "event_id", "resolution_used", "event_end_time_utc",
+                "recovery_boundary_time_utc",
                 "drop_duration_ms", "drop_duration_100ms",
                 "recovery_duration_ms", "recovery_duration_100ms",
                 "total_event_duration_ms", "total_event_duration_100ms",
                 "velocity_peak_pct_per_100ms", "panic_accel_peak_pct_per_100ms2",
                 "peak_1s_drop_pct",
+                "recovery_ratio_target", "recovery_stability_bins",
+                "recovery_phase_observed", "post_phase_observed",
             ]],
             on="event_id",
             how="left",
@@ -733,6 +804,10 @@ def main():
         dyn_df = pd.concat(all_dynamics, ignore_index=True)
         dyn_df.to_csv(OUTPUT_DYNAMICS_CSV, index=False)
         print(f"  -> Saved: {OUTPUT_DYNAMICS_CSV}")
+        phase_counts = dyn_df.groupby("phase")["event_id"].nunique().sort_index()
+        print("  Observed events by phase:")
+        for phase, count in phase_counts.items():
+            print(f"    - {phase:8s} {int(count):>3d}")
     else:
         dyn_df = pd.DataFrame()
         print("  [WARN] No event dynamics rows produced")
@@ -767,6 +842,8 @@ def main():
             "n_flash_crashes": int(fc_mask.sum()),
             "n_trend_drops": int(td_mask.sum()),
             "n_events_with_news_timestamp": int(labeled_df["news_time_utc"].notna().sum()),
+            "n_events_with_recovery_phase": int(labeled_df.get("recovery_phase_observed", pd.Series(dtype=bool)).fillna(False).sum()),
+            "n_events_with_post_phase": int(labeled_df.get("post_phase_observed", pd.Series(dtype=bool)).fillna(False).sum()),
             "dynamics_output_csv": str(OUTPUT_DYNAMICS_CSV),
             "generated_at": datetime.now().isoformat(),
         },

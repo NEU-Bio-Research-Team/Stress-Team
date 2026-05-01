@@ -151,6 +151,10 @@ def parsed_only(frame: pd.DataFrame) -> pd.DataFrame:
     parsed = frame[frame["parse_status"] == "parsed"].copy()
     if parsed.empty:
         return parsed
+    if "sample_origin" in parsed.columns:
+        parsed = parsed[parsed["sample_origin"] != "anchor_imputed_phase_sample"].copy()
+        if parsed.empty:
+            return parsed
     numeric_columns = [
         "aggressiveness",
         "cancel_probability",
@@ -175,15 +179,16 @@ def choose_fit_frame(
 ) -> tuple[pd.DataFrame, str, list[str]]:
     warnings: list[str] = []
     phase_frame = parsed[(parsed["agent_type"] == agent_type) & (parsed["phase"] == phase)].copy()
+    if phase_frame.empty:
+        warnings.append("no observed parsed rows for this agent-phase; excluded from fitting")
+        return phase_frame, "excluded_missing_phase", warnings
+
     if len(phase_frame) >= min_group_size:
         return phase_frame, "phase_fit", warnings
 
-    if len(phase_frame) > 0:
-        warnings.append(
-            f"phase sample size {len(phase_frame)} is below {min_group_size}; falling back to agent-level fit"
-        )
-    else:
-        warnings.append("no parsed rows for this agent-phase; falling back to broader defaults")
+    warnings.append(
+        f"phase sample size {len(phase_frame)} is below {min_group_size}; falling back to agent-level fit"
+    )
 
     agent_frame = parsed[parsed["agent_type"] == agent_type].copy()
     if len(agent_frame) >= min_group_size:
@@ -223,7 +228,7 @@ def contrarian_estar_params(phase_frame: pd.DataFrame) -> dict[str, Any] | None:
     usable = phase_frame.dropna(subset=["drop_from_local_pct_sample", "order_size_multiplier"])
     if usable.empty:
         return None
-    threshold = 0.10
+    threshold = 1.0
     top_cut = usable["order_size_multiplier"].quantile(0.75)
     high_commitment = usable[usable["order_size_multiplier"] >= top_cut]
     if high_commitment.empty:
@@ -323,6 +328,17 @@ def build_phase_output(
 ) -> dict[str, Any]:
     phase_frame = parsed[(parsed["agent_type"] == agent_type) & (parsed["phase"] == phase)].copy()
     fit_frame, fit_source, warnings = choose_fit_frame(parsed, agent_type, phase, min_group_size)
+    if fit_source == "excluded_missing_phase":
+        return {
+            "sample_size": 0,
+            "fit_sample_size": 0,
+            "fit_source": fit_source,
+            "excluded_from_fitting": True,
+            "warnings": warnings,
+            "common_behavior": None,
+            "behavioral_priors": None,
+        }
+
     common_behavior = fit_common_behavior(fit_frame, agent_type, fit_source, stats_module)
     agent_specific = build_agent_specific_priors(agent_type, phase, phase_frame, common_behavior, anchors)
 
@@ -330,6 +346,7 @@ def build_phase_output(
         "sample_size": int(len(phase_frame)),
         "fit_sample_size": int(len(fit_frame)),
         "fit_source": fit_source,
+        "excluded_from_fitting": False,
         "warnings": warnings,
         "common_behavior": common_behavior,
         "behavioral_priors": agent_specific,
@@ -345,10 +362,15 @@ def main() -> None:
     parsed = parsed_only(frame)
     stats_module = try_import_scipy()
     stats_backend = "scipy" if stats_module is not None else "moments_fallback"
+    synthetic_rows = 0
+    if "sample_origin" in frame.columns:
+        synthetic_rows = int((frame["sample_origin"] == "anchor_imputed_phase_sample").sum())
 
     if args.dry_run:
         frame = frame.head(DRY_RUN_SAMPLES)
         parsed = parsed_only(frame)
+        if "sample_origin" in frame.columns:
+            synthetic_rows = int((frame["sample_origin"] == "anchor_imputed_phase_sample").sum())
 
     print("=" * 70)
     print("Script 16: Fit Behavioral Priors")
@@ -357,6 +379,7 @@ def main() -> None:
     print(f"  Output JSON  : {output_json}")
     print(f"  Anchors JSON : {args.anchors_json}")
     print(f"  Parsed rows  : {len(parsed)}")
+    print(f"  Excluded synthetic rows : {synthetic_rows}")
     print(f"  Fit backend  : {stats_backend}")
     print(f"  Min group n  : {args.min_group_size}")
 
@@ -368,12 +391,15 @@ def main() -> None:
             "parsed_rows": int(len(parsed)),
             "minimum_group_size": int(args.min_group_size),
             "fit_backend": stats_backend,
+            "excluded_synthetic_rows": synthetic_rows,
             "agent_types": list(AGENT_CONFIGS.keys()),
             "phases": PHASES,
+            "observed_phases": sorted(parsed["phase"].dropna().astype(str).unique().tolist()) if not parsed.empty else [],
         }
     }
 
     fallback_count = 0
+    excluded_count = 0
     for agent_type in AGENT_CONFIGS:
         output[agent_type] = {}
         for phase in PHASES:
@@ -385,7 +411,9 @@ def main() -> None:
                 min_group_size=args.min_group_size,
                 stats_module=stats_module,
             )
-            if phase_output["fit_source"] != "phase_fit":
+            if phase_output["fit_source"] == "excluded_missing_phase":
+                excluded_count += 1
+            elif phase_output["fit_source"] != "phase_fit":
                 fallback_count += 1
             output[agent_type][phase] = phase_output
 
@@ -393,6 +421,7 @@ def main() -> None:
 
     print(f"\n  Agent-phase entries written: {len(AGENT_CONFIGS) * len(PHASES)}")
     print(f"  Fallback entries           : {fallback_count}")
+    print(f"  Excluded missing phases    : {excluded_count}")
     print("Done.")
 
 

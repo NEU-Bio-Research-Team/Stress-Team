@@ -47,8 +47,33 @@ DERIVED_COLS = [
 STEP_MS = 100
 
 
+def snap_event_timestamps_to_grid(edf: pd.DataFrame, step_ms: int = STEP_MS) -> pd.DataFrame:
+    """
+    Snap event timestamps to the nearest regular grid anchored at the event start.
+
+    Script 09 stores observed bar timestamps (often first-trade timestamps),
+    which are not guaranteed to land exactly on 100ms boundaries. Reindexing
+    against an exact grid without snapping can turn most rows into NaN, then
+    force trade-flow columns to zero.
+    """
+    out = edf.copy()
+    out["timestamp_ms"] = pd.to_numeric(out["timestamp_ms"], errors="coerce")
+    out = out.dropna(subset=["timestamp_ms"]).copy()
+    out["timestamp_ms"] = out["timestamp_ms"].astype(np.int64)
+    out = out.sort_values("timestamp_ms")
+
+    anchor = int(out["timestamp_ms"].iloc[0])
+    rel = (out["timestamp_ms"] - anchor) / float(step_ms)
+    out["timestamp_ms"] = (np.rint(rel).astype(np.int64) * step_ms + anchor).astype(np.int64)
+
+    # If rounding creates collisions, keep the latest observed state at that bin.
+    out = out.drop_duplicates(subset="timestamp_ms", keep="last")
+    return out
+
+
 def reindex_event(edf: pd.DataFrame) -> pd.DataFrame:
     """Re-index a single event onto a regular 100 ms grid."""
+    edf = snap_event_timestamps_to_grid(edf, step_ms=STEP_MS)
     edf = edf.sort_values("timestamp_ms").copy()
     t_min = int(edf["timestamp_ms"].iloc[0])
     t_max = int(edf["timestamp_ms"].iloc[-1])
@@ -56,9 +81,10 @@ def reindex_event(edf: pd.DataFrame) -> pd.DataFrame:
     grid = np.arange(t_min, t_max + STEP_MS, STEP_MS)
 
     # Set index and reindex
-    edf = edf.drop_duplicates(subset="timestamp_ms", keep="last")
+    original_index = pd.Index(edf["timestamp_ms"].to_numpy())
     edf = edf.set_index("timestamp_ms").reindex(grid)
     edf.index.name = "timestamp_ms"
+    edf["is_imputed_grid_row"] = ~edf.index.isin(original_index)
 
     # Fill strategies
     for col in BOOK_STATE_COLS:
@@ -132,6 +158,9 @@ def main():
     OUTPUT_CSV.parent.mkdir(parents=True, exist_ok=True)
     result.to_csv(OUTPUT_CSV, index=False)
     print(f"\n  Total: {len(df)} → {total_after} rows ({original_gaps} gap-fills)")
+    if "is_imputed_grid_row" in result.columns:
+        imputed_ratio = float(result["is_imputed_grid_row"].mean() * 100.0)
+        print(f"  Imputed rows: {imputed_ratio:.2f}%")
     print(f"  Saved: {OUTPUT_CSV}")
     print("Done.")
 

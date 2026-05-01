@@ -64,8 +64,8 @@ AGENT_CONFIGS: dict[str, dict[str, Any]] = {
                 "params": {"shape": 0.45, "loc": 0.0, "scale": 1.0},
             },
             "order_type_market_fraction": {"dist": "scalar", "params": {"value": 0.85}},
-            "estar_activation_threshold_pct": {"dist": "scalar", "params": {"value": 0.10}},
-            "max_size_commitment_deviation_pct": {"dist": "scalar", "params": {"value": 0.60}},
+            "estar_activation_threshold_pct": {"dist": "scalar", "params": {"value": 1.0}},
+            "max_size_commitment_deviation_pct": {"dist": "scalar", "params": {"value": 5.0}},
         },
     },
     "hft_market_maker": {

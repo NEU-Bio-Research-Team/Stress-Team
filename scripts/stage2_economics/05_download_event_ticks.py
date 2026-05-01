@@ -327,7 +327,7 @@ def main():
         # -- aggTrades --
         agg_path = out_dir / "aggtrades.parquet"
         agg_ok = False
-        if agg_path.exists():
+        if agg_path.exists() and agg_path.stat().st_size > 0:
             print(f"    aggTrades: already exists, skipping")
             agg_ok = True
         else:
