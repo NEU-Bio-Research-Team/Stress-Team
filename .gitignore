@@ -21,3 +21,4 @@ data/
 *.npz
 .vscode/mcp.json
 .github
+models/

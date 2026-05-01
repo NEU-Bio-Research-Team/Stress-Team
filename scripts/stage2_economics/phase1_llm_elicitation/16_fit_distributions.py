@@ -76,12 +76,16 @@ def try_import_scipy() -> Any | None:
 
 def fit_beta(values: np.ndarray, stats_module: Any | None) -> dict[str, Any]:
     clipped = np.clip(values.astype(float), EPSILON, 1.0 - EPSILON)
-    if stats_module is not None:
-        alpha, beta, _, _ = stats_module.beta.fit(clipped, floc=0.0, fscale=1.0)
-        return {"dist": "beta", "params": {"alpha": round(float(alpha), 6), "beta": round(float(beta), 6)}}
-
     mean = float(np.mean(clipped))
     var = float(np.var(clipped, ddof=1)) if len(clipped) > 1 else 0.0
+
+    if stats_module is not None and len(clipped) > 1 and var > 1e-8:
+        try:
+            alpha, beta, _, _ = stats_module.beta.fit(clipped, floc=0.0, fscale=1.0)
+            return {"dist": "beta", "params": {"alpha": round(float(alpha), 6), "beta": round(float(beta), 6)}}
+        except Exception:
+            pass
+
     if var <= 1e-8:
         concentration = 50.0
         alpha = max(mean * concentration, EPSILON)
