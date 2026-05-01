@@ -108,7 +108,7 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--mm-vol-threshold-mult", type=float, default=1.4)
     parser.add_argument("--mm-withdrawal-strength", type=float, default=1.8)
     parser.add_argument("--crash-window-ticks", type=int, default=10)
-    parser.add_argument("--crash-threshold-pct", type=float, default=1.0)
+    parser.add_argument("--crash-threshold-pct", type=float, default=1.93)
     parser.add_argument("--max-drop-ticks", type=int, default=5000,
                         help="Upper cap for drop-phase ticks per run to avoid pathological long events")
     parser.add_argument("--max-recovery-ticks", type=int, default=3000,
@@ -345,35 +345,60 @@ def infer_side_probability(
 ) -> float:
     # Returns P(buy).
     trend_buy = 0.58 if ofi_anchor_median >= 0 else 0.42
+    p_buy = 0.50
 
     if agent_type == "momentum_trader":
         if phase == "drop":
-            return 0.25
-        if phase == "recovery":
-            return 0.70
-        if phase == "post":
-            return 0.55
-        return trend_buy
-
-    if agent_type == "contrarian_trader":
+            p_buy = 0.25
+        elif phase == "recovery":
+            p_buy = 0.70
+        elif phase == "post":
+            p_buy = 0.55
+        else:
+            p_buy = trend_buy
+    elif agent_type == "contrarian_trader":
         if phase == "drop":
-            return 0.55
-        if phase in {"recovery", "post"}:
-            return 0.35
-        return 0.45
-
-    if agent_type == "hft_market_maker":
-        return 0.50
-
-    if agent_type == "noise_trader":
+            p_buy = 0.55
+        elif phase in {"recovery", "post"}:
+            p_buy = 0.35
+        else:
+            p_buy = 0.45
+    elif agent_type == "hft_market_maker":
+        p_buy = 0.50
+    elif agent_type == "noise_trader":
         if phase == "drop":
-            return 0.45
-        return 0.50 + 0.05 * np.sign(ofi_anchor_median)
+            p_buy = 0.45
+        else:
+            p_buy = 0.50 + 0.05 * np.sign(ofi_anchor_median)
 
-    p_buy = 0.50
+    # Apply a uniform sell-tilt in drop phase for all archetypes.
     if phase == "drop":
         p_buy = p_buy - drop_sell_pressure
     return clip01(p_buy)
+
+
+def max_drawdown_pct_rolling(close_series: pd.Series, window_ticks: int) -> float:
+    """Maximum rolling-window drawdown (%) using the same detector logic as flash_crash_flag."""
+    if window_ticks <= 1:
+        return 0.0
+    prices = pd.to_numeric(close_series, errors="coerce").to_numpy(dtype=float)
+    n = len(prices)
+    if n < window_ticks:
+        return 0.0
+
+    best = 0.0
+    for end_idx in range(window_ticks - 1, n):
+        win = prices[end_idx - window_ticks + 1: end_idx + 1]
+        first = float(win[0])
+        if first <= 0 or not np.isfinite(first):
+            continue
+        min_price = float(np.nanmin(win))
+        if not np.isfinite(min_price):
+            continue
+        drop_pct = (first - min_price) / first * 100.0
+        if drop_pct > best:
+            best = drop_pct
+    return float(best)
 
 
 def rolling_realized_vol(log_returns: list[float], window: int = 50) -> float:
@@ -598,6 +623,9 @@ def run_one_simulation(
 def summarize_output(df: pd.DataFrame, args: argparse.Namespace) -> dict[str, Any]:
     run_flags = df.groupby("run_id")["flash_crash_flag"].max()
     phase_ofi = df.groupby("phase")["ofi"].mean().to_dict()
+    run_max_dd = df.groupby("run_id")["close"].apply(
+        lambda s: max_drawdown_pct_rolling(s, args.crash_window_ticks)
+    )
 
     mean_wealth_by_phase = df.groupby("phase")["mean_wealth_t"].mean().to_dict()
     pct_ins_peak = float(df["pct_insolvent"].max())
@@ -608,7 +636,17 @@ def summarize_output(df: pd.DataFrame, args: argparse.Namespace) -> dict[str, An
         "n_runs": int(df["run_id"].nunique()),
         "n_rows": int(len(df)),
         "tick_ms": args.tick_ms,
+        "crash_window_ticks": int(args.crash_window_ticks),
+        "crash_threshold_pct": float(args.crash_threshold_pct),
         "flash_crash_rate": float(run_flags.mean()) if len(run_flags) else 0.0,
+        "run_max_drawdown_pct": {
+            "mean": float(run_max_dd.mean()) if len(run_max_dd) else 0.0,
+            "p50": float(run_max_dd.quantile(0.50)) if len(run_max_dd) else 0.0,
+            "p90": float(run_max_dd.quantile(0.90)) if len(run_max_dd) else 0.0,
+            "p95": float(run_max_dd.quantile(0.95)) if len(run_max_dd) else 0.0,
+            "p99": float(run_max_dd.quantile(0.99)) if len(run_max_dd) else 0.0,
+            "max": float(run_max_dd.max()) if len(run_max_dd) else 0.0,
+        },
         "mean_ofi_pre": float(phase_ofi.get("pre", np.nan)),
         "mean_ofi_drop": float(phase_ofi.get("drop", np.nan)),
         "mean_wealth_by_phase": {k: float(v) for k, v in mean_wealth_by_phase.items()},
@@ -675,9 +713,12 @@ def main() -> None:
         avg_per_run = elapsed / done
         remaining = max(args.n_runs - done, 0)
         eta_sec = avg_per_run * remaining
+        run_max_dd = max_drawdown_pct_rolling(run_df["close"], args.crash_window_ticks)
+        run_crash = int(run_df["flash_crash_flag"].max()) if len(run_df) else 0
         print(
             f"[run {done}/{args.n_runs}] done rows={len(run_df)} "
-            f"run_time={run_elapsed:.1f}s elapsed={elapsed:.1f}s eta={eta_sec:.1f}s",
+            f"max_dd_{args.crash_window_ticks}t={run_max_dd:.4f}% "
+            f"crash={run_crash} run_time={run_elapsed:.1f}s elapsed={elapsed:.1f}s eta={eta_sec:.1f}s",
             flush=True,
         )
 
@@ -720,6 +761,12 @@ def main() -> None:
     print(f"Runs            : {summary['n_runs']}")
     print(f"Rows            : {summary['n_rows']}")
     print(f"Crash rate      : {summary['flash_crash_rate']:.4f}")
+    print(
+        "Run max DD (%) : "
+        f"mean={summary['run_max_drawdown_pct']['mean']:.4f} "
+        f"p95={summary['run_max_drawdown_pct']['p95']:.4f} "
+        f"max={summary['run_max_drawdown_pct']['max']:.4f}"
+    )
     print(f"OFI pre mean    : {summary['mean_ofi_pre']:.6f}")
     print(f"OFI drop mean   : {summary['mean_ofi_drop']:.6f}")
     print(f"Pct insolvent   : {summary['pct_insolvent_peak']:.4f}")
