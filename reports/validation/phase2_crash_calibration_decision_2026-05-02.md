@@ -105,3 +105,36 @@ Conclusion:
 
 - This patch intentionally does not modify impact calibration (`impact_scale`, leverage feedback loop) beyond selected scope.
 - Next calibration steps should be done against the locked target (`~10%`) and validated against Phase 2 stylized-fact gates.
+
+## Blocker Quantification (Pre-Advanced Tasks)
+
+Using the manual formula agreed in review:
+
+`impact_scale = (D/100 * P0) / (W * kyle_lambda_drop * |mean_net_flow_drop|)`
+
+With:
+- `D = 1.93` (%)
+- `W = 10` ticks
+- `kyle_lambda_drop = 0.77641797` (from `prior_anchors.json`)
+- `P0 = 36747.9774` (mean `tick_start_price` from `Flash_Crash_Events_Labeled.csv`)
+- `mean_net_flow_drop = -0.133472...` (from patched default run output)
+
+Computed:
+- `impact_scale_required ≈ 684.39`
+
+Sensitivity (different observed drop OFI means):
+- if `|mean_net_flow_drop| = 0.472204...` -> `impact_scale ≈ 193.45`
+- if `|mean_net_flow_drop| = 0.055020...` -> `impact_scale ≈ 1660.25`
+
+Interpretation:
+- With current dynamics and default `impact_scale=1.0`, crash detector threshold `1.93%` is unlikely to trigger frequently.
+- A dedicated impact calibration step is required before expecting `flash_crash_rate ~ 10%`.
+
+## Pending Manual Decisions (Before Advanced Tasks)
+
+1. Contrarian immunity policy under systemic sell-pressure:
+  - keep uniform shift for all archetypes (current implementation), or
+  - exempt contrarian in drop phase.
+2. Impact calibration strategy for target crash-rate:
+  - choose whether to calibrate via `impact_scale` first, or
+  - jointly calibrate `impact_scale` and drop-phase OFI amplification.
