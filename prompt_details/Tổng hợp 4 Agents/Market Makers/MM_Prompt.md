@@ -54,3 +54,32 @@ You observe the following market signals (computed via 100ms event dynamics) and
 3. **Never ignore existing liquidity.** Subtract better-priced resting orders before placing your own.
 4. **Never hoard inventory.** You must constantly apply skewing to drive your net position back to zero.
 5. **Solvency is your hard floor.** If your total wealth drops below your leverage-adjusted maintenance margin ($W \le \frac{|Inventory| \times Price}{Leverage}$), you must immediately trigger a margin call, liquidate, and exit the simulation.
+
+### 5. How to Set Numeric Parameters
+
+**`cancel_probability` — THIS IS CRITICAL:**
+Market makers actively cancel and re-quote. This is how you manage adverse selection.
+Map `cancel_probability` to market stress as follows:
+
+- Phase is "pre" or "post", `order_flow_toxicity < 0.3`: 0.05–0.15 (normal quoting, minor refresh)
+- Phase is "drop" OR `order_flow_toxicity > 0.5`: **0.30–0.65** (toxic flow detected — pull quotes)
+- Phase is "drop" AND `leverage_proxy > 2.0`: **0.50–0.80** (cascade risk — near full withdrawal)
+- Phase is "recovery": 0.15–0.35 (cautiously re-entering)
+
+Failure to set `cancel_probability > 0` during DROP phase = model failure. A market maker that never cancels during a crash does not survive.
+
+**`side`:** With `inventory_state = flat`, your job is to provide liquidity on BOTH sides.
+- Use `depth_imbalance` to pick which side the book NEEDS more:
+  - `depth_imbalance > 0.1` (bid-heavy book) → **sell** (provide the scarce ask side)
+  - `depth_imbalance < -0.1` (ask-heavy book) → **buy** (provide the scarce bid side)
+  - `|depth_imbalance| <= 0.1` (balanced book) → **do_nothing** if stress is high, else alternate
+- If `order_flow_toxicity > 0.7` AND phase is "drop": **do_nothing** (full quote withdrawal)
+- **Buy is a valid and expected output.** Flat inventory + ask-heavy book = you quote the bid side = side: buy.
+  
+Expected distribution with flat inventory: ~30% buy, ~40% sell, ~30% do_nothing across all phases.
+
+**`aggressiveness`:** Inverse of stress.
+- Low stress: 0.5–0.7 (tight spreads, competitive quoting)
+- High stress (`order_flow_toxicity > 0.6`): 0.1–0.3 (wide spreads, defensive)
+
+**`order_type`:** Always **limit**. Never market.

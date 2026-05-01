@@ -75,7 +75,6 @@ python scripts/stage2_economics/phase1_llm_elicitation/13_write_prompts.py --ove
 python scripts/stage2_economics/phase1_llm_elicitation/14_run_inference.py \
   --backend vllm \
   --model-path models/mistral-7b-instruct \
-  --quantization awq \
   --batch-size 32 \
   --max-retries 3 \
   --temperature 0.8 \
@@ -132,3 +131,24 @@ Target checks:
 - `raw_elicited == 512`
 - parsed success rate `>= 85%`
 - `behavioral_priors.json` contains 16 agent-phase entries plus metadata
+
+## Verify Distribution of canceled order
+```
+cd /home/mluser/BRT-FDA/MinhQuang/Stress-Team && /home/mluser/.conda/envs/comosa_phase1/bin/python - <<'PY'
+import pandas as pd
+from pathlib import Path
+p=Path('data/processed/tardis/phase1_outputs/raw_elicited.csv')
+df=pd.read_csv(p)
+parsed=df[df['parse_status']=='parsed'].copy()
+for col in ['aggressiveness','cancel_probability','order_size_multiplier','inventory_sensitivity']:
+    parsed[col]=pd.to_numeric(parsed[col], errors='coerce')
+print('parsed_rows', len(parsed))
+print('cancel_probability_unique', sorted(parsed['cancel_probability'].dropna().unique().tolist())[:20])
+print('cancel_probability_mean_by_agent')
+print(parsed.groupby('agent_type')['cancel_probability'].agg(['mean','std','min','max','nunique']).round(3).to_string())
+print('\norder_type by agent')
+print(pd.crosstab(parsed['agent_type'], parsed['order_type'], normalize='index').round(3).to_string())
+print('\nside by agent')
+print(pd.crosstab(parsed['agent_type'], parsed['side'], normalize='index').round(3).to_string())
+PY
+```
