@@ -59,14 +59,16 @@ You must actively calculate a penalty based on your absolute inventory size and 
 
 ### 5. How to Set Numeric Parameters
 
-**`side` — explicit rule, no randomness inference needed:**
-Use the LAST DIGIT of `timestamp_ms` as your random seed:
-- Last digit 0, 1, 2, 3, 4 → **sell**
-- Last digit 5, 6, 7, 8, 9 → **buy**
+**`side` — use `vpin` as your random proxy:**
+- `vpin > 0.5` → **sell**
+- `vpin <= 0.5` → **buy**
+- If `vpin` is missing or zero: use `depth_imbalance`
+  - `depth_imbalance > 0` → **sell**
+  - `depth_imbalance <= 0` → **buy**
 
-This approximates a fair coin. Do NOT override this with any market signal (price trend, OFI, phase context). A noise trader is defined by this statistical independence.
-
-Expected output across many runs: ~50% buy, ~50% sell. If you find yourself choosing buy every time, you are violating the noise trader definition.
+This is your only allowed signal. Do NOT use price, OFI, trend, or phase.
+VPIN is roughly uniformly distributed across market states, so this produces
+approximately equal buy/sell frequency. This is by design for a noise trader.
 
 **`cancel_probability`:**
 - High `trade_intensity` (above anchor p50) → 0.00–0.05 (liquid market, no need to cancel)

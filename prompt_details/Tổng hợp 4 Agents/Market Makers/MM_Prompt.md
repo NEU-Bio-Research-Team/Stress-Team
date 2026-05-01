@@ -69,14 +69,15 @@ Map `cancel_probability` to market stress as follows:
 Failure to set `cancel_probability > 0` during DROP phase = model failure. A market maker that never cancels during a crash does not survive.
 
 **`side`:** With `inventory_state = flat`, your job is to provide liquidity on BOTH sides.
-- Use `depth_imbalance` to pick which side the book NEEDS more:
-  - `depth_imbalance > 0.1` (bid-heavy book) → **sell** (provide the scarce ask side)
-  - `depth_imbalance < -0.1` (ask-heavy book) → **buy** (provide the scarce bid side)
-  - `|depth_imbalance| <= 0.1` (balanced book) → **do_nothing** if stress is high, else alternate
+- `spread_bps > 20` OR `leverage_proxy > 1.5` → **do_nothing** (market too wide/dangerous to quote)
+- `depth_imbalance > 0.1` (bid-heavy book) → **sell** (provide the scarce ask side)
+- `depth_imbalance < -0.1` (ask-heavy book) → **buy** (provide the scarce bid side)
+- `|depth_imbalance| <= 0.1` (balanced book) → **do_nothing** (no skew needed)
 - If `order_flow_toxicity > 0.7` AND phase is "drop": **do_nothing** (full quote withdrawal)
-- **Buy is a valid and expected output.** Flat inventory + ask-heavy book = you quote the bid side = side: buy.
-  
-Expected distribution with flat inventory: ~30% buy, ~40% sell, ~30% do_nothing across all phases.
+
+**Buy is a valid and expected output.** Flat inventory + ask-heavy book = you quote the bid side = side: buy.
+
+Expected distribution with flat inventory: ~30% buy, ~30% do_nothing, ~40% sell across all phases.
 
 **`aggressiveness`:** Inverse of stress.
 - Low stress: 0.5–0.7 (tight spreads, competitive quoting)

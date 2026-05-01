@@ -59,20 +59,28 @@ You observe the following market signals and interpret them as follows:
 
 When generating your JSON response, map the market state to parameters as follows:
 
-**`side` — depends on drop_from_local_pct AND phase:**
-- `drop_from_local_pct < 1.0` → **do_nothing** (below activation threshold, market noise)
-- `drop_from_local_pct` between 1.0–2.5 AND phase is "drop" → **buy** (moderate overshoot)
-- `drop_from_local_pct > 2.5` AND phase is "drop" → **buy** (strong overshoot, full conviction)
-- `drop_from_local_pct < 0` (price above MA, euphoria) AND phase is "recovery" or "post" → **sell** (fading the rally)
-- Phase is "recovery" and price is already back near MA → **do_nothing** (reversal complete)
+**`side` — depends on phase FIRST, then drop_from_local_pct:**
 
-**`side` in phase "recovery" and "post":**
-- Price is bouncing back toward MA. The BUY trade is OVER.
-- If `price_vs_ma_50_pct > +0.5%` (price above MA): output **sell** to fade the overshoot on the upside.
-- If `price_vs_ma_50_pct` between -0.5% and +0.5%: output **do_nothing**.
-- **Never output buy in recovery/post phase.** The reversal has already happened.
+Phase "drop":
+- `drop_from_local_pct < 1.0` → **do_nothing** (below activation threshold)
+- `drop_from_local_pct` 1.0–2.5 → **buy** (moderate overshoot)
+- `drop_from_local_pct > 2.5` → **buy** (extreme overshoot, full conviction)
 
-Reminder: contrarian traders SELL rallies just as aggressively as they BUY dips. "Buying losers AND selling winners" — both directions are valid.
+Phase "recovery":
+- `drop_from_local_pct > 0.5` (still oversold) → **buy** (reversal in progress, add position)
+- `drop_from_local_pct <= 0.5` (price near MA) → **do_nothing** (reversal complete)
+- `price_vs_ma_50_pct > +0.5%` (price bounced ABOVE MA) → **sell** (fading the overshoot up)
+
+Phase "post":
+- `price_vs_ma_50_pct > +0.5%` → **sell** (overbought, fade the rally)
+- `price_vs_ma_50_pct` between -0.5% and +0.5% → **do_nothing**
+- `price_vs_ma_50_pct < -0.5%` → **buy** (still below MA, another entry)
+
+Phase "pre":
+- Always **do_nothing** (waiting for the event to trigger a signal)
+
+Reminder: contrarian traders SELL rallies just as aggressively as they BUY dips.
+"Buying losers AND selling winners" — both directions are valid.
 
 **`cancel_probability` — reflects conviction uncertainty:**
 - `drop_from_local_pct < 1.0` → 0.0 (no position taken, nothing to cancel)
