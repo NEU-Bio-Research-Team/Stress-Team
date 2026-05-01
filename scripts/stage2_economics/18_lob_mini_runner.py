@@ -25,6 +25,7 @@ from __future__ import annotations
 
 import argparse
 import json
+import time
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Any
@@ -108,6 +109,20 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--mm-withdrawal-strength", type=float, default=1.8)
     parser.add_argument("--crash-window-ticks", type=int, default=10)
     parser.add_argument("--crash-threshold-pct", type=float, default=1.0)
+    parser.add_argument("--max-drop-ticks", type=int, default=5000,
+                        help="Upper cap for drop-phase ticks per run to avoid pathological long events")
+    parser.add_argument("--max-recovery-ticks", type=int, default=3000,
+                        help="Upper cap for recovery-phase ticks per run")
+    parser.add_argument("--max-post-ticks", type=int, default=2000,
+                        help="Upper cap for post-phase ticks per run")
+    parser.add_argument("--max-pre-ticks", type=int, default=2000,
+                        help="Upper cap for pre-phase ticks per run")
+    parser.add_argument("--drop-sell-pressure", type=float, default=0.12,
+                        help="Extra sell tilt in drop phase (probability shift from buy to sell)")
+    parser.add_argument("--drop-impact-mult", type=float, default=1.35,
+                        help="Impact multiplier applied only during drop phase")
+    parser.add_argument("--log-every-runs", type=int, default=1)
+    parser.add_argument("--log-every-ticks", type=int, default=500)
     return parser.parse_args()
 
 
@@ -322,7 +337,12 @@ def sample_behavior(
     )
 
 
-def infer_side_probability(agent_type: str, phase: str, ofi_anchor_median: float) -> float:
+def infer_side_probability(
+    agent_type: str,
+    phase: str,
+    ofi_anchor_median: float,
+    drop_sell_pressure: float,
+) -> float:
     # Returns P(buy).
     trend_buy = 0.58 if ofi_anchor_median >= 0 else 0.42
 
@@ -337,7 +357,7 @@ def infer_side_probability(agent_type: str, phase: str, ofi_anchor_median: float
 
     if agent_type == "contrarian_trader":
         if phase == "drop":
-            return 0.68
+            return 0.55
         if phase in {"recovery", "post"}:
             return 0.35
         return 0.45
@@ -346,9 +366,14 @@ def infer_side_probability(agent_type: str, phase: str, ofi_anchor_median: float
         return 0.50
 
     if agent_type == "noise_trader":
+        if phase == "drop":
+            return 0.45
         return 0.50 + 0.05 * np.sign(ofi_anchor_median)
 
-    return 0.50
+    p_buy = 0.50
+    if phase == "drop":
+        p_buy = p_buy - drop_sell_pressure
+    return clip01(p_buy)
 
 
 def rolling_realized_vol(log_returns: list[float], window: int = 50) -> float:
@@ -369,18 +394,23 @@ def rolling_vpin(flow_history: list[float], window: int = 50) -> float:
     return numerator / denominator if denominator > 0 else 0.0
 
 
-def compute_phase_lengths(event_row: pd.Series) -> dict[str, int]:
+def compute_phase_lengths(event_row: pd.Series, args: argparse.Namespace) -> dict[str, int]:
     drop = int(max(pd.to_numeric(event_row.get("drop_duration_100ms"), errors="coerce") or 200, 20))
+    drop = int(min(drop, max(int(args.max_drop_ticks), 20)))
+
     recovery_raw = pd.to_numeric(event_row.get("recovery_duration_100ms"), errors="coerce")
     recovery = int(max(recovery_raw if pd.notna(recovery_raw) else 120, 20))
+    recovery = int(min(recovery, max(int(args.max_recovery_ticks), 20)))
 
     total_raw = pd.to_numeric(event_row.get("total_event_duration_100ms"), errors="coerce")
     if pd.notna(total_raw):
         post = int(max(float(total_raw) - drop - recovery, 20))
     else:
         post = int(max(drop * 0.25, 20))
+    post = int(min(post, max(int(args.max_post_ticks), 20)))
 
     pre = int(max(drop * 0.35, 30))
+    pre = int(min(pre, max(int(args.max_pre_ticks), 30)))
     return {"pre": pre, "drop": drop, "recovery": recovery, "post": post}
 
 
@@ -403,8 +433,9 @@ def run_one_simulation(
     agent_mix: dict[str, float],
     args: argparse.Namespace,
     rng: np.random.Generator,
+    run_label: str,
 ) -> pd.DataFrame:
-    phase_lengths = compute_phase_lengths(event_row)
+    phase_lengths = compute_phase_lengths(event_row, args)
     total_ticks = int(sum(phase_lengths.values()))
 
     init_price = float(pd.to_numeric(event_row.get("tick_start_price"), errors="coerce") or 30_000.0)
@@ -457,7 +488,12 @@ def run_one_simulation(
                 continue
             agent = solvent_pool[int(rng.integers(0, len(solvent_pool)))]
 
-            side_buy_prob = infer_side_probability(agent_type, phase, ofi_p50)
+            side_buy_prob = infer_side_probability(
+                agent_type=agent_type,
+                phase=phase,
+                ofi_anchor_median=ofi_p50,
+                drop_sell_pressure=args.drop_sell_pressure,
+            )
             side = 1.0 if rng.random() < side_buy_prob else -1.0
 
             # ── Wealth-normalised order size ──────────────────────────────
@@ -480,7 +516,8 @@ def run_one_simulation(
             # ── Update agent's balance and solvency ───────────────────────
             agent.update(signed_qty=side * order_size, trade_price=mid_price)
 
-        impact = args.impact_scale * kyle_lambda * net_flow
+        phase_impact_mult = args.drop_impact_mult if phase == "drop" else 1.0
+        impact = args.impact_scale * phase_impact_mult * kyle_lambda * net_flow
 
         if scenario == "literature":
             impact *= 1.05
@@ -548,6 +585,13 @@ def run_one_simulation(
             }
         )
 
+        if args.log_every_ticks > 0 and ((tick_idx + 1) % args.log_every_ticks == 0 or (tick_idx + 1) == total_ticks):
+            print(
+                f"{run_label} tick {tick_idx + 1}/{total_ticks} "
+                f"phase={phase} price={close_price:.2f} ofi={net_flow:.4f} insolvent={pct_insolvent:.3f}",
+                flush=True,
+            )
+
     return pd.DataFrame(rows)
 
 
@@ -595,10 +639,23 @@ def main() -> None:
 
     all_runs: list[pd.DataFrame] = []
     event_indices = np.arange(len(events))
+    started = time.time()
 
     for run_id in range(args.n_runs):
         idx = int(rng.choice(event_indices))
         event_row = events.iloc[idx]
+        event_id = int(pd.to_numeric(event_row.get("event_id"), errors="coerce") or idx)
+        phase_lengths = compute_phase_lengths(event_row, args)
+        total_ticks = int(sum(phase_lengths.values()))
+
+        if args.log_every_runs > 0 and ((run_id + 1) % args.log_every_runs == 0 or run_id == 0):
+            print(
+                f"[run {run_id + 1}/{args.n_runs}] start event_id={event_id} "
+                f"ticks={total_ticks} phases={phase_lengths}",
+                flush=True,
+            )
+
+        run_started = time.time()
         run_df = run_one_simulation(
             run_id=run_id,
             event_row=event_row,
@@ -608,8 +665,21 @@ def main() -> None:
             agent_mix=agent_mix,
             args=args,
             rng=rng,
+            run_label=f"[run {run_id + 1}/{args.n_runs}]",
         )
         all_runs.append(run_df)
+
+        run_elapsed = time.time() - run_started
+        elapsed = time.time() - started
+        done = run_id + 1
+        avg_per_run = elapsed / done
+        remaining = max(args.n_runs - done, 0)
+        eta_sec = avg_per_run * remaining
+        print(
+            f"[run {done}/{args.n_runs}] done rows={len(run_df)} "
+            f"run_time={run_elapsed:.1f}s elapsed={elapsed:.1f}s eta={eta_sec:.1f}s",
+            flush=True,
+        )
 
     out_df = pd.concat(all_runs, ignore_index=True)
 

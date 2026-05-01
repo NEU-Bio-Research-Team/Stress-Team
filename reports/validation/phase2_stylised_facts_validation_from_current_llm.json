@@ -1,0 +1,75 @@
+{
+  "metadata": {
+    "script": "19_stylised_facts_validation.py",
+    "empirical_baseline": {
+      "kurtosis_excess": 8581.0,
+      "acf_vol_lag1": 1.0,
+      "ofi_drop_mean": -2.7,
+      "ofi_pre_mean": 0.26
+    }
+  },
+  "metrics": {
+    "llm": {
+      "exists": true,
+      "path": "data/processed/tardis/phase2_outputs/lob_mini_simulation_llm.csv",
+      "rows": 19316282,
+      "runs": 50,
+      "kurtosis_excess": 19.94777997224679,
+      "acf_vol_lag1": 1.0,
+      "ofi_pre_mean": 0.0040684732322267755,
+      "ofi_drop_mean": 0.031419050500512684,
+      "crash_rate_sim": 0.0
+    },
+    "uniform": {
+      "exists": false
+    },
+    "literature": {
+      "exists": false
+    }
+  },
+  "ablation": {
+    "h1_pass_kurtosis_llm_gt_uniform": null,
+    "kurtosis_ratio_llm_over_uniform": null
+  },
+  "gates": [
+    {
+      "gate": "kurtosis_excess",
+      "pass": true,
+      "observed": 19.94777997224679,
+      "target": "> 3.0",
+      "empirical_baseline": 8581.0
+    },
+    {
+      "gate": "acf_vol_lag1",
+      "pass": true,
+      "observed": 1.0,
+      "target": "> 0.10",
+      "empirical_baseline": 1.0
+    },
+    {
+      "gate": "ofi_drop_less_than_pre",
+      "pass": false,
+      "observed": {
+        "ofi_pre_mean": 0.0040684732322267755,
+        "ofi_drop_mean": 0.031419050500512684
+      },
+      "target": "ofi_drop_mean < ofi_pre_mean",
+      "empirical_baseline": {
+        "ofi_pre_mean": 0.26,
+        "ofi_drop_mean": -2.7
+      }
+    },
+    {
+      "gate": "crash_rate_sim",
+      "pass": false,
+      "observed": 0.0,
+      "target": "in [0.05, 0.40]",
+      "empirical_baseline": "pending_real_world_mapping"
+    }
+  ],
+  "all_gates_pass": false,
+  "recommendations": [
+    "crash_rate_sim < 0.05: increase sell pressure in drop phase or raise leverage amplification",
+    "OFI phase ordering invalid: verify phase-conditioned side probabilities and Poisson rates"
+  ]
+}

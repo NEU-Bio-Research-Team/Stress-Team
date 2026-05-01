@@ -1,0 +1,90 @@
+{
+  "metadata": {
+    "script": "19_stylised_facts_validation.py",
+    "empirical_baseline": {
+      "kurtosis_excess": 8581.0,
+      "acf_vol_lag1": 1.0,
+      "ofi_drop_mean": -2.7,
+      "ofi_pre_mean": 0.26
+    }
+  },
+  "metrics": {
+    "llm": {
+      "exists": true,
+      "path": "data/processed/tardis/phase2_outputs/lob_mini_simulation_llm.csv",
+      "rows": 578100,
+      "runs": 50,
+      "kurtosis_excess": 15.999627942018972,
+      "acf_vol_lag1": 1.0,
+      "ofi_pre_mean": 0.020444175203658002,
+      "ofi_drop_mean": -0.05502005463185628,
+      "crash_rate_sim": 0.0
+    },
+    "uniform": {
+      "exists": true,
+      "path": "data/processed/tardis/phase2_outputs/lob_mini_simulation_uniform.csv",
+      "rows": 577500,
+      "runs": 50,
+      "kurtosis_excess": 11.617639079178907,
+      "acf_vol_lag1": 1.0,
+      "ofi_pre_mean": 0.00541862230145628,
+      "ofi_drop_mean": -0.023119545487569216,
+      "crash_rate_sim": 0.0
+    },
+    "literature": {
+      "exists": true,
+      "path": "data/processed/tardis/phase2_outputs/lob_mini_simulation_literature.csv",
+      "rows": 579100,
+      "runs": 50,
+      "kurtosis_excess": 20.88545318157489,
+      "acf_vol_lag1": 1.0,
+      "ofi_pre_mean": 0.011376481348897408,
+      "ofi_drop_mean": -0.05490186329464501,
+      "crash_rate_sim": 0.0
+    }
+  },
+  "ablation": {
+    "h1_pass_kurtosis_llm_gt_uniform": true,
+    "kurtosis_ratio_llm_over_uniform": 1.3771841105559433
+  },
+  "gates": [
+    {
+      "gate": "kurtosis_excess",
+      "pass": true,
+      "observed": 15.999627942018972,
+      "target": "> 3.0",
+      "empirical_baseline": 8581.0
+    },
+    {
+      "gate": "acf_vol_lag1",
+      "pass": true,
+      "observed": 1.0,
+      "target": "> 0.10",
+      "empirical_baseline": 1.0
+    },
+    {
+      "gate": "ofi_drop_less_than_pre",
+      "pass": true,
+      "observed": {
+        "ofi_pre_mean": 0.020444175203658002,
+        "ofi_drop_mean": -0.05502005463185628
+      },
+      "target": "ofi_drop_mean < ofi_pre_mean",
+      "empirical_baseline": {
+        "ofi_pre_mean": 0.26,
+        "ofi_drop_mean": -2.7
+      }
+    },
+    {
+      "gate": "crash_rate_sim",
+      "pass": false,
+      "observed": 0.0,
+      "target": "in [0.05, 0.40]",
+      "empirical_baseline": "pending_real_world_mapping"
+    }
+  ],
+  "all_gates_pass": false,
+  "recommendations": [
+    "crash_rate_sim < 0.05: increase sell pressure in drop phase or raise leverage amplification"
+  ]
+}
