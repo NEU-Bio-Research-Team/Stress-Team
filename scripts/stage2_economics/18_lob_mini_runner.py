@@ -123,6 +123,8 @@ def parse_args() -> argparse.Namespace:
                         help="Extra sell tilt in drop phase (probability shift from buy to sell)")
     parser.add_argument("--drop-impact-mult", type=float, default=1.35,
                         help="Impact multiplier applied only during drop phase")
+    parser.add_argument("--min-price-fraction", type=float, default=0.70,
+                        help="Per-run hard floor as a fraction of init_price to avoid price-to-zero collapse")
     parser.add_argument("--log-every-runs", type=int, default=1)
     parser.add_argument("--log-every-ticks", type=int, default=500)
     return parser.parse_args()
@@ -556,6 +558,8 @@ def run_one_simulation(
 
         prev_price = max(mid_price, 1e-9)
         mid_price = max(prev_price + impact, 1e-6)
+        # Keep runs inside flash-crash regime and avoid pathological collapse-to-zero.
+        mid_price = max(mid_price, init_price * args.min_price_fraction)
         close_price = mid_price
 
         log_ret = float(np.log(close_price / prev_price)) if prev_price > 0 else 0.0
@@ -643,6 +647,7 @@ def summarize_output(df: pd.DataFrame, args: argparse.Namespace) -> dict[str, An
         "tick_ms": args.tick_ms,
         "crash_window_ticks": int(args.crash_window_ticks),
         "crash_threshold_pct": float(args.crash_threshold_pct),
+        "min_price_fraction": float(args.min_price_fraction),
         "flash_crash_rate": float(run_flags.mean()) if len(run_flags) else 0.0,
         "run_max_drawdown_pct": {
             "mean": float(run_max_dd.mean()) if len(run_max_dd) else 0.0,
