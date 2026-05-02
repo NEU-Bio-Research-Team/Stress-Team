@@ -102,8 +102,10 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--n-runs", type=int, default=50)
     parser.add_argument("--seed", type=int, default=42)
     parser.add_argument("--tick-ms", type=int, default=100)
-    parser.add_argument("--impact-scale", type=float, default=1.0)
-    parser.add_argument("--intensity-scale", type=float, default=0.35)
+    parser.add_argument("--impact-scale", type=float, default=2.0,
+                        help="Calibrated in Step-2 benchmark sweep to hit ~10% crash-rate target")
+    parser.add_argument("--intensity-scale", type=float, default=1.2289,
+                        help="Calibrated via Step-1 OFI p50 match: target -0.1915, achieved -0.177 (7.7%% error)")
     parser.add_argument("--base-order-size", type=float, default=0.25)
     parser.add_argument("--mm-vol-threshold-mult", type=float, default=1.4)
     parser.add_argument("--mm-withdrawal-strength", type=float, default=1.8)
@@ -371,8 +373,11 @@ def infer_side_probability(
         else:
             p_buy = 0.50 + 0.05 * np.sign(ofi_anchor_median)
 
-    # Apply a uniform sell-tilt in drop phase for all archetypes.
-    if phase == "drop":
+    # Apply a uniform sell-tilt in drop phase for all archetypes EXCEPT contrarian_trader.
+    # Contrarian is exempt: it acts as a liquidity restorer / stabilizer (Kyle 1985,
+    # Glosten-Milgrom 1985) and must retain its buying bias during drop to preserve
+    # the recovery mechanism required by COMOSA §2.2 and Hypothesis H2.
+    if phase == "drop" and agent_type != "contrarian_trader":
         p_buy = p_buy - drop_sell_pressure
     return clip01(p_buy)
 

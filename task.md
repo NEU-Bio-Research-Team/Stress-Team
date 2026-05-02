@@ -1,197 +1,130 @@
-Tìm ra rồi — đây là toàn bộ sơ đồ nguồn gốc và cơ chế gây zero.
+Tôi đã có đủ thông tin. Giờ tôi phân tích root cause trực tiếp từ code.
 
 ***
 
-## Nguồn gốc của `Event_Dynamics_100ms_gridded.csv`
+## Root Cause Analysis: `crash_rate_sim = 0.0` trong cả 3 scenario
 
-File được tạo bởi **[`script 10`](https://github.com/NEU-Bio-Research-Team/Stress-Team/blob/a0b09aacdfd181782f92498719c5147816936524/scripts/stage2_economics/10_augment_dynamics_features.py)** — không phải script 09 hay bất kỳ script confounder nào khác. Chain đầy đủ là:
-
-```
-script 09  →  Event_Dynamics_100ms.csv          (raw, có gaps)
-script 10  →  Event_Dynamics_100ms_gridded.csv  (regular 100ms grid)
-script 13  →  phase1_prompts.json               (chọn gridded đầu tiên)
-```
+Sau khi đọc toàn bộ `18_lob_mini_runner.py` và output JSON, tôi xác định **4 root cause độc lập** đang cộng hưởng để triệt tiêu khả năng sinh crash.
 
 ***
 
-## Tại sao gridded bị zero-dominated
+## Root Cause 1: `flash_crash_flag` được tính per-tick, không per-run
 
-Script 10 áp dụng **3 fill strategy khác nhau** cho 3 nhóm cột, và đây chính là nguồn gốc của vấn đề:
+Đây là **bug logic nghiêm trọng nhất** . Logic hiện tại trong `run_one_simulation()` tại dòng tính `window`:
 
 ```python
-BOOK_STATE_COLS = ["close", "mid_price", "spread_bps", "depth_imbalance", "touch_depth"]
-TRADE_FLOW_COLS = ["ofi", "trade_intensity"]          # ← zero-fill
-DERIVED_COLS    = ["kyle_lambda", "vpin", "amihud_illiq", "realized_vol_50", ...]  # ← interpolate
+window = close_series[-args.crash_window_ticks:]
+flash_crash_flag = 0
+if len(window) == args.crash_window_ticks and window[0] > 0:
+    drop_pct = (window[0] - min(window)) / window[0] * 100.0
+    if drop_pct >= args.crash_threshold_pct:  # default = 1.0%
+        flash_crash_flag = 1
 ```
 
-Đoạn fill trong `reindex_event()`:
-```python
-for col in TRADE_FLOW_COLS:
-    if col in edf.columns:
-        edf[col] = edf[col].fillna(0.0)   # ← mọi gap 100ms trong ofi, trade_intensity → 0
-```
-
-Logic này **đúng về mặt tài chính**: khi không có trade nào land trong 100ms bin, OFI và trade intensity thật sự bằng 0. Vấn đề không phải zero-fill sai — mà là **tỷ lệ gap quá cao**. Nếu raw data có nhiều khoảng lặng (ví dụ: thị trường yên tĩnh ở phase `pre` và `post`), thì sau khi grid, phần lớn rows sẽ là 0. 
-
-**`amihud_illiq` bị 0 toàn bộ** thì khác — nó thuộc `DERIVED_COLS` (được interpolate), nhưng nếu raw đã là NaN/0 toàn bộ do không có đủ volume trong crash window ở script 09, thì `interpolate + ffill().bfill()` cũng chỉ khuếch đại số 0 ban đầu đó. 
-
-***
-
-## Cách sửa logic đúng chỗ
-
-Vấn đề thật sự ở **chỗ nào trong chain** và **cần sửa ở đâu**:
-
-### Tùy chọn A — Sửa script 10 (fix tại nguồn gridded)
-
-Thay vì zero-fill ngay lập tức, tính thêm metadata về density trước khi fill:
+Giá trị `flash_crash_flag` được ghi vào từng row riêng lẻ. Tuy nhiên trong `summarize_output()` :
 
 ```python
-# Thêm vào reindex_event():
-n_original = len(edf)
-n_grid = len(grid)
-edf["trade_density"] = n_original / n_grid   # fraction of bins with real trades
-
-# Zero-fill như cũ, nhưng thêm cột flag để script 13 biết
-for col in TRADE_FLOW_COLS:
-    if col in edf.columns:
-        edf[f"{col}_observed"] = edf[col].notna()   # True = có real trade
-        edf[col] = edf[col].fillna(0.0)
+run_flags = df.groupby("run_id")["flash_crash_flag"].max()
 ```
 
-Script 13 sau đó có thể lọc: chỉ sample rows có `trade_density > 0.1` hoặc `ofi_observed == True`.
+Tức là một run được tính là "crash" chỉ khi **ít nhất 1 tick trong 10 tick liên tiếp** có `drop_pct >= 1.0%`. Vì `window[0]` là giá đầu window, còn `min(window)` là đáy window — điều này về mặt lý thuyết không sai. Nhưng vấn đề thực tế là: **price path cực kỳ smooth do impact quá nhỏ**, nên không tick nào đạt 1% drawdown trong 10 ticks (= 1 giây).
 
-### Tùy chọn B — Sửa script 13 (fix tại sampling)
+Cần đọc thêm để confirm magnitude.
 
-Đây là fix nhanh nhất và không cần rerun script 10. Trong `choose_input_csv()` và `load_market_state()`, thêm fallback theo signal density:
+***
+
+## Root Cause 2: `impact_scale * kyle_lambda * net_flow` quá nhỏ để tạo 1% drop
+
+Tại default params :
+- `--impact-scale = 1.0`
+- `--drop-impact-mult = 1.35`
+- `--drop-sell-pressure = 0.12`
+- `--intensity-scale = 0.35` → `lam ≈ 0.35 * trade_intensity_anchor`
+
+Theo summary JSON , `ofi_drop_mean = -0.0550` cho LLM. Với kyle_lambda điển hình từ anchors vào khoảng 0.5–2.0 (empirical HFT range), `impact ≈ 1.0 * 1.35 * 0.5 * (-0.0550) ≈ -0.037`. Với init_price ≈ 30,000 USDT, **impact per tick chỉ ~ -$37**, hay ~0.00012% per tick. Để đạt 1% drawdown trong 10 ticks cần tích lũy 10 ticks cùng chiều impact ~ -$30 mỗi tick — xác suất xảy ra liên tục rất thấp với lognormal noise.
+
+Vấn đề: `kyle_lambda` từ `prior_anchors.json` có thể quá nhỏ (được tính từ empirical data thực tế trên BTC, thường nằm khoảng 1e-5 đến 1e-2 tính bằng $/BTC), trong khi `net_flow` tính bằng BTC với `base_order_size = 0.25 BTC`. Cần kiểm tra unit mismatch giữa kyle_lambda empirical và net_flow đơn vị BTC.
+
+***
+
+## Root Cause 3: `infer_side_probability` không áp dụng `drop_sell_pressure` đúng chỗ
+
+Đây là **bug logic im lặng** . Hàm `infer_side_probability` có logic như sau:
 
 ```python
-def sample_phase_row(phase_df, run_id, seed):
-    """Prefer rows with non-zero trade flow over pure gap-fill rows."""
-    signal_rows = phase_df[
-        (phase_df["ofi"].abs() > 1e-6) |
-        (phase_df["trade_intensity"] > 1e-6)
-    ]
-    pool = signal_rows if len(signal_rows) >= 5 else phase_df
-    # Dùng pool thay vì phase_df trong deterministic_index
-    return pool
+def infer_side_probability(agent_type, phase, ofi_anchor_median, drop_sell_pressure):
+    if agent_type == "momentum_trader":
+        if phase == "drop":
+            return 0.25   # hardcoded, KHÔNG dùng drop_sell_pressure
+    ...
+    # drop_sell_pressure chỉ được dùng ở nhánh cuối (fallback)
+    p_buy = 0.50
+    if phase == "drop":
+        p_buy = p_buy - drop_sell_pressure
+    return clip01(p_buy)
 ```
 
-Điều này giữ nguyên gridded CSV (tốt cho NOTEARS/LiNGAM cần regular grid) nhưng chỉ sample từ rows có real market activity.
+`drop_sell_pressure` (default `0.12`) **chỉ áp dụng cho fallback branch** — không rơi vào bất kỳ agent_type nào được định nghĩa rõ ràng. Cụ thể:
+- `momentum_trader` → hardcoded 0.25 trong drop (không dùng tham số)
+- `contrarian_trader` → hardcoded 0.55 trong drop
+- `hft_market_maker` → hardcoded 0.50 (luôn)
+- `noise_trader` → hardcoded 0.45 trong drop
 
-### Tùy chọn C — Merge raw + gridded (fix toàn diện nhất)
+Không có agent type nào sử dụng `drop_sell_pressure`. Tham số `--drop-sell-pressure` **hoàn toàn dead code** cho các agent type cụ thể. Tăng `--drop-sell-pressure` lên bất kỳ giá trị nào cũng **không có tác dụng** vì fallback branch không bao giờ được gọi (tất cả 4 agent types đều được handle trước đó).
 
-Dùng gridded cho các cột book-state (`spread_bps`, `touch_depth`, `close`, `mid_price`) nhưng lấy `ofi`, `trade_intensity` từ raw CSV, join theo `(event_id, timestamp_ms)`:
+***
+
+## Root Cause 4: `leverage_proxy` không feed back vào price impact
+
+`leverage_proxy` được tính như sau :
 
 ```python
-def load_market_state_merged(gridded_path, raw_path):
-    gridded = pd.read_csv(gridded_path)
-    raw = pd.read_csv(raw_path)[["event_id", "timestamp_ms", "ofi",
-                                  "trade_intensity", "amihud_illiq",
-                                  "depth_imbalance"]]
-    # Merge: gridded làm base, raw overwrite các flow columns
-    merged = gridded.merge(raw, on=["event_id", "timestamp_ms"],
-                            how="left", suffixes=("_grid", "_raw"))
-    for col in ["ofi", "trade_intensity", "amihud_illiq", "depth_imbalance"]:
-        merged[col] = merged[f"{col}_raw"].where(
-            merged[f"{col}_raw"].notna(), merged[f"{col}_grid"]
-        )
-    return merged
+leverage_proxy = 1.0 + abs(log_ret) / max(realized_anchor, 1e-8)
 ```
 
-***
-
-## Điểm cần kiểm tra thêm trước khi chọn fix
-
-Trước khi sửa, nên confirm thêm một điểm: **raw CSV (`Event_Dynamics_100ms.csv`) có ofi non-zero ở các phase drop/recovery không?** Nếu raw cũng toàn 0 thì vấn đề nằm sâu hơn ở script 06 (`06_micro_feature_engineering.py`) — là nơi tính OFI từ aggTrades parquet. Từ output terminal bạn đã chạy, zero-fraction của raw là khoảng ~89% — có nghĩa raw vẫn có ~11% non-zero rows, và đó là signal thật. Vậy **Tùy chọn B (fix script 13 bằng density-aware sampling)** là đường đi nhanh và an toàn nhất để unblock rerun ngay hôm nay.
-
-Dưới đây là bản tổng hợp kỹ thuật đầy đủ dựa trên rà soát toàn bộ pipeline 4 scripts và output thực tế. Các nguyên nhân được xếp theo thứ tự causal, không phải theo mức độ dễ fix.
+Nhưng giá trị này **chỉ được ghi vào DataFrame, không bao giờ được dùng để amplify impact**. Không có feedback loop từ leverage vào `impact`. Đây là lý do `leverage_proxy ~ 1.006` trong drop phase — không phải vì leverage thấp thực sự, mà vì khi `log_ret` nhỏ (do impact nhỏ ở RC2), `leverage_proxy` cũng nhỏ. Vòng tròn này hoàn toàn decorative.
 
 ***
 
-## Chuỗi lỗi causal theo 4 tầng
+## Bảng tóm tắt root causes
 
-Vấn đề không phải là một lỗi đơn lẻ mà là **cascade failure** — mỗi tầng khuếch đại lỗi từ tầng trước. Script 16 không phải nguồn gốc; nó chỉ là nơi collapse trở nên quan sát được.
+| # | Root Cause | Loại | Tác động | Severity |
+|---|---|---|---|---|
+| RC1 | `crash_threshold_pct=1%` quá cao so với impact magnitude thực tế | **Tham số miscalibrated** | Không có tick nào pass gate crash | 🔴 Critical |
+| RC2 | Kyle lambda × net_flow → impact per tick quá nhỏ (possibily unit mismatch) | **Physics bug / calibration** | Price path quá smooth để tạo 1% trong 10 ticks | 🔴 Critical |
+| RC3 | `drop_sell_pressure` là dead code — không áp dụng cho bất kỳ agent type nào | **Logic bug** | Tăng param không có tác dụng gì | 🟠 High |
+| RC4 | `leverage_proxy` không feed back vào price impact | **Missing amplification loop** | Wealth/leverage channel decorative | 🟠 High |
 
 ***
 
-## Tầng 1 — Input Data (Script 13)
+## Fix đề xuất theo thứ tự ưu tiên
 
-**Root cause: `choose_input_csv` ưu tiên gridded CSV nhưng file đó bị zero-dominated.**
-
-Nhìn vào đúng đoạn code trong [`13_write_prompts.py`](https://github.com/NEU-Bio-Research-Team/Stress-Team/blob/a0b09aacdfd181782f92498719c5147816936524/scripts/stage2_economics/phase1_llm_elicitation/13_write_prompts.py):
+**Fix RC3 trước (1 dòng)** — đây là quick win nhất. Trong `infer_side_probability`, thay vì hardcode, áp dụng `drop_sell_pressure` vào tất cả agent types trong drop phase:
 
 ```python
-def choose_input_csv(override: Path | None) -> Path:
-    if override is not None:
-        return override
-    if INPUT_GRIDDED_CSV.exists():
-        return INPUT_GRIDDED_CSV  # ← luôn ưu tiên gridded
-    return INPUT_FALLBACK_CSV
+if agent_type == "momentum_trader":
+    base = 0.25 if phase == "drop" else ...
+    if phase == "drop":
+        return clip01(base - drop_sell_pressure * 0.5)  # thêm dòng này
 ```
 
-File gridded có ~89.8% zero cho `ofi`, `trade_intensity`, `depth_imbalance`, và 100% zero cho `amihud_illiq`. Tất cả 18 trường này đều được inject thẳng vào `build_user_prompt()` dưới dạng literal numbers. Khi model nhìn thấy `ofi: 0.0`, `trade_intensity: 0.0`, `amihud_illiq: 0.0` cho hầu hết runs, nó không có signal gì để differentiate hành vi theo phase, nên sẽ fall back về stereotype của agent.
+Hoặc tốt hơn, refactor để `drop_sell_pressure` là một global shift áp dụng sau khi xác định base probability:
 
-**Failure mode phụ:** `impute_phase_row()` có logic remap theo z-score, nhưng nó chỉ được gọi khi `phase_df.empty` — tức là khi phase không có row trong CSV. Khi phase có rows (dù toàn zero), imputation bị skip hoàn toàn.
+```python
+p_buy = _base_side_prob(agent_type, phase, ofi_anchor_median)
+if phase == "drop":
+    p_buy = clip01(p_buy - drop_sell_pressure)
+return p_buy
+```
 
-***
+**Fix RC1 + RC2** — Hạ `crash_threshold_pct` từ `1.0%` xuống `0.5%` làm điểm thử nghiệm đầu tiên. Đồng thời kiểm tra đơn vị của `kyle_lambda` trong `prior_anchors.json` — nếu đang là $ per BTC unit, cần nhân thêm hệ số scale để `impact` tính ra được theo phần trăm giá.
 
-## Tầng 2 — Prompt Contract (Script 13 + common.py)
+**Fix RC4** — Thêm feedback loop leverage vào impact multiplier trong drop phase:
 
-**Root cause: hai lỗi độc lập cộng hưởng.**
+```python
+# Sau khi tính leverage_proxy
+if phase == "drop" and leverage_proxy > 1.5:
+    impact *= min(leverage_proxy / 1.5, 3.0)  # cap tại 3x
+```
 
-**Lỗi 2a — Missing state variables.** Từ code `build_user_prompt()`, script 13 chỉ truyền vào: `close`, `ofi`, `trade_intensity`, `realized_vol_50`, `kyle_lambda`, `spread_bps`, `touch_depth`, `depth_imbalance`, `vpin`, `amihud_illiq`, `leverage_proxy`, `order_flow_toxicity`, `drop_from_local_pct`, `delta_from_news_ms`. Nhưng các prompt markdown yêu cầu thêm:
-
-| Biến cần trong prompt | Agent | Script 13 có truyền? |
-|---|---|---|
-| `moving_average` / `long_term_MA` | Contrarian, Momentum | ❌ |
-| `current_inventory` / `inventory` | MM, Noise, Contrarian | ❌ |
-| `mid_price` | MM, Noise | ❌ |
-| `position_pnl` / `unrealized_pnl` | MM | ❌ |
-
-Hệ quả trực tiếp: model buộc phải hallucinate những giá trị này. Output `raw_elicited.csv` đã chứng minh — có row reasoning về "3.5x the long-term moving average" và "drop_from_local_pct = 1624.7%" dù script không cấp inventory hay MA state nào.
-
-**Lỗi 2b — Target leakage.** Trong `common.py`, `AGENT_CONFIGS` chứa trường `parameter_targets` với các câu như:
-- `"Cancel probability should stay close to zero"` (nhiều agent)
-- `"Order type should usually be market"` (momentum, noise)
-- `"Order type should be limit unless urgent"` (market maker)
-
-Những câu này được embed **nguyên văn** vào user prompt qua `build_user_prompt()`. Đây là circular prior injection: pipeline đang elicit distribution từ LLM nhưng đồng thời bảo LLM output phải ra giá trị nào. Output đã confirm điều này: toàn bộ 510 parsed rows có `cancel_probability = 0.0`, MM 100% limit, còn lại 100% market.
-
-***
-
-## Tầng 3 — Inference Decoding (Script 14)
-
-**Root cause: free-form generation không có structural constraint.**
-
-Script 14 chỉ set `temperature` và `max_tokens` trong `SamplingParams` — không có `stop` sequences, không có guided decoding, không có JSON mode. Kết quả thực tế:
-
-- 72/512 responses wrap JSON trong code fence ` ```json ... ``` `
-- 5 responses append extra prose sau JSON
-- 47 responses cần ít nhất 1 retry
-- 2 responses fail parse hoàn toàn (contrarian drop+recovery)
-
-`extract_json_object()` trong `common.py` chỉ scan `text.find('{')` và decode từ đó — nên code fence và extra text làm hỏng extraction logic. Với vLLM/LLM inference framework, đây là vấn đề hoàn toàn có thể tránh bằng guided decoding (outlines/lm-format-enforcer).
-
-***
-
-## Tầng 4 — Fitting (Script 16)
-
-**Root cause: downstream damage, không phải independent bug.**
-
-Script 16 không có lỗi logic riêng — nó chỉ fit đúng những gì được feed vào. Vì `cancel_probability` đã là toàn 0.0 từ tầng trước, Beta fitting bị degenerate: tham số `alpha` về `5e-05`, distribution là near-point-mass tại 0. `order_type_market_fraction = 1.0` chính xác là encode collapse từ tầng 2b. `behavioral_priors.json` về mặt kỹ thuật không sai — nó chỉ đang faithfully phản ánh corrupted elicitation.
-
-***
-
-## Thứ tự fix theo dependency order
-
-Fix không đúng thứ tự sẽ tốn công rerun nhiều lần. Dependency chain buộc thứ tự sau:
-
-1. **Fix `13_write_prompts.py`:** Merge raw + gridded thay vì chọn một. Cụ thể: dùng gridded cho `spread_bps`, `touch_depth`, `kyle_lambda` (vì gridded interpolate tốt hơn); nhưng lấy `ofi`, `trade_intensity`, `depth_imbalance`, `amihud_illiq` từ raw. Hoặc đơn giản hơn: thêm `--input-csv` flag trỏ vào raw CSV khi chạy.
-
-2. **Thêm missing state variables vào `build_user_prompt()`:** Tối thiểu cần tính `moving_average` từ `close` column của phase window trước khi sample, và truyền `inventory=0` như initial state. Nếu không có inventory tracking thực, thì phải xóa các rule trong prompt markdown phụ thuộc vào inventory.
-
-3. **Giảm leakage trong `common.py`:** Thay các `parameter_targets` kiểu prescriptive (`"cancel probability should stay close to zero"`) bằng descriptive (`"cancel probability reflects current market uncertainty; typical range 0.0–0.3"`). Elicitation nên capture uncertainty, không encode point estimate.
-
-4. **Thêm structured decoding vào `14_run_inference.py`:** Với vLLM, dùng `guided_json=RESPONSE_SCHEMA` trong `SamplingParams`. Nếu framework không support, tối thiểu thêm `stop=["}"]` và strip code fences trước khi parse.
-
-5. **Rerun 13 → 14 → 15 → 16 theo thứ tự.** Chạy 15+16 trên `raw_elicited.csv` hiện tại là vô nghĩa vì sẽ chỉ refit lên collapsed data.
+Với 4 fix trên, đặc biệt RC3, `crash_rate_sim` sẽ nhích lên ngay cả khi không tăng `--drop-sell-pressure` hay `--drop-impact-mult` — vì hiện tại tăng 2 tham số đó không có tác dụng gì .
