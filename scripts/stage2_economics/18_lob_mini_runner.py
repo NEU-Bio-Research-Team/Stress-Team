@@ -159,8 +159,15 @@ def clip01(x: float) -> float:
 
 
 def resolve_anchor_phase(sim_phase: str, calibration_phase: str) -> str:
-    """Select which anchor phase to use for calibration-sensitive metrics."""
-    if calibration_phase in CALIBRATION_PHASES:
+    """Select which anchor phase to use for calibration-sensitive metrics.
+
+    Only apply calibration_phase override for normal-baseline phases
+    (normal_bull, normal_bear). Flash-crash phases (pre, drop, recovery,
+    post) must use their own empirical anchors so that drop-phase dynamics
+    (higher trade intensity, directional OFI) are preserved.
+    """
+    NORMAL_CALIBRATION = {"normal_bull", "normal_bear"}
+    if calibration_phase in NORMAL_CALIBRATION:
         return calibration_phase
     return sim_phase
 
@@ -507,7 +514,7 @@ def run_one_simulation(
         vpin_anchor = safe_phase_metric(anchors, "vpin_per_phase", anchor_phase, fallback=0.25)
         ofi_p50 = float(anchors.get("ofi_percentiles_per_phase", {}).get(anchor_phase, {}).get("p50", 0.0) or 0.0)
 
-        lam = max(min(trade_intensity_anchor * args.intensity_scale, 50.0), 0.05)
+        lam = max(min(trade_intensity_anchor * args.intensity_scale, 500.0), 0.05)
         arrivals = int(rng.poisson(lam=lam))
 
         net_flow = 0.0

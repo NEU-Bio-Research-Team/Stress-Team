@@ -77,11 +77,12 @@ def prepare_matrix(df: pd.DataFrame, sample_rows: int, seed: int = 42) -> tuple[
 
 def run_notears(X: np.ndarray, node_names: list[str], lambda1: float) -> tuple[list[dict[str, Any]], str]:
     try:
-        from notears import notears_linear  # type: ignore
+        from dagma.linear import DagmaLinear  # type: ignore
     except Exception as e:
         return [], f"notears_unavailable: {e}"
 
-    W = notears_linear(X, lambda1=lambda1, loss_type="l2")
+    model = DagmaLinear(loss_type="l2")
+    W = model.fit(X, lambda1=lambda1)
     edges: list[dict[str, Any]] = []
     for i, src in enumerate(node_names):
         for j, dst in enumerate(node_names):
