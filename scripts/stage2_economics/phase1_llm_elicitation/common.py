@@ -9,6 +9,8 @@ from typing import Any
 
 
 PHASES = ["pre", "drop", "recovery", "post"]
+NORMAL_PHASES = ["normal_bull", "normal_bear"]
+ALL_PHASES = PHASES + NORMAL_PHASES
 RUNS_PER_PHASE = 32
 DRY_RUN_SAMPLES = 3
 SCHEMA_VERSION = "phase1_llm_elicitation.v1"

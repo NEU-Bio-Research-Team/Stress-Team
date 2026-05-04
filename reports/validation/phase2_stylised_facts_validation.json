@@ -12,46 +12,46 @@
     "llm": {
       "exists": true,
       "path": "data/processed/tardis/phase2_outputs/lob_mini_simulation_llm.csv",
-      "rows": 578100,
+      "rows": 581300,
       "runs": 50,
-      "kurtosis_excess": 15.999627942018972,
+      "kurtosis_excess": 12.36941759054868,
       "acf_vol_lag1": 1.0,
-      "ofi_pre_mean": 0.020444175203658002,
-      "ofi_drop_mean": -0.05502005463185628,
+      "ofi_pre_mean": 0.0830266272663147,
+      "ofi_drop_mean": -0.5298376095794275,
       "crash_rate_sim": 0.0
     },
     "uniform": {
       "exists": true,
       "path": "data/processed/tardis/phase2_outputs/lob_mini_simulation_uniform.csv",
-      "rows": 577500,
+      "rows": 587500,
       "runs": 50,
-      "kurtosis_excess": 11.617639079178907,
-      "acf_vol_lag1": 1.0,
-      "ofi_pre_mean": 0.00541862230145628,
-      "ofi_drop_mean": -0.023119545487569216,
+      "kurtosis_excess": 12.174634228083361,
+      "acf_vol_lag1": 0.9999999999999999,
+      "ofi_pre_mean": 0.058668131033674624,
+      "ofi_drop_mean": -0.4195078569214146,
       "crash_rate_sim": 0.0
     },
     "literature": {
       "exists": true,
       "path": "data/processed/tardis/phase2_outputs/lob_mini_simulation_literature.csv",
-      "rows": 579100,
+      "rows": 576100,
       "runs": 50,
-      "kurtosis_excess": 20.88545318157489,
+      "kurtosis_excess": 11.962762196626354,
       "acf_vol_lag1": 1.0,
-      "ofi_pre_mean": 0.011376481348897408,
-      "ofi_drop_mean": -0.05490186329464501,
+      "ofi_pre_mean": 0.10760384457665156,
+      "ofi_drop_mean": -0.28603014277559896,
       "crash_rate_sim": 0.0
     }
   },
   "ablation": {
     "h1_pass_kurtosis_llm_gt_uniform": true,
-    "kurtosis_ratio_llm_over_uniform": 1.3771841105559433
+    "kurtosis_ratio_llm_over_uniform": 1.0159991141266496
   },
   "gates": [
     {
       "gate": "kurtosis_excess",
       "pass": true,
-      "observed": 15.999627942018972,
+      "observed": 12.36941759054868,
       "target": "> 3.0",
       "empirical_baseline": 8581.0
     },
@@ -66,8 +66,8 @@
       "gate": "ofi_drop_less_than_pre",
       "pass": true,
       "observed": {
-        "ofi_pre_mean": 0.020444175203658002,
-        "ofi_drop_mean": -0.05502005463185628
+        "ofi_pre_mean": 0.0830266272663147,
+        "ofi_drop_mean": -0.5298376095794275
       },
       "target": "ofi_drop_mean < ofi_pre_mean",
       "empirical_baseline": {

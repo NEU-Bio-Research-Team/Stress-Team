@@ -25,6 +25,10 @@ Required inputs:
 - `data/processed/tardis/confounder_outputs/prior_anchors.json`
 - `data/processed/tardis/confounder_outputs/Flash_Crash_Events_Labeled.csv`
 
+Optional but recommended for unbiased calibration ablation:
+
+- `data/processed/tardis/normal_baseline/baseline_prior_stats.json`
+
 Primary Phase 2 outputs:
 
 - `data/processed/tardis/phase2_outputs/lob_mini_simulation_llm.csv`
@@ -57,11 +61,29 @@ If NOTEARS and LiNGAM packages are missing, Script 20 will still run with a corr
 
 ## Smoke Test (Quick)
 
+### Step 04b - Normal Baseline Download (NEW)
+
+Build normal-week baseline anchors before simulation ablations.
+
+```bash
+python scripts/stage2_economics/05b_download_normal_week.py --max-days 2
+python scripts/stage2_economics/06_micro_feature_engineering.py --mode normal --normal-dir data/processed/tardis/normal_baseline --resolution 100
+python scripts/stage2_economics/11_compute_prior_anchors.py
+```
+
+Outputs:
+
+- `data/processed/tardis/normal_baseline/baseline_prior_stats.json`
+- merged normal phases in `data/processed/tardis/confounder_outputs/prior_anchors.json`
+
+### Step 05 - Mini Simulation Smoke
+
 Run a 10-run smoke test first.
 
 ```bash
 python scripts/stage2_economics/18_lob_mini_runner.py \
   --scenario llm \
+  --calibration-phase pre \
   --n-runs 10 \
   --output-csv data/processed/tardis/phase2_outputs/lob_mini_simulation_llm_smoke.csv \
   --summary-json data/processed/tardis/phase2_outputs/lob_mini_summary_llm_smoke.json
@@ -92,17 +114,25 @@ python scripts/stage2_economics/18_lob_mini_runner.py \
 
 ## Ablation Runs for H1 (Phase 2 Day 2)
 
-Generate baseline panels under uniform and literature priors.
+Generate baseline panels under different behavioral priors and calibration phases.
+
+Calibration-phase options in Script 18:
+
+- `pre`: existing event-conditioned baseline
+- `normal_bull`: normal-week bull-regime baseline
+- `normal_bear`: normal-week bear-regime baseline
 
 ```bash
 python scripts/stage2_economics/18_lob_mini_runner.py \
   --scenario uniform \
+  --calibration-phase normal_bull \
   --n-runs 50 \
   --output-csv data/processed/tardis/phase2_outputs/lob_mini_simulation_uniform.csv \
   --summary-json data/processed/tardis/phase2_outputs/lob_mini_summary_uniform.json
 
 python scripts/stage2_economics/18_lob_mini_runner.py \
   --scenario literature \
+  --calibration-phase normal_bear \
   --n-runs 50 \
   --output-csv data/processed/tardis/phase2_outputs/lob_mini_simulation_literature.csv \
   --summary-json data/processed/tardis/phase2_outputs/lob_mini_summary_literature.json
@@ -164,6 +194,7 @@ Once mini-run gates pass, scale to 500–1000 runs.
 ```bash
 python scripts/stage2_economics/18_lob_mini_runner.py \
   --scenario llm \
+  --calibration-phase pre \
   --n-runs 1000 \
   --output-csv data/processed/tardis/phase2_outputs/lob_full_simulation_llm.csv \
   --summary-json data/processed/tardis/phase2_outputs/lob_full_summary_llm.json
@@ -213,15 +244,18 @@ Use this exact sequence:
 
 ```bash
 # Day 1
-python scripts/stage2_economics/18_lob_mini_runner.py --scenario llm --n-runs 50
+python scripts/stage2_economics/05b_download_normal_week.py
+python scripts/stage2_economics/06_micro_feature_engineering.py --mode normal --normal-dir data/processed/tardis/normal_baseline --resolution 100
+python scripts/stage2_economics/11_compute_prior_anchors.py
+python scripts/stage2_economics/18_lob_mini_runner.py --scenario llm --calibration-phase pre --n-runs 50
 
 # Day 2
-python scripts/stage2_economics/18_lob_mini_runner.py --scenario uniform --n-runs 50 --output-csv data/processed/tardis/phase2_outputs/lob_mini_simulation_uniform.csv --summary-json data/processed/tardis/phase2_outputs/lob_mini_summary_uniform.json
-python scripts/stage2_economics/18_lob_mini_runner.py --scenario literature --n-runs 50 --output-csv data/processed/tardis/phase2_outputs/lob_mini_simulation_literature.csv --summary-json data/processed/tardis/phase2_outputs/lob_mini_summary_literature.json
+python scripts/stage2_economics/18_lob_mini_runner.py --scenario uniform --calibration-phase normal_bull --n-runs 50 --output-csv data/processed/tardis/phase2_outputs/lob_mini_simulation_uniform.csv --summary-json data/processed/tardis/phase2_outputs/lob_mini_summary_uniform.json
+python scripts/stage2_economics/18_lob_mini_runner.py --scenario literature --calibration-phase normal_bear --n-runs 50 --output-csv data/processed/tardis/phase2_outputs/lob_mini_simulation_literature.csv --summary-json data/processed/tardis/phase2_outputs/lob_mini_summary_literature.json
 python scripts/stage2_economics/19_stylised_facts_validation.py
 
 # Day 3
-python scripts/stage2_economics/18_lob_mini_runner.py --scenario llm --n-runs 1000 --output-csv data/processed/tardis/phase2_outputs/lob_full_simulation_llm.csv --summary-json data/processed/tardis/phase2_outputs/lob_full_summary_llm.json
+python scripts/stage2_economics/18_lob_mini_runner.py --scenario llm --calibration-phase pre --n-runs 1000 --output-csv data/processed/tardis/phase2_outputs/lob_full_simulation_llm.csv --summary-json data/processed/tardis/phase2_outputs/lob_full_summary_llm.json
 
 # Day 4
 python scripts/stage2_economics/20_causal_discovery.py --sim-panel data/processed/tardis/phase2_outputs/lob_full_simulation_llm.csv

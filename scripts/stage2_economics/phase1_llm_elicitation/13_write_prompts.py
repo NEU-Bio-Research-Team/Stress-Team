@@ -30,8 +30,10 @@ sys.path.insert(0, os.path.join(os.path.dirname(__file__), "..", "..", ".."))
 from config.settings import PROCESSED_DIR
 
 from common import (
+    ALL_PHASES,
     AGENT_CONFIGS,
     DRY_RUN_SAMPLES,
+    NORMAL_PHASES,
     PHASES,
     PROMPT_DETAILS_DIR,
     PROMPT_RECORD_COLUMNS,
@@ -160,15 +162,17 @@ def parse_args() -> argparse.Namespace:
                         help="Ignore existing output and regenerate all run_ids")
     parser.add_argument("--dry-run", action="store_true",
                         help="Generate only 3 prompt records and write a dry-run file")
+    parser.add_argument("--include-normal", action="store_true",
+                        help="Also generate prompts for normal_bull/normal_bear when present in input data")
     return parser.parse_args()
 
 
-def load_anchors(path: Path) -> dict[str, Any]:
+def load_anchors(path: Path, required_phases: list[str]) -> dict[str, Any]:
     if not path.exists():
         raise FileNotFoundError(f"Anchor file not found: {path}")
     anchors = json.loads(path.read_text(encoding="utf-8"))
     phases = anchors.get("metadata", {}).get("phases", [])
-    missing = [phase for phase in PHASES if phase not in phases]
+    missing = [phase for phase in required_phases if phase not in phases]
     if missing:
         raise ValueError(f"Anchor file missing phases: {missing}")
     return anchors
@@ -616,10 +620,12 @@ def build_prompt_record(
 
 def main() -> None:
     args = parse_args()
+    target_phases = ALL_PHASES if args.include_normal else PHASES
+    requested_normal = NORMAL_PHASES if args.include_normal else []
 
     output_json = args.output_json or (DRY_RUN_OUTPUT_JSON if args.dry_run else OUTPUT_JSON)
 
-    anchors = load_anchors(args.anchors_json)
+    anchors = load_anchors(args.anchors_json, required_phases=target_phases)
     market_states = load_market_state_sources(
         args.input_csv,
         raw_signal_tolerance_ms=args.raw_signal_tolerance_ms,
@@ -630,7 +636,7 @@ def main() -> None:
     for payload in market_states.values():
         payload["available_phases"] = set(payload["dataframe"]["phase"].dropna().astype(str).unique())
     available_phases = set().union(*(payload["available_phases"] for payload in market_states.values()))
-    missing_phases = [phase for phase in PHASES if phase not in available_phases]
+    missing_phases = [phase for phase in target_phases if phase not in available_phases]
     agent_market_state = {
         agent_type: resolve_market_state_for_agent(agent_type, market_states)
         for agent_type in agent_docs
@@ -679,15 +685,18 @@ def main() -> None:
     if dropped_existing_records:
         print(f"  [INFO] Dropped stale prompt records for missing phases: {dropped_existing_records}")
     print(f"  Available phases in CSV: {sorted(available_phases)}")
+    print(f"  Target phases       : {target_phases}")
     if missing_phases:
         print(f"  [WARN] Missing CSV phases: {missing_phases}")
         print("         Missing phases are excluded from prompt generation; no synthetic phase imputation is used.")
+    if requested_normal and not any(phase in available_phases for phase in requested_normal):
+        print("  [WARN] --include-normal enabled but no normal_* phases were found in input CSV.")
 
     for agent_type, agent_doc in agent_docs.items():
         selected_market_state = agent_market_state[agent_type]
         agent_df = selected_market_state["dataframe"]
         agent_available_phases = selected_market_state["available_phases"]
-        for phase in PHASES:
+        for phase in target_phases:
             if phase not in agent_available_phases:
                 continue
             phase_df = agent_df[agent_df["phase"] == phase].copy().reset_index(drop=False)

@@ -4,14 +4,14 @@ Overall gates passed: 9/9
 
 ## Prior sanity snapshot
 - parsed_rows: 512
-- cancel_probability_unique: [0.0, 0.01, 0.03, 0.05, 0.06, 0.1, 0.4, 0.5, 0.6, 0.65]
+- cancel_probability_unique: [0.0, 0.01, 0.03, 0.05, 0.1, 0.15, 0.4, 0.6, 0.65]
 
 ### cancel_probability by agent
 | agent_type | mean | std | min | max | nunique |
 |---|---:|---:|---:|---:|---:|
-| contrarian_trader | 0.067 | 0.046 | 0.0 | 0.1 | 5 |
-| hft_market_maker | 0.23 | 0.219 | 0.1 | 0.65 | 5 |
-| momentum_trader | 0.054 | 0.017 | 0.0 | 0.1 | 3 |
+| contrarian_trader | 0.074 | 0.044 | 0.0 | 0.1 | 4 |
+| hft_market_maker | 0.231 | 0.222 | 0.1 | 0.65 | 5 |
+| momentum_trader | 0.052 | 0.016 | 0.0 | 0.1 | 3 |
 | noise_trader | 0.033 | 0.01 | 0.01 | 0.05 | 3 |
 
 ### order_type share by agent
@@ -25,9 +25,9 @@ Overall gates passed: 9/9
 ### side share by agent
 | agent_type | buy | do_nothing | sell |
 |---|---:|---:|---:|
-| contrarian_trader | 0.461 | 0.188 | 0.352 |
-| hft_market_maker | 0.727 | 0.016 | 0.258 |
-| momentum_trader | 0.523 | 0.0 | 0.477 |
+| contrarian_trader | 0.453 | 0.086 | 0.461 |
+| hft_market_maker | 0.719 | 0.016 | 0.266 |
+| momentum_trader | 0.516 | 0.0 | 0.484 |
 | noise_trader | 0.5 | 0.0 | 0.5 |
 
 ## Empirical stylized-fact baseline
@@ -45,9 +45,9 @@ Overall gates passed: 9/9
 ## Gate checklist
 - [PASS] parsed_rows_minimum | observed=512 | expected=>= 400
 - [PASS] market_maker_limit_dominance | observed=1.0 | expected=>= 0.90
-- [PASS] market_maker_cancel_rate_reasonable | observed=0.23 | expected=[0.20, 0.40]
+- [PASS] market_maker_cancel_rate_reasonable | observed=0.231 | expected=[0.20, 0.40]
 - [PASS] noise_buy_sell_balance | observed=0.0 | expected=<= 0.10
-- [PASS] contrarian_sell_floor | observed=0.352 | expected=>= 0.15
+- [PASS] contrarian_sell_floor | observed=0.461 | expected=>= 0.15
 - [PASS] empirical_fat_tails_baseline | observed=8581.787979 | expected=> 3.0
 - [PASS] empirical_vol_clustering_baseline | observed=1.0 | expected=> 0.10
 - [PASS] empirical_ofi_drop_below_pre | observed={"pre": 0.26444, "drop": -2.698847} | expected=ofi_drop < ofi_pre

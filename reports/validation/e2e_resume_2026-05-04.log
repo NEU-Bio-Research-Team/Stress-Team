@@ -1,0 +1,13 @@
+=== START E2E RESUME ===
+2026. 05. 04. (월) 08:50:17 KST
+--- 18 uniform mini (50) ---
+[run 1/50] start event_id=5 ticks=11750 phases={'pre': 1750, 'drop': 5000, 'recovery': 3000, 'post': 2000}
+[run 1/50] tick 500/11750 phase=pre price=58640.73 ofi=1.1886 insolvent=0.000
+[run 1/50] tick 1000/11750 phase=pre price=58655.97 ofi=-0.2695 insolvent=0.000
+[run 1/50] tick 1500/11750 phase=pre price=58683.83 ofi=-0.5749 insolvent=0.000
+[run 1/50] tick 2000/11750 phase=drop price=58502.52 ofi=-1.1289 insolvent=0.000
+[run 1/50] tick 2500/11750 phase=drop price=58133.11 ofi=0.4583 insolvent=0.000
+[run 1/50] tick 3000/11750 phase=drop price=57827.47 ofi=-0.2645 insolvent=0.000
+[run 1/50] tick 3500/11750 phase=drop price=57543.71 ofi=-0.2462 insolvent=0.000
+[run 1/50] tick 4000/11750 phase=drop price=57255.89 ofi=-0.1332 insolvent=0.000
+[run 1/50] tick 4500/11750 phase=drop price=56971.59 ofi=-0.3293 insolvent=0.000

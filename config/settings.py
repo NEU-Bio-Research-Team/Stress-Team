@@ -117,6 +117,14 @@ EVENT_RAW_DIR       = RAW_DIR / "tardis" / "events"          # aggtrades + bookt
 EVENT_MICRO_DIR     = PROCESSED_DIR / "tardis" / "micro"     # merged micro features
 EVENT_DAG_DIR       = PROCESSED_DIR / "tardis" / "dag_validation"
 
+# Normal-market baseline windows for calibration ablations
+NORMAL_WEEK_WINDOWS = [
+    {"label": "normal_bull", "start": "2021-10-04", "end": "2021-10-08"},
+    {"label": "normal_bear", "start": "2023-02-06", "end": "2023-02-10"},
+]
+NORMAL_WEEK_DIR   = PROCESSED_DIR / "tardis" / "normal_baseline"
+NORMAL_WEEK_STATS = NORMAL_WEEK_DIR / "baseline_prior_stats.json"
+
 # Micro-feature configuration
 MICRO_RESOLUTIONS_MS       = [10, 100, 1000]   # 10ms, 100ms, 1s bins
 MICRO_OFI_WINDOW_MS        = 100               # OFI aggregation window
@@ -143,5 +151,6 @@ def ensure_dirs():
               HFT_FEATURES_DIR,
               EVENT_RAW_DIR,
               EVENT_MICRO_DIR,
-              EVENT_DAG_DIR]:
+              EVENT_DAG_DIR,
+              NORMAL_WEEK_DIR]:
         d.mkdir(parents=True, exist_ok=True)

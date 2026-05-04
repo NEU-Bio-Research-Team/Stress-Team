@@ -1,0 +1,43 @@
+{
+  "data": {
+    "sim_panel": "data/processed/tardis/phase2_outputs/lob_full_simulation_llm.csv",
+    "rows_used": 120000,
+    "nodes": [
+      "ofi",
+      "spread_bps",
+      "depth_imbalance",
+      "leverage_proxy",
+      "kyle_lambda",
+      "vpin",
+      "flash_crash_flag",
+      "mean_wealth_t",
+      "pct_insolvent",
+      "wealth_concentration"
+    ],
+    "notears_status": "notears_unavailable: No module named 'notears'",
+    "lingam_status": "ok",
+    "weight_threshold": 0.05
+  },
+  "method_scores": [
+    {
+      "method": "lingam",
+      "num_edges_above_threshold": 12,
+      "true_positives": 0,
+      "false_positives": 12,
+      "false_negatives": 8,
+      "precision": 0.0,
+      "recall": 0.0,
+      "matched_edges": []
+    }
+  ],
+  "theoretical_edges": [
+    "depth_imbalance->flash_crash_flag",
+    "leverage_proxy->flash_crash_flag",
+    "mean_wealth_t->ofi",
+    "ofi->flash_crash_flag",
+    "ofi->spread_bps",
+    "pct_insolvent->spread_bps",
+    "spread_bps->depth_imbalance",
+    "wealth_concentration->leverage_proxy"
+  ]
+}

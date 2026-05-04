@@ -44,6 +44,7 @@ DEFAULT_OUTPUT_CSV = PROJECT_ROOT / "data" / "processed" / "tardis" / "phase2_ou
 DEFAULT_SUMMARY_JSON = PROJECT_ROOT / "data" / "processed" / "tardis" / "phase2_outputs" / "lob_mini_summary_llm.json"
 
 PHASES = ["pre", "drop", "recovery", "post"]
+CALIBRATION_PHASES = ["pre", "normal_bull", "normal_bear"]
 AGENT_TYPES = ["momentum_trader", "contrarian_trader", "hft_market_maker", "noise_trader"]
 DEFAULT_MIX = {
     "momentum_trader": 0.30,
@@ -103,9 +104,11 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--seed", type=int, default=42)
     parser.add_argument("--tick-ms", type=int, default=100)
     parser.add_argument("--impact-scale", type=float, default=2.0,
-                        help="Calibrated in Step-2 benchmark sweep to hit ~10% crash-rate target")
+                        help="Calibrated in Step-2 benchmark sweep to hit ~10%% crash-rate target")
     parser.add_argument("--intensity-scale", type=float, default=1.2289,
                         help="Calibrated via Step-1 OFI p50 match: target -0.1915, achieved -0.177 (7.7%% error)")
+    parser.add_argument("--calibration-phase", choices=CALIBRATION_PHASES, default="pre",
+                        help="Anchor phase used for Noise/MM calibration priors")
     parser.add_argument("--base-order-size", type=float, default=0.25)
     parser.add_argument("--mm-vol-threshold-mult", type=float, default=1.4)
     parser.add_argument("--mm-withdrawal-strength", type=float, default=1.8)
@@ -153,6 +156,13 @@ def safe_phase_metric(anchors: dict[str, Any], key: str, phase: str, fallback: f
 
 def clip01(x: float) -> float:
     return float(np.clip(x, 0.0, 1.0))
+
+
+def resolve_anchor_phase(sim_phase: str, calibration_phase: str) -> str:
+    """Select which anchor phase to use for calibration-sensitive metrics."""
+    if calibration_phase in CALIBRATION_PHASES:
+        return calibration_phase
+    return sim_phase
 
 
 def wealth_order_size(
@@ -466,6 +476,7 @@ def run_one_simulation(
     args: argparse.Namespace,
     rng: np.random.Generator,
     run_label: str,
+    calibration_phase: str,
 ) -> pd.DataFrame:
     phase_lengths = compute_phase_lengths(event_row, args)
     total_ticks = int(sum(phase_lengths.values()))
@@ -486,14 +497,15 @@ def run_one_simulation(
 
     for tick_idx in range(total_ticks):
         phase = assign_phase(tick_idx, phase_lengths)
+        anchor_phase = resolve_anchor_phase(phase, calibration_phase)
 
-        kyle_lambda = safe_phase_metric(anchors, "kyle_lambda_per_phase", phase, fallback=0.5)
-        trade_intensity_anchor = safe_phase_metric(anchors, "trade_intensity_per_phase", phase, fallback=8.0)
-        spread_anchor = safe_phase_metric(anchors, "spread_bps_per_phase", phase, fallback=2.0)
-        realized_anchor = safe_phase_metric(anchors, "realized_vol_per_phase", phase, fallback=0.001)
-        depth_anchor = safe_phase_metric(anchors, "depth_imbalance_per_phase", phase, fallback=0.0)
-        vpin_anchor = safe_phase_metric(anchors, "vpin_per_phase", phase, fallback=0.25)
-        ofi_p50 = float(anchors.get("ofi_percentiles_per_phase", {}).get(phase, {}).get("p50", 0.0) or 0.0)
+        kyle_lambda = safe_phase_metric(anchors, "kyle_lambda_per_phase", anchor_phase, fallback=0.5)
+        trade_intensity_anchor = safe_phase_metric(anchors, "trade_intensity_per_phase", anchor_phase, fallback=8.0)
+        spread_anchor = safe_phase_metric(anchors, "spread_bps_per_phase", anchor_phase, fallback=2.0)
+        realized_anchor = safe_phase_metric(anchors, "realized_vol_per_phase", anchor_phase, fallback=0.001)
+        depth_anchor = safe_phase_metric(anchors, "depth_imbalance_per_phase", anchor_phase, fallback=0.0)
+        vpin_anchor = safe_phase_metric(anchors, "vpin_per_phase", anchor_phase, fallback=0.25)
+        ofi_p50 = float(anchors.get("ofi_percentiles_per_phase", {}).get(anchor_phase, {}).get("p50", 0.0) or 0.0)
 
         lam = max(min(trade_intensity_anchor * args.intensity_scale, 50.0), 0.05)
         arrivals = int(rng.poisson(lam=lam))
@@ -642,6 +654,7 @@ def summarize_output(df: pd.DataFrame, args: argparse.Namespace) -> dict[str, An
 
     return {
         "scenario": args.scenario,
+        "calibration_phase": args.calibration_phase,
         "n_runs": int(df["run_id"].nunique()),
         "n_rows": int(len(df)),
         "tick_ms": args.tick_ms,
@@ -714,6 +727,7 @@ def main() -> None:
             args=args,
             rng=rng,
             run_label=f"[run {run_id + 1}/{args.n_runs}]",
+            calibration_phase=args.calibration_phase,
         )
         all_runs.append(run_df)
 
@@ -768,6 +782,7 @@ def main() -> None:
     print("Script 18: LOB mini runner")
     print("=" * 72)
     print(f"Scenario        : {args.scenario}")
+    print(f"Calibration     : {args.calibration_phase}")
     print(f"Runs            : {summary['n_runs']}")
     print(f"Rows            : {summary['n_rows']}")
     print(f"Crash rate      : {summary['flash_crash_rate']:.4f}")

@@ -45,7 +45,7 @@ from pathlib import Path
 
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), "..", ".."))
 from config.settings import (
-    EVENT_RAW_DIR, EVENT_MICRO_DIR, EVENT_CATALOG_PATH,
+    EVENT_RAW_DIR, EVENT_MICRO_DIR, NORMAL_WEEK_DIR,
     MICRO_RESOLUTIONS_MS, MICRO_KYLE_WINDOW, MICRO_VPIN_WINDOW,
     ensure_dirs,
 )
@@ -315,6 +315,10 @@ def main():
     parser = argparse.ArgumentParser(
         description="Micro HFT feature engineering from event tick data"
     )
+    parser.add_argument("--mode", choices=["event", "normal"], default="event",
+                        help="'event' = crash-window pipeline; 'normal' = normal-week baseline")
+    parser.add_argument("--normal-dir", type=Path, default=NORMAL_WEEK_DIR,
+                        help="Root folder for normal-week aggtrades folders")
     parser.add_argument("--resolution", nargs="+", type=int, default=None,
                         help="Resolution(s) in ms (default: from config)")
     parser.add_argument("--kyle-window", type=int, default=MICRO_KYLE_WINDOW)
@@ -326,31 +330,45 @@ def main():
     ensure_dirs()
 
     resolutions = args.resolution or MICRO_RESOLUTIONS_MS
+    input_root = EVENT_RAW_DIR if args.mode == "event" else Path(args.normal_dir)
+    output_root = EVENT_MICRO_DIR if args.mode == "event" else Path(args.normal_dir) / "micro"
+    output_root.mkdir(parents=True, exist_ok=True)
 
     print("Micro Feature Engineering (Tier 2)")
-    print(f"  Input       : {EVENT_RAW_DIR}")
-    print(f"  Output      : {EVENT_MICRO_DIR}")
+    print(f"  Mode        : {args.mode}")
+    print(f"  Input       : {input_root}")
+    print(f"  Output      : {output_root}")
     print(f"  Resolutions : {resolutions} ms")
     print(f"  Kyle window : {args.kyle_window}")
     print(f"  VPIN window : {args.vpin_window}\n")
 
+    if not input_root.exists():
+        if args.mode == "event":
+            print(f"[!] Input directory not found: {input_root}. Run script 05 first.")
+        else:
+            print(f"[!] Input directory not found: {input_root}. Run script 05b first.")
+        return
+
     # Discover event directories
     event_dirs = sorted([
-        d for d in EVENT_RAW_DIR.iterdir()
+        d for d in input_root.iterdir()
         if d.is_dir() and (d / "aggtrades.parquet").exists()
     ])
 
     if not event_dirs:
-        print("[!] No event data found. Run script 05 first.")
+        if args.mode == "event":
+            print("[!] No event data found. Run script 05 first.")
+        else:
+            print("[!] No normal baseline data found. Run script 05b first.")
         return
 
-    print(f"  Found {len(event_dirs)} events\n")
+    print(f"  Found {len(event_dirs)} folders\n")
 
     all_results = []
 
     for res_ms in resolutions:
         print(f"  --- Resolution: {res_ms}ms ---")
-        out_dir = EVENT_MICRO_DIR / f"res_{res_ms}ms"
+        out_dir = output_root / f"res_{res_ms}ms"
         out_dir.mkdir(parents=True, exist_ok=True)
 
         for edir in event_dirs:
@@ -375,7 +393,7 @@ def main():
     # Summary
     if all_results:
         summary = pd.DataFrame(all_results)
-        summary_path = EVENT_MICRO_DIR / "micro_features_summary.csv"
+        summary_path = output_root / "micro_features_summary.csv"
         summary.to_csv(summary_path, index=False)
         print(f"  Summary: {len(all_results)} feature files written")
         print(f"  Saved: {summary_path}")

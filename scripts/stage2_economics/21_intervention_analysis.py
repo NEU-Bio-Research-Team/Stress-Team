@@ -71,24 +71,41 @@ def run_interventions(work: pd.DataFrame) -> dict[str, Any]:
     X = work[x_cols].copy()
     y = work["flash_crash_flag"].astype(int)
 
-    clf = LogisticRegression(max_iter=2000)
-    clf.fit(X, y)
+    crash_rate_obs = float(y.mean())
+    auc = None
 
-    p_obs = clf.predict_proba(X)[:, 1]
-    crash_rate_obs = float(np.mean(p_obs))
-    auc = float(roc_auc_score(y, p_obs)) if y.nunique() > 1 else None
+    if y.nunique() < 2:
+        # Degenerate: all ticks in same class — logistic regression is undefined.
+        # Report observed rates as zero; intervention counterfactuals are not estimable.
+        crash_rate_do_ofi0 = 0.0
+        crash_rate_do_lev0 = 0.0
+        p_obs = np.zeros(len(y))
+        p_do_ofi0 = np.zeros(len(y))
+        p_do_lev0 = np.zeros(len(y))
+        clf = None
+    else:
+        clf = LogisticRegression(max_iter=2000)
+        clf.fit(X, y)
 
-    X_do_ofi0 = X.copy()
-    X_do_ofi0["ofi"] = 0.0
-    X_do_ofi0["ofi_x_leverage"] = 0.0
-    p_do_ofi0 = clf.predict_proba(X_do_ofi0)[:, 1]
-    crash_rate_do_ofi0 = float(np.mean(p_do_ofi0))
+        p_obs = clf.predict_proba(X)[:, 1]
+        crash_rate_obs = float(np.mean(p_obs))
+        auc = float(roc_auc_score(y, p_obs))
+
+        X_do_ofi0 = X.copy()
+        X_do_ofi0["ofi"] = 0.0
+        X_do_ofi0["ofi_x_leverage"] = 0.0
+        p_do_ofi0 = clf.predict_proba(X_do_ofi0)[:, 1]
+        crash_rate_do_ofi0 = float(np.mean(p_do_ofi0))
+
+        X_do_lev0 = X.copy()
+        X_do_lev0["leverage_proxy"] = 0.0
+        X_do_lev0["ofi_x_leverage"] = 0.0
+        p_do_lev0 = clf.predict_proba(X_do_lev0)[:, 1]
+        crash_rate_do_lev0 = float(np.mean(p_do_lev0))
 
     X_do_lev0 = X.copy()
     X_do_lev0["leverage_proxy"] = 0.0
     X_do_lev0["ofi_x_leverage"] = 0.0
-    p_do_lev0 = clf.predict_proba(X_do_lev0)[:, 1]
-    crash_rate_do_lev0 = float(np.mean(p_do_lev0))
 
     y_severity = work["drawdown_1s_pct"].clip(lower=0.0)
     reg = LinearRegression()

@@ -29,8 +29,10 @@ from config.settings import PROCESSED_DIR
 INPUT_CSV  = PROCESSED_DIR / "tardis" / "confounder_outputs" / "Event_Dynamics_100ms_gridded.csv"
 INPUT_FALLBACK = PROCESSED_DIR / "tardis" / "confounder_outputs" / "Event_Dynamics_100ms.csv"
 OUTPUT_JSON = PROCESSED_DIR / "tardis" / "confounder_outputs" / "prior_anchors.json"
+NORMAL_STATS_PATH = PROCESSED_DIR / "tardis" / "normal_baseline" / "baseline_prior_stats.json"
 
 PHASES = ["pre", "drop", "recovery", "post"]
+NORMAL_PHASES = ["normal_bull", "normal_bear"]
 QUANTILES = [0.05, 0.25, 0.50, 0.75, 0.95]
 
 
@@ -172,6 +174,44 @@ def main():
                 alpha = pareto_alpha_mle(pdf["ofi"].abs().values)
                 anchors["order_size_pareto_alpha"][phase] = round(alpha, 4) if not np.isnan(alpha) else None
         anchors["order_size_pareto_alpha"]["all"] = round(pareto_alpha_mle(ofi_abs), 4)
+
+    # Optional normal baseline merge (flat phase keys for compatibility)
+    anchors["metadata"]["has_normal_baseline"] = False
+    if NORMAL_STATS_PATH.exists():
+        with open(NORMAL_STATS_PATH, "r", encoding="utf-8") as f:
+            normal_payload = json.load(f)
+
+        merged_any = False
+        for phase in NORMAL_PHASES:
+            payload = normal_payload.get(phase)
+            if not isinstance(payload, dict):
+                continue
+
+            anchors["ofi_percentiles_per_phase"][phase] = payload.get("ofi_percentiles", {})
+            anchors["trade_intensity_per_phase"][phase] = payload.get("trade_intensity", {})
+            anchors["kyle_lambda_per_phase"][phase] = payload.get("kyle_lambda", {})
+            anchors["realized_vol_per_phase"][phase] = payload.get("realized_vol", {})
+            anchors["spread_bps_per_phase"][phase] = payload.get("spread_bps", {})
+            anchors["depth_imbalance_per_phase"][phase] = payload.get("depth_imbalance", {})
+            anchors["vpin_per_phase"][phase] = payload.get("vpin", {})
+            anchors["amihud_per_phase"][phase] = payload.get("amihud", {})
+
+            anchors["noise_trader_lambda"][phase] = payload.get("noise_trader_lambda")
+            anchors["order_size_pareto_alpha"][phase] = payload.get("order_size_pareto_alpha")
+            merged_any = True
+
+        if merged_any:
+            anchors["metadata"]["phases"] = PHASES + NORMAL_PHASES
+            anchors["metadata"]["has_normal_baseline"] = True
+            anchors["normal_baseline"] = {
+                "source": str(NORMAL_STATS_PATH.name),
+                "labels": [p for p in NORMAL_PHASES if p in normal_payload],
+            }
+            print(f"  [OK] Normal baseline loaded: {NORMAL_STATS_PATH}")
+        else:
+            print(f"  [WARN] Normal baseline file found but no valid labels: {NORMAL_STATS_PATH}")
+    else:
+        print(f"  [WARN] No normal baseline found. Run script 05b first.")
 
     # Save
     OUTPUT_JSON.parent.mkdir(parents=True, exist_ok=True)
