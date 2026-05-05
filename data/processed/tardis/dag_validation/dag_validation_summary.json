@@ -1,0 +1,14 @@
+{
+  "n_events": 66,
+  "resolution_ms": 100,
+  "granger_edges_tested": 330,
+  "impulse_responses": 198,
+  "crash_anatomies": 66,
+  "granger_significance_rates": {
+    "OFI -> Price (Market Impact)": 1.0,
+    "Trade Intensity -> OFI (Herding)": 0.8787878787878788,
+    "Return -> Trade Intensity (Feedback)": 0.803030303030303,
+    "Kyle Lambda -> Return (Informed Trading)": 0.4393939393939394,
+    "VPIN -> Return (Toxicity)": 0.25757575757575757
+  }
+}

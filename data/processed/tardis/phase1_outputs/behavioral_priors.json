@@ -1,0 +1,1185 @@
+{
+  "metadata": {
+    "schema_version": "phase1_behavioral_priors.v1",
+    "source_csv": "raw_elicited.csv",
+    "anchors_json": "prior_anchors.json",
+    "parsed_rows": 512,
+    "minimum_group_size": 10,
+    "fit_backend": "scipy",
+    "excluded_synthetic_rows": 0,
+    "agent_types": [
+      "momentum_trader",
+      "contrarian_trader",
+      "hft_market_maker",
+      "noise_trader"
+    ],
+    "phases": [
+      "pre",
+      "drop",
+      "recovery",
+      "post"
+    ],
+    "observed_phases": [
+      "drop",
+      "post",
+      "pre",
+      "recovery"
+    ]
+  },
+  "momentum_trader": {
+    "pre": {
+      "sample_size": 32,
+      "fit_sample_size": 32,
+      "fit_source": "phase_fit",
+      "excluded_from_fitting": false,
+      "warnings": [],
+      "common_behavior": {
+        "aggressiveness": {
+          "dist": "beta",
+          "params": {
+            "alpha": 139.133792,
+            "beta": 61.508124
+          }
+        },
+        "cancel_probability": {
+          "dist": "beta",
+          "params": {
+            "alpha": 18.861634,
+            "beta": 325.808561
+          }
+        },
+        "order_size_multiplier": {
+          "dist": "lognorm",
+          "params": {
+            "shape": 0.174157,
+            "loc": 0.0,
+            "scale": 2.790633
+          }
+        },
+        "inventory_sensitivity_vg": {
+          "dist": "gamma",
+          "params": {
+            "shape": 100.0,
+            "scale": 0.005
+          }
+        },
+        "order_type_market_fraction": {
+          "dist": "scalar",
+          "params": {
+            "value": 1.0
+          }
+        }
+      },
+      "behavioral_priors": {
+        "aggressiveness": {
+          "dist": "beta",
+          "params": {
+            "alpha": 139.133792,
+            "beta": 61.508124
+          }
+        },
+        "cancel_probability": {
+          "dist": "beta",
+          "params": {
+            "alpha": 18.861634,
+            "beta": 325.808561
+          }
+        },
+        "inventory_sensitivity_vg": {
+          "dist": "gamma",
+          "params": {
+            "shape": 100.0,
+            "scale": 0.005
+          }
+        },
+        "order_type_market_fraction": {
+          "dist": "scalar",
+          "params": {
+            "value": 1.0
+          }
+        }
+      }
+    },
+    "drop": {
+      "sample_size": 32,
+      "fit_sample_size": 32,
+      "fit_source": "phase_fit",
+      "excluded_from_fitting": false,
+      "warnings": [],
+      "common_behavior": {
+        "aggressiveness": {
+          "dist": "beta",
+          "params": {
+            "alpha": 76.701242,
+            "beta": 29.524263
+          }
+        },
+        "cancel_probability": {
+          "dist": "beta",
+          "params": {
+            "alpha": 0.90423,
+            "beta": 17.05777
+          }
+        },
+        "order_size_multiplier": {
+          "dist": "lognorm",
+          "params": {
+            "shape": 0.147221,
+            "loc": 0.0,
+            "scale": 2.815834
+          }
+        },
+        "inventory_sensitivity_vg": {
+          "dist": "gamma",
+          "params": {
+            "shape": 100.0,
+            "scale": 0.005
+          }
+        },
+        "order_type_market_fraction": {
+          "dist": "scalar",
+          "params": {
+            "value": 1.0
+          }
+        }
+      },
+      "behavioral_priors": {
+        "aggressiveness": {
+          "dist": "beta",
+          "params": {
+            "alpha": 76.701242,
+            "beta": 29.524263
+          }
+        },
+        "cancel_probability": {
+          "dist": "beta",
+          "params": {
+            "alpha": 0.90423,
+            "beta": 17.05777
+          }
+        },
+        "inventory_sensitivity_vg": {
+          "dist": "gamma",
+          "params": {
+            "shape": 100.0,
+            "scale": 0.005
+          }
+        },
+        "order_type_market_fraction": {
+          "dist": "scalar",
+          "params": {
+            "value": 1.0
+          }
+        }
+      }
+    },
+    "recovery": {
+      "sample_size": 32,
+      "fit_sample_size": 32,
+      "fit_source": "phase_fit",
+      "excluded_from_fitting": false,
+      "warnings": [],
+      "common_behavior": {
+        "aggressiveness": {
+          "dist": "beta",
+          "params": {
+            "alpha": 139.133792,
+            "beta": 61.508124
+          }
+        },
+        "cancel_probability": {
+          "dist": "beta",
+          "params": {
+            "alpha": 0.916635,
+            "beta": 17.85118
+          }
+        },
+        "order_size_multiplier": {
+          "dist": "lognorm",
+          "params": {
+            "shape": 0.175572,
+            "loc": 0.0,
+            "scale": 2.710806
+          }
+        },
+        "inventory_sensitivity_vg": {
+          "dist": "gamma",
+          "params": {
+            "shape": 147.897978,
+            "scale": 0.003338
+          }
+        },
+        "order_type_market_fraction": {
+          "dist": "scalar",
+          "params": {
+            "value": 1.0
+          }
+        }
+      },
+      "behavioral_priors": {
+        "aggressiveness": {
+          "dist": "beta",
+          "params": {
+            "alpha": 139.133792,
+            "beta": 61.508124
+          }
+        },
+        "cancel_probability": {
+          "dist": "beta",
+          "params": {
+            "alpha": 0.916635,
+            "beta": 17.85118
+          }
+        },
+        "inventory_sensitivity_vg": {
+          "dist": "gamma",
+          "params": {
+            "shape": 147.897978,
+            "scale": 0.003338
+          }
+        },
+        "order_type_market_fraction": {
+          "dist": "scalar",
+          "params": {
+            "value": 1.0
+          }
+        }
+      }
+    },
+    "post": {
+      "sample_size": 32,
+      "fit_sample_size": 32,
+      "fit_source": "phase_fit",
+      "excluded_from_fitting": false,
+      "warnings": [],
+      "common_behavior": {
+        "aggressiveness": {
+          "dist": "beta",
+          "params": {
+            "alpha": 35.0,
+            "beta": 15.0
+          }
+        },
+        "cancel_probability": {
+          "dist": "beta",
+          "params": {
+            "alpha": 26.754955,
+            "beta": 476.611967
+          }
+        },
+        "order_size_multiplier": {
+          "dist": "lognorm",
+          "params": {
+            "shape": 0.134095,
+            "loc": 0.0,
+            "scale": 2.851739
+          }
+        },
+        "inventory_sensitivity_vg": {
+          "dist": "gamma",
+          "params": {
+            "shape": 100.0,
+            "scale": 0.005
+          }
+        },
+        "order_type_market_fraction": {
+          "dist": "scalar",
+          "params": {
+            "value": 1.0
+          }
+        }
+      },
+      "behavioral_priors": {
+        "aggressiveness": {
+          "dist": "beta",
+          "params": {
+            "alpha": 35.0,
+            "beta": 15.0
+          }
+        },
+        "cancel_probability": {
+          "dist": "beta",
+          "params": {
+            "alpha": 26.754955,
+            "beta": 476.611967
+          }
+        },
+        "inventory_sensitivity_vg": {
+          "dist": "gamma",
+          "params": {
+            "shape": 100.0,
+            "scale": 0.005
+          }
+        },
+        "order_type_market_fraction": {
+          "dist": "scalar",
+          "params": {
+            "value": 1.0
+          }
+        }
+      }
+    }
+  },
+  "contrarian_trader": {
+    "pre": {
+      "sample_size": 32,
+      "fit_sample_size": 32,
+      "fit_source": "phase_fit",
+      "excluded_from_fitting": false,
+      "warnings": [],
+      "common_behavior": {
+        "aggressiveness": {
+          "dist": "beta",
+          "params": {
+            "alpha": 5.0,
+            "beta": 45.0
+          }
+        },
+        "cancel_probability": {
+          "dist": "beta",
+          "params": {
+            "alpha": 0.117153,
+            "beta": 3.976717
+          }
+        },
+        "order_size_multiplier": {
+          "dist": "lognorm",
+          "params": {
+            "shape": 0.0,
+            "loc": 0.0,
+            "scale": 1.0
+          }
+        },
+        "inventory_sensitivity_vg": {
+          "dist": "gamma",
+          "params": {
+            "shape": 15.574502,
+            "scale": 0.02488
+          }
+        },
+        "order_type_market_fraction": {
+          "dist": "scalar",
+          "params": {
+            "value": 1.0
+          }
+        }
+      },
+      "behavioral_priors": {
+        "inventory_sensitivity_vg": {
+          "dist": "gamma",
+          "params": {
+            "shape": 15.574502,
+            "scale": 0.02488
+          }
+        },
+        "aggressiveness_estar": {
+          "dist": "non_linear_thresholds",
+          "params": {
+            "activation_threshold_pct": 1.0,
+            "max_size_commitment_deviation_pct": 1.0
+          }
+        },
+        "order_type_market_fraction": {
+          "dist": "scalar",
+          "params": {
+            "value": 1.0
+          }
+        }
+      }
+    },
+    "drop": {
+      "sample_size": 32,
+      "fit_sample_size": 32,
+      "fit_source": "phase_fit",
+      "excluded_from_fitting": false,
+      "warnings": [],
+      "common_behavior": {
+        "aggressiveness": {
+          "dist": "beta",
+          "params": {
+            "alpha": 3.005465,
+            "beta": 12.889431
+          }
+        },
+        "cancel_probability": {
+          "dist": "beta",
+          "params": {
+            "alpha": 0.400575,
+            "beta": 4.877917
+          }
+        },
+        "order_size_multiplier": {
+          "dist": "lognorm",
+          "params": {
+            "shape": 0.158258,
+            "loc": 0.0,
+            "scale": 1.078989
+          }
+        },
+        "inventory_sensitivity_vg": {
+          "dist": "gamma",
+          "params": {
+            "shape": 25.621794,
+            "scale": 0.018844
+          }
+        },
+        "order_type_market_fraction": {
+          "dist": "scalar",
+          "params": {
+            "value": 1.0
+          }
+        }
+      },
+      "behavioral_priors": {
+        "inventory_sensitivity_vg": {
+          "dist": "gamma",
+          "params": {
+            "shape": 25.621794,
+            "scale": 0.018844
+          }
+        },
+        "aggressiveness_estar": {
+          "dist": "non_linear_thresholds",
+          "params": {
+            "activation_threshold_pct": 1.0,
+            "max_size_commitment_deviation_pct": 1.0
+          }
+        },
+        "order_type_market_fraction": {
+          "dist": "scalar",
+          "params": {
+            "value": 1.0
+          }
+        }
+      }
+    },
+    "recovery": {
+      "sample_size": 32,
+      "fit_sample_size": 32,
+      "fit_source": "phase_fit",
+      "excluded_from_fitting": false,
+      "warnings": [],
+      "common_behavior": {
+        "aggressiveness": {
+          "dist": "beta",
+          "params": {
+            "alpha": 27.942532,
+            "beta": 62.076939
+          }
+        },
+        "cancel_probability": {
+          "dist": "beta",
+          "params": {
+            "alpha": 5.0,
+            "beta": 45.0
+          }
+        },
+        "order_size_multiplier": {
+          "dist": "lognorm",
+          "params": {
+            "shape": 0.345896,
+            "loc": 0.0,
+            "scale": 1.38391
+          }
+        },
+        "inventory_sensitivity_vg": {
+          "dist": "gamma",
+          "params": {
+            "shape": 89.814088,
+            "scale": 0.00595
+          }
+        },
+        "order_type_market_fraction": {
+          "dist": "scalar",
+          "params": {
+            "value": 1.0
+          }
+        }
+      },
+      "behavioral_priors": {
+        "inventory_sensitivity_vg": {
+          "dist": "gamma",
+          "params": {
+            "shape": 89.814088,
+            "scale": 0.00595
+          }
+        },
+        "aggressiveness_estar": {
+          "dist": "non_linear_thresholds",
+          "params": {
+            "activation_threshold_pct": 1.0,
+            "max_size_commitment_deviation_pct": 1.0
+          }
+        },
+        "order_type_market_fraction": {
+          "dist": "scalar",
+          "params": {
+            "value": 1.0
+          }
+        }
+      }
+    },
+    "post": {
+      "sample_size": 32,
+      "fit_sample_size": 32,
+      "fit_source": "phase_fit",
+      "excluded_from_fitting": false,
+      "warnings": [],
+      "common_behavior": {
+        "aggressiveness": {
+          "dist": "beta",
+          "params": {
+            "alpha": 2.357803,
+            "beta": 6.587992
+          }
+        },
+        "cancel_probability": {
+          "dist": "beta",
+          "params": {
+            "alpha": 0.396409,
+            "beta": 4.993999
+          }
+        },
+        "order_size_multiplier": {
+          "dist": "lognorm",
+          "params": {
+            "shape": 0.312848,
+            "loc": 0.0,
+            "scale": 1.506709
+          }
+        },
+        "inventory_sensitivity_vg": {
+          "dist": "gamma",
+          "params": {
+            "shape": 54.23336,
+            "scale": 0.010314
+          }
+        },
+        "order_type_market_fraction": {
+          "dist": "scalar",
+          "params": {
+            "value": 1.0
+          }
+        }
+      },
+      "behavioral_priors": {
+        "inventory_sensitivity_vg": {
+          "dist": "gamma",
+          "params": {
+            "shape": 54.23336,
+            "scale": 0.010314
+          }
+        },
+        "aggressiveness_estar": {
+          "dist": "non_linear_thresholds",
+          "params": {
+            "activation_threshold_pct": 1.0,
+            "max_size_commitment_deviation_pct": 1.0
+          }
+        },
+        "order_type_market_fraction": {
+          "dist": "scalar",
+          "params": {
+            "value": 1.0
+          }
+        }
+      }
+    }
+  },
+  "hft_market_maker": {
+    "pre": {
+      "sample_size": 32,
+      "fit_sample_size": 32,
+      "fit_source": "phase_fit",
+      "excluded_from_fitting": false,
+      "warnings": [],
+      "common_behavior": {
+        "aggressiveness": {
+          "dist": "beta",
+          "params": {
+            "alpha": 489.539011,
+            "beta": 330.683226
+          }
+        },
+        "cancel_probability": {
+          "dist": "beta",
+          "params": {
+            "alpha": 5.0,
+            "beta": 45.0
+          }
+        },
+        "order_size_multiplier": {
+          "dist": "lognorm",
+          "params": {
+            "shape": 0.0,
+            "loc": 0.0,
+            "scale": 2.0
+          }
+        },
+        "inventory_sensitivity_vg": {
+          "dist": "gamma",
+          "params": {
+            "shape": 30.622429,
+            "scale": 0.007348
+          }
+        },
+        "order_type_market_fraction": {
+          "dist": "scalar",
+          "params": {
+            "value": 0.0
+          }
+        }
+      },
+      "behavioral_priors": {
+        "inventory_sensitivity_vg": {
+          "dist": "gamma",
+          "params": {
+            "shape": 30.622429,
+            "scale": 0.007348
+          }
+        },
+        "event_trigger_price_bps": {
+          "dist": "scalar",
+          "params": {
+            "value": 2.0
+          }
+        },
+        "max_order_frac_depth": {
+          "dist": "scalar",
+          "params": {
+            "value": 0.25
+          }
+        },
+        "leverage_factor": {
+          "dist": "scalar",
+          "params": {
+            "value": 1.0
+          }
+        },
+        "order_type_market_fraction": {
+          "dist": "scalar",
+          "params": {
+            "value": 0.0
+          }
+        }
+      }
+    },
+    "drop": {
+      "sample_size": 32,
+      "fit_sample_size": 32,
+      "fit_source": "phase_fit",
+      "excluded_from_fitting": false,
+      "warnings": [],
+      "common_behavior": {
+        "aggressiveness": {
+          "dist": "beta",
+          "params": {
+            "alpha": 5.0,
+            "beta": 45.0
+          }
+        },
+        "cancel_probability": {
+          "dist": "beta",
+          "params": {
+            "alpha": 82.903836,
+            "beta": 54.273503
+          }
+        },
+        "order_size_multiplier": {
+          "dist": "lognorm",
+          "params": {
+            "shape": 0.933267,
+            "loc": 0.0,
+            "scale": 0.663601
+          }
+        },
+        "inventory_sensitivity_vg": {
+          "dist": "gamma",
+          "params": {
+            "shape": 16.234683,
+            "scale": 0.025409
+          }
+        },
+        "order_type_market_fraction": {
+          "dist": "scalar",
+          "params": {
+            "value": 0.0
+          }
+        }
+      },
+      "behavioral_priors": {
+        "inventory_sensitivity_vg": {
+          "dist": "gamma",
+          "params": {
+            "shape": 16.234683,
+            "scale": 0.025409
+          }
+        },
+        "event_trigger_price_bps": {
+          "dist": "scalar",
+          "params": {
+            "value": 2.0
+          }
+        },
+        "max_order_frac_depth": {
+          "dist": "scalar",
+          "params": {
+            "value": 0.25
+          }
+        },
+        "leverage_factor": {
+          "dist": "scalar",
+          "params": {
+            "value": 1.0
+          }
+        },
+        "order_type_market_fraction": {
+          "dist": "scalar",
+          "params": {
+            "value": 0.0
+          }
+        }
+      }
+    },
+    "recovery": {
+      "sample_size": 32,
+      "fit_sample_size": 32,
+      "fit_source": "phase_fit",
+      "excluded_from_fitting": false,
+      "warnings": [],
+      "common_behavior": {
+        "aggressiveness": {
+          "dist": "beta",
+          "params": {
+            "alpha": 114.807135,
+            "beta": 74.544661
+          }
+        },
+        "cancel_probability": {
+          "dist": "beta",
+          "params": {
+            "alpha": 80.185586,
+            "beta": 697.235457
+          }
+        },
+        "order_size_multiplier": {
+          "dist": "lognorm",
+          "params": {
+            "shape": 0.35128,
+            "loc": 0.0,
+            "scale": 1.794709
+          }
+        },
+        "inventory_sensitivity_vg": {
+          "dist": "gamma",
+          "params": {
+            "shape": 20.149118,
+            "scale": 0.014424
+          }
+        },
+        "order_type_market_fraction": {
+          "dist": "scalar",
+          "params": {
+            "value": 0.0
+          }
+        }
+      },
+      "behavioral_priors": {
+        "inventory_sensitivity_vg": {
+          "dist": "gamma",
+          "params": {
+            "shape": 20.149118,
+            "scale": 0.014424
+          }
+        },
+        "event_trigger_price_bps": {
+          "dist": "scalar",
+          "params": {
+            "value": 2.0
+          }
+        },
+        "max_order_frac_depth": {
+          "dist": "scalar",
+          "params": {
+            "value": 0.25
+          }
+        },
+        "leverage_factor": {
+          "dist": "scalar",
+          "params": {
+            "value": 1.0
+          }
+        },
+        "order_type_market_fraction": {
+          "dist": "scalar",
+          "params": {
+            "value": 0.0
+          }
+        }
+      }
+    },
+    "post": {
+      "sample_size": 32,
+      "fit_sample_size": 32,
+      "fit_source": "phase_fit",
+      "excluded_from_fitting": false,
+      "warnings": [],
+      "common_behavior": {
+        "aggressiveness": {
+          "dist": "beta",
+          "params": {
+            "alpha": 46.772132,
+            "beta": 32.988117
+          }
+        },
+        "cancel_probability": {
+          "dist": "beta",
+          "params": {
+            "alpha": 3.55536,
+            "beta": 25.959977
+          }
+        },
+        "order_size_multiplier": {
+          "dist": "lognorm",
+          "params": {
+            "shape": 0.229237,
+            "loc": 0.0,
+            "scale": 1.834008
+          }
+        },
+        "inventory_sensitivity_vg": {
+          "dist": "gamma",
+          "params": {
+            "shape": 42.290784,
+            "scale": 0.005099
+          }
+        },
+        "order_type_market_fraction": {
+          "dist": "scalar",
+          "params": {
+            "value": 0.0
+          }
+        }
+      },
+      "behavioral_priors": {
+        "inventory_sensitivity_vg": {
+          "dist": "gamma",
+          "params": {
+            "shape": 42.290784,
+            "scale": 0.005099
+          }
+        },
+        "event_trigger_price_bps": {
+          "dist": "scalar",
+          "params": {
+            "value": 2.0
+          }
+        },
+        "max_order_frac_depth": {
+          "dist": "scalar",
+          "params": {
+            "value": 0.25
+          }
+        },
+        "leverage_factor": {
+          "dist": "scalar",
+          "params": {
+            "value": 1.0
+          }
+        },
+        "order_type_market_fraction": {
+          "dist": "scalar",
+          "params": {
+            "value": 0.0
+          }
+        }
+      }
+    }
+  },
+  "noise_trader": {
+    "pre": {
+      "sample_size": 32,
+      "fit_sample_size": 32,
+      "fit_source": "phase_fit",
+      "excluded_from_fitting": false,
+      "warnings": [],
+      "common_behavior": {
+        "aggressiveness": {
+          "dist": "beta",
+          "params": {
+            "alpha": 245.344462,
+            "beta": 187.209491
+          }
+        },
+        "cancel_probability": {
+          "dist": "beta",
+          "params": {
+            "alpha": 6.475966,
+            "beta": 185.505065
+          }
+        },
+        "order_size_multiplier": {
+          "dist": "lognorm",
+          "params": {
+            "shape": 0.269111,
+            "loc": 0.0,
+            "scale": 1.786718
+          }
+        },
+        "inventory_sensitivity_vg": {
+          "dist": "gamma",
+          "params": {
+            "shape": 2.519719,
+            "scale": 0.244943
+          }
+        },
+        "order_type_market_fraction": {
+          "dist": "scalar",
+          "params": {
+            "value": 1.0
+          }
+        }
+      },
+      "behavioral_priors": {
+        "aggressiveness_alpha": {
+          "dist": "scalar",
+          "params": {
+            "value": 1.859375
+          }
+        },
+        "inventory_sensitivity_vg": {
+          "dist": "gamma",
+          "params": {
+            "shape": 2.519719,
+            "scale": 0.244943
+          }
+        },
+        "arrival_rate_lambda": {
+          "dist": "scalar",
+          "params": {
+            "value": 140.649984
+          }
+        },
+        "order_type_market_fraction": {
+          "dist": "scalar",
+          "params": {
+            "value": 1.0
+          }
+        }
+      }
+    },
+    "drop": {
+      "sample_size": 32,
+      "fit_sample_size": 32,
+      "fit_source": "phase_fit",
+      "excluded_from_fitting": false,
+      "warnings": [],
+      "common_behavior": {
+        "aggressiveness": {
+          "dist": "beta",
+          "params": {
+            "alpha": 197.95476,
+            "beta": 155.927822
+          }
+        },
+        "cancel_probability": {
+          "dist": "beta",
+          "params": {
+            "alpha": 11.484611,
+            "beta": 322.64214
+          }
+        },
+        "order_size_multiplier": {
+          "dist": "lognorm",
+          "params": {
+            "shape": 0.216298,
+            "loc": 0.0,
+            "scale": 1.704681
+          }
+        },
+        "inventory_sensitivity_vg": {
+          "dist": "gamma",
+          "params": {
+            "shape": 1.939267,
+            "scale": 0.276361
+          }
+        },
+        "order_type_market_fraction": {
+          "dist": "scalar",
+          "params": {
+            "value": 1.0
+          }
+        }
+      },
+      "behavioral_priors": {
+        "aggressiveness_alpha": {
+          "dist": "scalar",
+          "params": {
+            "value": 1.75
+          }
+        },
+        "inventory_sensitivity_vg": {
+          "dist": "gamma",
+          "params": {
+            "shape": 1.939267,
+            "scale": 0.276361
+          }
+        },
+        "arrival_rate_lambda": {
+          "dist": "scalar",
+          "params": {
+            "value": 311.598774
+          }
+        },
+        "order_type_market_fraction": {
+          "dist": "scalar",
+          "params": {
+            "value": 1.0
+          }
+        }
+      }
+    },
+    "recovery": {
+      "sample_size": 32,
+      "fit_sample_size": 32,
+      "fit_source": "phase_fit",
+      "excluded_from_fitting": false,
+      "warnings": [],
+      "common_behavior": {
+        "aggressiveness": {
+          "dist": "beta",
+          "params": {
+            "alpha": 248.611388,
+            "beta": 204.698209
+          }
+        },
+        "cancel_probability": {
+          "dist": "beta",
+          "params": {
+            "alpha": 13.030745,
+            "beta": 380.371067
+          }
+        },
+        "order_size_multiplier": {
+          "dist": "lognorm",
+          "params": {
+            "shape": 0.118927,
+            "loc": 0.0,
+            "scale": 1.597429
+          }
+        },
+        "inventory_sensitivity_vg": {
+          "dist": "gamma",
+          "params": {
+            "shape": 1.81231,
+            "scale": 0.161224
+          }
+        },
+        "order_type_market_fraction": {
+          "dist": "scalar",
+          "params": {
+            "value": 1.0
+          }
+        }
+      },
+      "behavioral_priors": {
+        "aggressiveness_alpha": {
+          "dist": "scalar",
+          "params": {
+            "value": 1.609375
+          }
+        },
+        "inventory_sensitivity_vg": {
+          "dist": "gamma",
+          "params": {
+            "shape": 1.81231,
+            "scale": 0.161224
+          }
+        },
+        "arrival_rate_lambda": {
+          "dist": "scalar",
+          "params": {
+            "value": 303.825432
+          }
+        },
+        "order_type_market_fraction": {
+          "dist": "scalar",
+          "params": {
+            "value": 1.0
+          }
+        }
+      }
+    },
+    "post": {
+      "sample_size": 32,
+      "fit_sample_size": 32,
+      "fit_source": "phase_fit",
+      "excluded_from_fitting": false,
+      "warnings": [],
+      "common_behavior": {
+        "aggressiveness": {
+          "dist": "beta",
+          "params": {
+            "alpha": 254.826108,
+            "beta": 200.720333
+          }
+        },
+        "cancel_probability": {
+          "dist": "beta",
+          "params": {
+            "alpha": 6.085464,
+            "beta": 188.752597
+          }
+        },
+        "order_size_multiplier": {
+          "dist": "lognorm",
+          "params": {
+            "shape": 0.189963,
+            "loc": 0.0,
+            "scale": 1.653224
+          }
+        },
+        "inventory_sensitivity_vg": {
+          "dist": "gamma",
+          "params": {
+            "shape": 3.089348,
+            "scale": 0.212929
+          }
+        },
+        "order_type_market_fraction": {
+          "dist": "scalar",
+          "params": {
+            "value": 1.0
+          }
+        }
+      },
+      "behavioral_priors": {
+        "aggressiveness_alpha": {
+          "dist": "scalar",
+          "params": {
+            "value": 1.6875
+          }
+        },
+        "inventory_sensitivity_vg": {
+          "dist": "gamma",
+          "params": {
+            "shape": 3.089348,
+            "scale": 0.212929
+          }
+        },
+        "arrival_rate_lambda": {
+          "dist": "scalar",
+          "params": {
+            "value": 168.05572
+          }
+        },
+        "order_type_market_fraction": {
+          "dist": "scalar",
+          "params": {
+            "value": 1.0
+          }
+        }
+      }
+    }
+  }
+}

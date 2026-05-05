@@ -1,0 +1,134 @@
+{
+  "metadata": {
+    "description": "Normal-market baseline anchors for calibration",
+    "symbol": "BTCUSDT",
+    "source": "binance_vision_aggtrades",
+    "generated_at_utc": "2026-05-03T16:54:37Z",
+    "windows": [
+      {
+        "label": "normal_bull",
+        "start": "2021-10-04",
+        "end": "2021-10-08"
+      },
+      {
+        "label": "normal_bear",
+        "start": "2023-02-06",
+        "end": "2023-02-10"
+      }
+    ]
+  },
+  "normal_bull": {
+    "label": "normal_bull",
+    "n_days": 5,
+    "n_trades": 9398783,
+    "n_bars_100ms": 2600218,
+    "ofi_percentiles": {
+      "p05": -0.941,
+      "p25": -0.058,
+      "p50": 0.001,
+      "p75": 0.057,
+      "p95": 0.966
+    },
+    "trade_intensity": {
+      "mean": 36.14613467,
+      "std": 101.62777694,
+      "median": 10.0,
+      "n": 2600218
+    },
+    "kyle_lambda": {
+      "mean": 0.95217203,
+      "std": 0.81352243,
+      "median": 0.76801848,
+      "n": 2600218
+    },
+    "realized_vol": {
+      "mean": 0.00024861,
+      "std": 0.00027481,
+      "median": 0.00021258,
+      "n": 2600218
+    },
+    "spread_bps": {
+      "mean": null,
+      "std": null,
+      "median": null,
+      "n": 0
+    },
+    "depth_imbalance": {
+      "mean": null,
+      "std": null,
+      "median": null,
+      "n": 0
+    },
+    "vpin": {
+      "mean": 0.37594362,
+      "std": 0.23832501,
+      "median": 0.35389145,
+      "n": 2600218
+    },
+    "amihud": {
+      "mean": 2e-08,
+      "std": 1e-07,
+      "median": 0.0,
+      "n": 2600218
+    },
+    "noise_trader_lambda": 36.14613467,
+    "order_size_pareto_alpha": 0.0258
+  },
+  "normal_bear": {
+    "label": "normal_bear",
+    "n_days": 5,
+    "n_trades": 4769413,
+    "n_bars_100ms": 1988760,
+    "ofi_percentiles": {
+      "p05": -2.0,
+      "p25": -0.087,
+      "p50": 0.001,
+      "p75": 0.087,
+      "p95": 2.0
+    },
+    "trade_intensity": {
+      "mean": 23.98184296,
+      "std": 55.64624413,
+      "median": 10.0,
+      "n": 1988760
+    },
+    "kyle_lambda": {
+      "mean": 0.07910858,
+      "std": 0.07725316,
+      "median": 0.05918274,
+      "n": 1988760
+    },
+    "realized_vol": {
+      "mean": 0.00011896,
+      "std": 0.00013717,
+      "median": 9.144e-05,
+      "n": 1988760
+    },
+    "spread_bps": {
+      "mean": null,
+      "std": null,
+      "median": null,
+      "n": 0
+    },
+    "depth_imbalance": {
+      "mean": null,
+      "std": null,
+      "median": null,
+      "n": 0
+    },
+    "vpin": {
+      "mean": 0.41890681,
+      "std": 0.25729303,
+      "median": 0.40267411,
+      "n": 1988760
+    },
+    "amihud": {
+      "mean": 2e-08,
+      "std": 1.2e-07,
+      "median": 0.0,
+      "n": 1988760
+    },
+    "noise_trader_lambda": 23.98184296,
+    "order_size_pareto_alpha": 0.0256
+  }
+}

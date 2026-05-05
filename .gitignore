@@ -19,6 +19,14 @@ data/
 *.joblib
 *.npy
 *.npz
+
+# Allow committing Phase 2 JSON outputs for debugging/review.
+!data/
+!data/processed/
+!data/processed/tardis/
+data/raw
+!data/processed/tardis/phase2_outputs/
+!data/processed/tardis/phase2_outputs/**/*.json
 .vscode/mcp.json
 .github
 models/

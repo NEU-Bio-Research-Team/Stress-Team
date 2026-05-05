@@ -1,0 +1,20 @@
+{
+  "complete": true,
+  "completed_runs": 50,
+  "n_runs_target": 50,
+  "scenario": "llm",
+  "seed": 42,
+  "tick_ms": 100,
+  "output_csv": "data/processed/tardis/phase2_outputs/lob_mini_simulation_llm.csv",
+  "summary_json": "data/processed/tardis/phase2_outputs/lob_mini_summary_llm.json",
+  "rng_state": {
+    "bit_generator": "PCG64",
+    "state": {
+      "state": 240352872562059108870474261595279303173,
+      "inc": 332724090758049132448979897138935081983
+    },
+    "has_uint32": 0,
+    "uinteger": 3193530528
+  },
+  "updated_at_unix": 1777654103.0379238
+}

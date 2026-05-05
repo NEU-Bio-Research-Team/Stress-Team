@@ -1,0 +1,1210 @@
+{
+  "metadata": {
+    "schema_version": "phase1_behavioral_priors.v1",
+    "source_csv": "raw_elicited.dry_run.csv",
+    "anchors_json": "prior_anchors.json",
+    "parsed_rows": 3,
+    "minimum_group_size": 10,
+    "fit_backend": "scipy",
+    "agent_types": [
+      "momentum_trader",
+      "contrarian_trader",
+      "hft_market_maker",
+      "noise_trader"
+    ],
+    "phases": [
+      "pre",
+      "drop",
+      "recovery",
+      "post"
+    ]
+  },
+  "momentum_trader": {
+    "pre": {
+      "sample_size": 1,
+      "fit_sample_size": 1,
+      "fit_source": "spec_default",
+      "warnings": [
+        "phase sample size 1 is below 10; falling back to agent-level fit",
+        "agent-level sample size is also below threshold; using spec defaults"
+      ],
+      "common_behavior": {
+        "aggressiveness": {
+          "dist": "beta",
+          "params": {
+            "alpha": 6.0,
+            "beta": 2.0
+          }
+        },
+        "cancel_probability": {
+          "dist": "beta",
+          "params": {
+            "alpha": 1.0,
+            "beta": 19.0
+          }
+        },
+        "order_size_multiplier": {
+          "dist": "lognorm",
+          "params": {
+            "shape": 0.35,
+            "loc": 0.0,
+            "scale": 1.0
+          }
+        },
+        "inventory_sensitivity_vg": {
+          "dist": "gamma",
+          "params": {
+            "shape": 2.0,
+            "scale": 0.05
+          }
+        },
+        "order_type_market_fraction": {
+          "dist": "scalar",
+          "params": {
+            "value": 0.9
+          }
+        }
+      },
+      "behavioral_priors": {
+        "aggressiveness": {
+          "dist": "beta",
+          "params": {
+            "alpha": 6.0,
+            "beta": 2.0
+          }
+        },
+        "cancel_probability": {
+          "dist": "beta",
+          "params": {
+            "alpha": 1.0,
+            "beta": 19.0
+          }
+        },
+        "inventory_sensitivity_vg": {
+          "dist": "gamma",
+          "params": {
+            "shape": 2.0,
+            "scale": 0.05
+          }
+        },
+        "order_type_market_fraction": {
+          "dist": "scalar",
+          "params": {
+            "value": 0.9
+          }
+        }
+      }
+    },
+    "drop": {
+      "sample_size": 1,
+      "fit_sample_size": 1,
+      "fit_source": "spec_default",
+      "warnings": [
+        "phase sample size 1 is below 10; falling back to agent-level fit",
+        "agent-level sample size is also below threshold; using spec defaults"
+      ],
+      "common_behavior": {
+        "aggressiveness": {
+          "dist": "beta",
+          "params": {
+            "alpha": 6.0,
+            "beta": 2.0
+          }
+        },
+        "cancel_probability": {
+          "dist": "beta",
+          "params": {
+            "alpha": 1.0,
+            "beta": 19.0
+          }
+        },
+        "order_size_multiplier": {
+          "dist": "lognorm",
+          "params": {
+            "shape": 0.35,
+            "loc": 0.0,
+            "scale": 1.0
+          }
+        },
+        "inventory_sensitivity_vg": {
+          "dist": "gamma",
+          "params": {
+            "shape": 2.0,
+            "scale": 0.05
+          }
+        },
+        "order_type_market_fraction": {
+          "dist": "scalar",
+          "params": {
+            "value": 0.9
+          }
+        }
+      },
+      "behavioral_priors": {
+        "aggressiveness": {
+          "dist": "beta",
+          "params": {
+            "alpha": 6.0,
+            "beta": 2.0
+          }
+        },
+        "cancel_probability": {
+          "dist": "beta",
+          "params": {
+            "alpha": 1.0,
+            "beta": 19.0
+          }
+        },
+        "inventory_sensitivity_vg": {
+          "dist": "gamma",
+          "params": {
+            "shape": 2.0,
+            "scale": 0.05
+          }
+        },
+        "order_type_market_fraction": {
+          "dist": "scalar",
+          "params": {
+            "value": 0.9
+          }
+        }
+      }
+    },
+    "recovery": {
+      "sample_size": 1,
+      "fit_sample_size": 1,
+      "fit_source": "spec_default",
+      "warnings": [
+        "phase sample size 1 is below 10; falling back to agent-level fit",
+        "agent-level sample size is also below threshold; using spec defaults"
+      ],
+      "common_behavior": {
+        "aggressiveness": {
+          "dist": "beta",
+          "params": {
+            "alpha": 6.0,
+            "beta": 2.0
+          }
+        },
+        "cancel_probability": {
+          "dist": "beta",
+          "params": {
+            "alpha": 1.0,
+            "beta": 19.0
+          }
+        },
+        "order_size_multiplier": {
+          "dist": "lognorm",
+          "params": {
+            "shape": 0.35,
+            "loc": 0.0,
+            "scale": 1.0
+          }
+        },
+        "inventory_sensitivity_vg": {
+          "dist": "gamma",
+          "params": {
+            "shape": 2.0,
+            "scale": 0.05
+          }
+        },
+        "order_type_market_fraction": {
+          "dist": "scalar",
+          "params": {
+            "value": 0.9
+          }
+        }
+      },
+      "behavioral_priors": {
+        "aggressiveness": {
+          "dist": "beta",
+          "params": {
+            "alpha": 6.0,
+            "beta": 2.0
+          }
+        },
+        "cancel_probability": {
+          "dist": "beta",
+          "params": {
+            "alpha": 1.0,
+            "beta": 19.0
+          }
+        },
+        "inventory_sensitivity_vg": {
+          "dist": "gamma",
+          "params": {
+            "shape": 2.0,
+            "scale": 0.05
+          }
+        },
+        "order_type_market_fraction": {
+          "dist": "scalar",
+          "params": {
+            "value": 0.9
+          }
+        }
+      }
+    },
+    "post": {
+      "sample_size": 0,
+      "fit_sample_size": 0,
+      "fit_source": "spec_default",
+      "warnings": [
+        "no parsed rows for this agent-phase; falling back to broader defaults",
+        "agent-level sample size is also below threshold; using spec defaults"
+      ],
+      "common_behavior": {
+        "aggressiveness": {
+          "dist": "beta",
+          "params": {
+            "alpha": 6.0,
+            "beta": 2.0
+          }
+        },
+        "cancel_probability": {
+          "dist": "beta",
+          "params": {
+            "alpha": 1.0,
+            "beta": 19.0
+          }
+        },
+        "order_size_multiplier": {
+          "dist": "lognorm",
+          "params": {
+            "shape": 0.35,
+            "loc": 0.0,
+            "scale": 1.0
+          }
+        },
+        "inventory_sensitivity_vg": {
+          "dist": "gamma",
+          "params": {
+            "shape": 2.0,
+            "scale": 0.05
+          }
+        },
+        "order_type_market_fraction": {
+          "dist": "scalar",
+          "params": {
+            "value": 0.9
+          }
+        }
+      },
+      "behavioral_priors": {
+        "aggressiveness": {
+          "dist": "beta",
+          "params": {
+            "alpha": 6.0,
+            "beta": 2.0
+          }
+        },
+        "cancel_probability": {
+          "dist": "beta",
+          "params": {
+            "alpha": 1.0,
+            "beta": 19.0
+          }
+        },
+        "inventory_sensitivity_vg": {
+          "dist": "gamma",
+          "params": {
+            "shape": 2.0,
+            "scale": 0.05
+          }
+        },
+        "order_type_market_fraction": {
+          "dist": "scalar",
+          "params": {
+            "value": 0.9
+          }
+        }
+      }
+    }
+  },
+  "contrarian_trader": {
+    "pre": {
+      "sample_size": 0,
+      "fit_sample_size": 0,
+      "fit_source": "spec_default",
+      "warnings": [
+        "no parsed rows for this agent-phase; falling back to broader defaults",
+        "agent-level sample size is also below threshold; using spec defaults"
+      ],
+      "common_behavior": {
+        "aggressiveness": {
+          "dist": "beta",
+          "params": {
+            "alpha": 4.0,
+            "beta": 3.0
+          }
+        },
+        "cancel_probability": {
+          "dist": "beta",
+          "params": {
+            "alpha": 1.0,
+            "beta": 12.0
+          }
+        },
+        "order_size_multiplier": {
+          "dist": "lognorm",
+          "params": {
+            "shape": 0.45,
+            "loc": 0.0,
+            "scale": 1.0
+          }
+        },
+        "inventory_sensitivity_vg": {
+          "dist": "gamma",
+          "params": {
+            "shape": 2.0,
+            "scale": 0.075
+          }
+        },
+        "order_type_market_fraction": {
+          "dist": "scalar",
+          "params": {
+            "value": 0.85
+          }
+        }
+      },
+      "behavioral_priors": {
+        "inventory_sensitivity_vg": {
+          "dist": "gamma",
+          "params": {
+            "shape": 2.0,
+            "scale": 0.075
+          }
+        },
+        "aggressiveness_estar": {
+          "dist": "non_linear_thresholds",
+          "params": {
+            "activation_threshold_pct": 1.0,
+            "max_size_commitment_deviation_pct": 5.0
+          }
+        },
+        "order_type_market_fraction": {
+          "dist": "scalar",
+          "params": {
+            "value": 0.85
+          }
+        }
+      }
+    },
+    "drop": {
+      "sample_size": 0,
+      "fit_sample_size": 0,
+      "fit_source": "spec_default",
+      "warnings": [
+        "no parsed rows for this agent-phase; falling back to broader defaults",
+        "agent-level sample size is also below threshold; using spec defaults"
+      ],
+      "common_behavior": {
+        "aggressiveness": {
+          "dist": "beta",
+          "params": {
+            "alpha": 4.0,
+            "beta": 3.0
+          }
+        },
+        "cancel_probability": {
+          "dist": "beta",
+          "params": {
+            "alpha": 1.0,
+            "beta": 12.0
+          }
+        },
+        "order_size_multiplier": {
+          "dist": "lognorm",
+          "params": {
+            "shape": 0.45,
+            "loc": 0.0,
+            "scale": 1.0
+          }
+        },
+        "inventory_sensitivity_vg": {
+          "dist": "gamma",
+          "params": {
+            "shape": 2.0,
+            "scale": 0.075
+          }
+        },
+        "order_type_market_fraction": {
+          "dist": "scalar",
+          "params": {
+            "value": 0.85
+          }
+        }
+      },
+      "behavioral_priors": {
+        "inventory_sensitivity_vg": {
+          "dist": "gamma",
+          "params": {
+            "shape": 2.0,
+            "scale": 0.075
+          }
+        },
+        "aggressiveness_estar": {
+          "dist": "non_linear_thresholds",
+          "params": {
+            "activation_threshold_pct": 1.0,
+            "max_size_commitment_deviation_pct": 5.0
+          }
+        },
+        "order_type_market_fraction": {
+          "dist": "scalar",
+          "params": {
+            "value": 0.85
+          }
+        }
+      }
+    },
+    "recovery": {
+      "sample_size": 0,
+      "fit_sample_size": 0,
+      "fit_source": "spec_default",
+      "warnings": [
+        "no parsed rows for this agent-phase; falling back to broader defaults",
+        "agent-level sample size is also below threshold; using spec defaults"
+      ],
+      "common_behavior": {
+        "aggressiveness": {
+          "dist": "beta",
+          "params": {
+            "alpha": 4.0,
+            "beta": 3.0
+          }
+        },
+        "cancel_probability": {
+          "dist": "beta",
+          "params": {
+            "alpha": 1.0,
+            "beta": 12.0
+          }
+        },
+        "order_size_multiplier": {
+          "dist": "lognorm",
+          "params": {
+            "shape": 0.45,
+            "loc": 0.0,
+            "scale": 1.0
+          }
+        },
+        "inventory_sensitivity_vg": {
+          "dist": "gamma",
+          "params": {
+            "shape": 2.0,
+            "scale": 0.075
+          }
+        },
+        "order_type_market_fraction": {
+          "dist": "scalar",
+          "params": {
+            "value": 0.85
+          }
+        }
+      },
+      "behavioral_priors": {
+        "inventory_sensitivity_vg": {
+          "dist": "gamma",
+          "params": {
+            "shape": 2.0,
+            "scale": 0.075
+          }
+        },
+        "aggressiveness_estar": {
+          "dist": "non_linear_thresholds",
+          "params": {
+            "activation_threshold_pct": 1.0,
+            "max_size_commitment_deviation_pct": 5.0
+          }
+        },
+        "order_type_market_fraction": {
+          "dist": "scalar",
+          "params": {
+            "value": 0.85
+          }
+        }
+      }
+    },
+    "post": {
+      "sample_size": 0,
+      "fit_sample_size": 0,
+      "fit_source": "spec_default",
+      "warnings": [
+        "no parsed rows for this agent-phase; falling back to broader defaults",
+        "agent-level sample size is also below threshold; using spec defaults"
+      ],
+      "common_behavior": {
+        "aggressiveness": {
+          "dist": "beta",
+          "params": {
+            "alpha": 4.0,
+            "beta": 3.0
+          }
+        },
+        "cancel_probability": {
+          "dist": "beta",
+          "params": {
+            "alpha": 1.0,
+            "beta": 12.0
+          }
+        },
+        "order_size_multiplier": {
+          "dist": "lognorm",
+          "params": {
+            "shape": 0.45,
+            "loc": 0.0,
+            "scale": 1.0
+          }
+        },
+        "inventory_sensitivity_vg": {
+          "dist": "gamma",
+          "params": {
+            "shape": 2.0,
+            "scale": 0.075
+          }
+        },
+        "order_type_market_fraction": {
+          "dist": "scalar",
+          "params": {
+            "value": 0.85
+          }
+        }
+      },
+      "behavioral_priors": {
+        "inventory_sensitivity_vg": {
+          "dist": "gamma",
+          "params": {
+            "shape": 2.0,
+            "scale": 0.075
+          }
+        },
+        "aggressiveness_estar": {
+          "dist": "non_linear_thresholds",
+          "params": {
+            "activation_threshold_pct": 1.0,
+            "max_size_commitment_deviation_pct": 5.0
+          }
+        },
+        "order_type_market_fraction": {
+          "dist": "scalar",
+          "params": {
+            "value": 0.85
+          }
+        }
+      }
+    }
+  },
+  "hft_market_maker": {
+    "pre": {
+      "sample_size": 0,
+      "fit_sample_size": 0,
+      "fit_source": "spec_default",
+      "warnings": [
+        "no parsed rows for this agent-phase; falling back to broader defaults",
+        "agent-level sample size is also below threshold; using spec defaults"
+      ],
+      "common_behavior": {
+        "aggressiveness": {
+          "dist": "beta",
+          "params": {
+            "alpha": 2.0,
+            "beta": 6.0
+          }
+        },
+        "cancel_probability": {
+          "dist": "beta",
+          "params": {
+            "alpha": 6.0,
+            "beta": 4.0
+          }
+        },
+        "order_size_multiplier": {
+          "dist": "lognorm",
+          "params": {
+            "shape": 0.25,
+            "loc": 0.0,
+            "scale": 0.8
+          }
+        },
+        "inventory_sensitivity_vg": {
+          "dist": "gamma",
+          "params": {
+            "shape": 2.0,
+            "scale": 0.08
+          }
+        },
+        "order_type_market_fraction": {
+          "dist": "scalar",
+          "params": {
+            "value": 0.0
+          }
+        }
+      },
+      "behavioral_priors": {
+        "inventory_sensitivity_vg": {
+          "dist": "gamma",
+          "params": {
+            "shape": 2.0,
+            "scale": 0.08
+          }
+        },
+        "event_trigger_price_bps": {
+          "dist": "scalar",
+          "params": {
+            "value": 3.0
+          }
+        },
+        "max_order_frac_depth": {
+          "dist": "scalar",
+          "params": {
+            "value": 0.25
+          }
+        },
+        "leverage_factor": {
+          "dist": "scalar",
+          "params": {
+            "value": 5.0
+          }
+        },
+        "order_type_market_fraction": {
+          "dist": "scalar",
+          "params": {
+            "value": 0.0
+          }
+        }
+      }
+    },
+    "drop": {
+      "sample_size": 0,
+      "fit_sample_size": 0,
+      "fit_source": "spec_default",
+      "warnings": [
+        "no parsed rows for this agent-phase; falling back to broader defaults",
+        "agent-level sample size is also below threshold; using spec defaults"
+      ],
+      "common_behavior": {
+        "aggressiveness": {
+          "dist": "beta",
+          "params": {
+            "alpha": 2.0,
+            "beta": 6.0
+          }
+        },
+        "cancel_probability": {
+          "dist": "beta",
+          "params": {
+            "alpha": 6.0,
+            "beta": 4.0
+          }
+        },
+        "order_size_multiplier": {
+          "dist": "lognorm",
+          "params": {
+            "shape": 0.25,
+            "loc": 0.0,
+            "scale": 0.8
+          }
+        },
+        "inventory_sensitivity_vg": {
+          "dist": "gamma",
+          "params": {
+            "shape": 2.0,
+            "scale": 0.08
+          }
+        },
+        "order_type_market_fraction": {
+          "dist": "scalar",
+          "params": {
+            "value": 0.0
+          }
+        }
+      },
+      "behavioral_priors": {
+        "inventory_sensitivity_vg": {
+          "dist": "gamma",
+          "params": {
+            "shape": 2.0,
+            "scale": 0.08
+          }
+        },
+        "event_trigger_price_bps": {
+          "dist": "scalar",
+          "params": {
+            "value": 3.0
+          }
+        },
+        "max_order_frac_depth": {
+          "dist": "scalar",
+          "params": {
+            "value": 0.25
+          }
+        },
+        "leverage_factor": {
+          "dist": "scalar",
+          "params": {
+            "value": 5.0
+          }
+        },
+        "order_type_market_fraction": {
+          "dist": "scalar",
+          "params": {
+            "value": 0.0
+          }
+        }
+      }
+    },
+    "recovery": {
+      "sample_size": 0,
+      "fit_sample_size": 0,
+      "fit_source": "spec_default",
+      "warnings": [
+        "no parsed rows for this agent-phase; falling back to broader defaults",
+        "agent-level sample size is also below threshold; using spec defaults"
+      ],
+      "common_behavior": {
+        "aggressiveness": {
+          "dist": "beta",
+          "params": {
+            "alpha": 2.0,
+            "beta": 6.0
+          }
+        },
+        "cancel_probability": {
+          "dist": "beta",
+          "params": {
+            "alpha": 6.0,
+            "beta": 4.0
+          }
+        },
+        "order_size_multiplier": {
+          "dist": "lognorm",
+          "params": {
+            "shape": 0.25,
+            "loc": 0.0,
+            "scale": 0.8
+          }
+        },
+        "inventory_sensitivity_vg": {
+          "dist": "gamma",
+          "params": {
+            "shape": 2.0,
+            "scale": 0.08
+          }
+        },
+        "order_type_market_fraction": {
+          "dist": "scalar",
+          "params": {
+            "value": 0.0
+          }
+        }
+      },
+      "behavioral_priors": {
+        "inventory_sensitivity_vg": {
+          "dist": "gamma",
+          "params": {
+            "shape": 2.0,
+            "scale": 0.08
+          }
+        },
+        "event_trigger_price_bps": {
+          "dist": "scalar",
+          "params": {
+            "value": 3.0
+          }
+        },
+        "max_order_frac_depth": {
+          "dist": "scalar",
+          "params": {
+            "value": 0.25
+          }
+        },
+        "leverage_factor": {
+          "dist": "scalar",
+          "params": {
+            "value": 5.0
+          }
+        },
+        "order_type_market_fraction": {
+          "dist": "scalar",
+          "params": {
+            "value": 0.0
+          }
+        }
+      }
+    },
+    "post": {
+      "sample_size": 0,
+      "fit_sample_size": 0,
+      "fit_source": "spec_default",
+      "warnings": [
+        "no parsed rows for this agent-phase; falling back to broader defaults",
+        "agent-level sample size is also below threshold; using spec defaults"
+      ],
+      "common_behavior": {
+        "aggressiveness": {
+          "dist": "beta",
+          "params": {
+            "alpha": 2.0,
+            "beta": 6.0
+          }
+        },
+        "cancel_probability": {
+          "dist": "beta",
+          "params": {
+            "alpha": 6.0,
+            "beta": 4.0
+          }
+        },
+        "order_size_multiplier": {
+          "dist": "lognorm",
+          "params": {
+            "shape": 0.25,
+            "loc": 0.0,
+            "scale": 0.8
+          }
+        },
+        "inventory_sensitivity_vg": {
+          "dist": "gamma",
+          "params": {
+            "shape": 2.0,
+            "scale": 0.08
+          }
+        },
+        "order_type_market_fraction": {
+          "dist": "scalar",
+          "params": {
+            "value": 0.0
+          }
+        }
+      },
+      "behavioral_priors": {
+        "inventory_sensitivity_vg": {
+          "dist": "gamma",
+          "params": {
+            "shape": 2.0,
+            "scale": 0.08
+          }
+        },
+        "event_trigger_price_bps": {
+          "dist": "scalar",
+          "params": {
+            "value": 3.0
+          }
+        },
+        "max_order_frac_depth": {
+          "dist": "scalar",
+          "params": {
+            "value": 0.25
+          }
+        },
+        "leverage_factor": {
+          "dist": "scalar",
+          "params": {
+            "value": 5.0
+          }
+        },
+        "order_type_market_fraction": {
+          "dist": "scalar",
+          "params": {
+            "value": 0.0
+          }
+        }
+      }
+    }
+  },
+  "noise_trader": {
+    "pre": {
+      "sample_size": 0,
+      "fit_sample_size": 0,
+      "fit_source": "spec_default",
+      "warnings": [
+        "no parsed rows for this agent-phase; falling back to broader defaults",
+        "agent-level sample size is also below threshold; using spec defaults"
+      ],
+      "common_behavior": {
+        "aggressiveness": {
+          "dist": "beta",
+          "params": {
+            "alpha": 3.0,
+            "beta": 3.0
+          }
+        },
+        "cancel_probability": {
+          "dist": "beta",
+          "params": {
+            "alpha": 1.0,
+            "beta": 20.0
+          }
+        },
+        "order_size_multiplier": {
+          "dist": "lognorm",
+          "params": {
+            "shape": 0.55,
+            "loc": 0.0,
+            "scale": 1.1
+          }
+        },
+        "inventory_sensitivity_vg": {
+          "dist": "gamma",
+          "params": {
+            "shape": 2.0,
+            "scale": 0.05
+          }
+        },
+        "order_type_market_fraction": {
+          "dist": "scalar",
+          "params": {
+            "value": 1.0
+          }
+        }
+      },
+      "behavioral_priors": {
+        "aggressiveness_alpha": {
+          "dist": "scalar",
+          "params": {
+            "value": 1.0
+          }
+        },
+        "inventory_sensitivity_vg": {
+          "dist": "gamma",
+          "params": {
+            "shape": 2.0,
+            "scale": 0.05
+          }
+        },
+        "arrival_rate_lambda": {
+          "dist": "scalar",
+          "params": {
+            "value": 9.492588
+          }
+        },
+        "order_type_market_fraction": {
+          "dist": "scalar",
+          "params": {
+            "value": 1.0
+          }
+        }
+      }
+    },
+    "drop": {
+      "sample_size": 0,
+      "fit_sample_size": 0,
+      "fit_source": "spec_default",
+      "warnings": [
+        "no parsed rows for this agent-phase; falling back to broader defaults",
+        "agent-level sample size is also below threshold; using spec defaults"
+      ],
+      "common_behavior": {
+        "aggressiveness": {
+          "dist": "beta",
+          "params": {
+            "alpha": 3.0,
+            "beta": 3.0
+          }
+        },
+        "cancel_probability": {
+          "dist": "beta",
+          "params": {
+            "alpha": 1.0,
+            "beta": 20.0
+          }
+        },
+        "order_size_multiplier": {
+          "dist": "lognorm",
+          "params": {
+            "shape": 0.55,
+            "loc": 0.0,
+            "scale": 1.1
+          }
+        },
+        "inventory_sensitivity_vg": {
+          "dist": "gamma",
+          "params": {
+            "shape": 2.0,
+            "scale": 0.05
+          }
+        },
+        "order_type_market_fraction": {
+          "dist": "scalar",
+          "params": {
+            "value": 1.0
+          }
+        }
+      },
+      "behavioral_priors": {
+        "aggressiveness_alpha": {
+          "dist": "scalar",
+          "params": {
+            "value": 1.0
+          }
+        },
+        "inventory_sensitivity_vg": {
+          "dist": "gamma",
+          "params": {
+            "shape": 2.0,
+            "scale": 0.05
+          }
+        },
+        "arrival_rate_lambda": {
+          "dist": "scalar",
+          "params": {
+            "value": 13.293721
+          }
+        },
+        "order_type_market_fraction": {
+          "dist": "scalar",
+          "params": {
+            "value": 1.0
+          }
+        }
+      }
+    },
+    "recovery": {
+      "sample_size": 0,
+      "fit_sample_size": 0,
+      "fit_source": "spec_default",
+      "warnings": [
+        "no parsed rows for this agent-phase; falling back to broader defaults",
+        "agent-level sample size is also below threshold; using spec defaults"
+      ],
+      "common_behavior": {
+        "aggressiveness": {
+          "dist": "beta",
+          "params": {
+            "alpha": 3.0,
+            "beta": 3.0
+          }
+        },
+        "cancel_probability": {
+          "dist": "beta",
+          "params": {
+            "alpha": 1.0,
+            "beta": 20.0
+          }
+        },
+        "order_size_multiplier": {
+          "dist": "lognorm",
+          "params": {
+            "shape": 0.55,
+            "loc": 0.0,
+            "scale": 1.1
+          }
+        },
+        "inventory_sensitivity_vg": {
+          "dist": "gamma",
+          "params": {
+            "shape": 2.0,
+            "scale": 0.05
+          }
+        },
+        "order_type_market_fraction": {
+          "dist": "scalar",
+          "params": {
+            "value": 1.0
+          }
+        }
+      },
+      "behavioral_priors": {
+        "aggressiveness_alpha": {
+          "dist": "scalar",
+          "params": {
+            "value": 1.0
+          }
+        },
+        "inventory_sensitivity_vg": {
+          "dist": "gamma",
+          "params": {
+            "shape": 2.0,
+            "scale": 0.05
+          }
+        },
+        "arrival_rate_lambda": {
+          "dist": "scalar",
+          "params": {
+            "value": 15.763881
+          }
+        },
+        "order_type_market_fraction": {
+          "dist": "scalar",
+          "params": {
+            "value": 1.0
+          }
+        }
+      }
+    },
+    "post": {
+      "sample_size": 0,
+      "fit_sample_size": 0,
+      "fit_source": "spec_default",
+      "warnings": [
+        "no parsed rows for this agent-phase; falling back to broader defaults",
+        "agent-level sample size is also below threshold; using spec defaults"
+      ],
+      "common_behavior": {
+        "aggressiveness": {
+          "dist": "beta",
+          "params": {
+            "alpha": 3.0,
+            "beta": 3.0
+          }
+        },
+        "cancel_probability": {
+          "dist": "beta",
+          "params": {
+            "alpha": 1.0,
+            "beta": 20.0
+          }
+        },
+        "order_size_multiplier": {
+          "dist": "lognorm",
+          "params": {
+            "shape": 0.55,
+            "loc": 0.0,
+            "scale": 1.1
+          }
+        },
+        "inventory_sensitivity_vg": {
+          "dist": "gamma",
+          "params": {
+            "shape": 2.0,
+            "scale": 0.05
+          }
+        },
+        "order_type_market_fraction": {
+          "dist": "scalar",
+          "params": {
+            "value": 1.0
+          }
+        }
+      },
+      "behavioral_priors": {
+        "aggressiveness_alpha": {
+          "dist": "scalar",
+          "params": {
+            "value": 1.0
+          }
+        },
+        "inventory_sensitivity_vg": {
+          "dist": "gamma",
+          "params": {
+            "shape": 2.0,
+            "scale": 0.05
+          }
+        },
+        "arrival_rate_lambda": {
+          "dist": "scalar",
+          "params": {
+            "value": 20.981878
+          }
+        },
+        "order_type_market_fraction": {
+          "dist": "scalar",
+          "params": {
+            "value": 1.0
+          }
+        }
+      }
+    }
+  }
+}
