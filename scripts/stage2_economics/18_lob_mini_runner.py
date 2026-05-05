@@ -128,6 +128,10 @@ def parse_args() -> argparse.Namespace:
                         help="Impact multiplier applied only during drop phase")
     parser.add_argument("--min-price-fraction", type=float, default=0.70,
                         help="Per-run hard floor as a fraction of init_price to avoid price-to-zero collapse")
+    parser.add_argument("--resilience-floor-fraction", type=float, default=0.85,
+                        help="Reference depth level for drop-phase impact damping")
+    parser.add_argument("--resilience-min-damp", type=float, default=0.20,
+                        help="Minimum impact multiplier near deep-drop region (0-1)")
     parser.add_argument("--log-every-runs", type=int, default=1)
     parser.add_argument("--log-every-ticks", type=int, default=500)
     return parser.parse_args()
@@ -569,6 +573,15 @@ def run_one_simulation(
 
         phase_impact_mult = args.drop_impact_mult if phase == "drop" else 1.0
         impact = args.impact_scale * phase_impact_mult * kyle_lambda * net_flow
+
+        if phase == "drop":
+            floor_ref = init_price * args.resilience_floor_fraction
+            span = max(init_price - floor_ref, 1e-9)
+            depth_ratio = (mid_price - floor_ref) / span
+            depth_ratio = float(np.clip(depth_ratio, 0.0, 1.0))
+            min_damp = float(np.clip(args.resilience_min_damp, 0.0, 1.0))
+            resilience_damp = min_damp + (1.0 - min_damp) * depth_ratio
+            impact *= resilience_damp
 
         if scenario == "literature":
             impact *= 1.05
