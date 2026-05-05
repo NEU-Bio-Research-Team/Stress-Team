@@ -1,0 +1,55 @@
+{
+  "cfg_label": "cfgC_dim350_dsp020_rdamp014",
+  "input_dir": "data/processed/tardis/phase2_outputs/rescue_sweep_cfgC_dim350_dsp020_rdamp_v1/cfgC_dim350_dsp020_rdamp014/raw",
+  "panel_file": "data/processed/tardis/phase2_outputs/rescue_sweep_cfgC_dim350_dsp020_rdamp_v1/cfgC_dim350_dsp020_rdamp014/censored_panel.csv",
+  "guard_window": 5,
+  "crash_window": 10,
+  "min_price_fraction": 0.6,
+  "n_shards": 4,
+  "n_runs": 20,
+  "raw_rows_total": 233600,
+  "censored_rows_total": 141834,
+  "crash_rate_raw": 0.15,
+  "crash_rate_censored": 0.15,
+  "avg_frac_at_min_censored": 0.0,
+  "floor_exposure": 0.0,
+  "usable_fraction_total_mean": 0.6095063829787234,
+  "usable_fraction_drop_mean": 0.73234,
+  "drawdown_at_first_crash": {
+    "mean": 2.6901639379072697,
+    "p50": 2.345204828516916,
+    "p95": 3.557877069899015
+  },
+  "ofi_first_crash": {
+    "mean": -5.800302229934673,
+    "p50": -5.5014153860628,
+    "p95": -4.487486163084329
+  },
+  "ofi_crash_window": {
+    "mean": -5.617197504384813,
+    "p50": -5.73284083587978,
+    "p95": -5.2550176647155675
+  },
+  "spread_crash_window": {
+    "mean": 3.4648233756666666,
+    "p50": 3.38362804,
+    "p95": 3.6028554463
+  },
+  "spread_pre": {
+    "mean": 5.819488109999999,
+    "p50": 5.819488109999999,
+    "p95": 5.819488109999999
+  },
+  "depth_crash_window": {
+    "mean": -0.21930354659094006,
+    "p50": -0.2247013737366439,
+    "p95": -0.20541647562860688
+  },
+  "depth_pre": {
+    "mean": 0.02401267417396309,
+    "p50": 0.023510948755417233,
+    "p95": 0.025073082620316822
+  },
+  "per_run_metrics_csv": "data/processed/tardis/phase2_outputs/rescue_sweep_cfgC_dim350_dsp020_rdamp_v1/cfgC_dim350_dsp020_rdamp014/analysis/censored/per_run_censored_metrics.csv",
+  "per_shard_metrics_csv": "data/processed/tardis/phase2_outputs/rescue_sweep_cfgC_dim350_dsp020_rdamp_v1/cfgC_dim350_dsp020_rdamp014/analysis/censored/per_shard_censored_metrics.csv"
+}
