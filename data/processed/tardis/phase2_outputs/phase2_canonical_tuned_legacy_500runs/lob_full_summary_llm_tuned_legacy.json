@@ -1,0 +1,12 @@
+{
+  "config_json": "config/phase2_canonical_config.json",
+  "known_limitations_path": "KNOWN_LIMITATIONS.md",
+  "target_runs": 500,
+  "observed_runs": 500,
+  "shard_count": 20,
+  "flash_crash_rate_mean_of_shards": 0.17600000000000002,
+  "flash_crash_rate_from_merged_panel": 0.176,
+  "crash_event_count": 88,
+  "top_up_recommended": false,
+  "top_up_guidance": "No top-up required under the current crash-count rule."
+}

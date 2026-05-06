@@ -1,0 +1,30 @@
+{
+  "name": "phase2_canonical_tuned_legacy",
+  "description": "Phase 2 canonical tuned legacy configuration locked from the 2026-05-04 audit trail, with resilience damping neutralized to preserve pre-2026-05-05 behavior on the current runner.",
+  "runner_args": {
+    "scenario": "llm",
+    "calibration_phase": "pre",
+    "seed": 42,
+    "tick_ms": 100,
+    "impact_scale": 2.0,
+    "intensity_scale": 1.2289,
+    "base_order_size": 0.1,
+    "mm_vol_threshold_mult": 1.4,
+    "mm_withdrawal_strength": 1.8,
+    "crash_window_ticks": 10,
+    "crash_threshold_pct": 1.93,
+    "max_drop_ticks": 5000,
+    "max_recovery_ticks": 3000,
+    "max_post_ticks": 2000,
+    "max_pre_ticks": 2000,
+    "drop_impact_mult": 2.2,
+    "drop_sell_pressure": 0.18,
+    "min_price_fraction": 0.5,
+    "resilience_floor_fraction": 0.85,
+    "resilience_min_damp": 1.0
+  },
+  "known_limitations": [
+    "min_price_fraction=0.50 is a binding floor and must be treated as a known structural limitation.",
+    "Any crash-rate claim based on this config must report floor-hit context alongside the raw estimate."
+  ]
+}

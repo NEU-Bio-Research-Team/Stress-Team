@@ -106,7 +106,7 @@ Run 50–100 LLM-prior simulations.
 
 ```bash
 python scripts/stage2_economics/18_lob_mini_runner.py \
-  --scenario llm \
+  --config-json config/phase2_canonical_config.json \
   --n-runs 50 \
   --output-csv data/processed/tardis/phase2_outputs/lob_mini_simulation_llm.csv \
   --summary-json data/processed/tardis/phase2_outputs/lob_mini_summary_llm.json
@@ -149,6 +149,30 @@ python scripts/stage2_economics/19_stylised_facts_validation.py \
   --report-md reports/validation/phase2_stylised_facts_validation.md
 ```
 
+## Parallel Ablation Surface (Task 2)
+
+Use the canonical tuned legacy config as the shared knob set, then override only the experimental axis you are testing.
+
+Main prior-comparison table:
+
+```bash
+bash scripts/stage2_economics/run_phase2_experiment_parallel.sh prior_llm 500 25 8 600 --scenario llm --calibration-phase pre
+bash scripts/stage2_economics/run_phase2_experiment_parallel.sh prior_uniform 500 25 8 700 --scenario uniform --calibration-phase normal_bull
+bash scripts/stage2_economics/run_phase2_experiment_parallel.sh prior_literature 500 25 8 800 --scenario literature --calibration-phase normal_bear
+```
+
+Floor-sensitivity robustness table:
+
+```bash
+bash scripts/stage2_economics/run_phase2_experiment_parallel.sh floor030 500 25 8 900 --min-price-fraction 0.30
+bash scripts/stage2_economics/run_phase2_experiment_parallel.sh floor050 500 25 8 1000 --min-price-fraction 0.50
+bash scripts/stage2_economics/run_phase2_experiment_parallel.sh floor070 500 25 8 1100 --min-price-fraction 0.70
+```
+
+Current limitation for Task 2:
+
+- homogeneous-agent ablation is not yet exposed by Script 18, so that slice still requires a simulator change rather than a shell wrapper
+
 ## Gate Criteria
 
 Script 19 checks 4 primary gates:
@@ -189,24 +213,28 @@ Suggested adjustments:
 
 ## Scale Up (Phase 2 Day 3)
 
-Once mini-run gates pass, scale to 500–1000 runs.
+Once mini-run gates pass, scale the canonical tuned legacy config to 500 runs first.
 
 ```bash
-python scripts/stage2_economics/18_lob_mini_runner.py \
-  --scenario llm \
-  --calibration-phase pre \
-  --n-runs 1000 \
-  --output-csv data/processed/tardis/phase2_outputs/lob_full_simulation_llm.csv \
-  --summary-json data/processed/tardis/phase2_outputs/lob_full_summary_llm.json
+bash scripts/stage2_economics/run_phase2_canonical_tuned_legacy_parallel.sh 500 25 20 500
 ```
 
-Validate the full panel with Script 19 by swapping `--sim-llm` to the full output path.
+Top-up rule:
+
+- If the 500-run panel yields at least 20 crash events, keep 500 and proceed to Phase 3.
+- If crash count is below 20, add only 200–300 more runs instead of jumping directly to 1000.
+
+```bash
+bash scripts/stage2_economics/run_phase2_canonical_tuned_legacy_parallel.sh 750 25 20 500
+```
+
+Validate the full panel with Script 19 by swapping `--sim-llm` to `data/processed/tardis/phase2_outputs/phase2_canonical_tuned_legacy_500runs/lob_full_simulation_llm_tuned_legacy.csv`.
 
 ## Causal Discovery (Phase 2 Day 4)
 
 ```bash
 python scripts/stage2_economics/20_causal_discovery.py \
-  --sim-panel data/processed/tardis/phase2_outputs/lob_mini_simulation_llm.csv \
+  --sim-panel data/processed/tardis/phase2_outputs/phase2_canonical_tuned_legacy_500runs/lob_full_simulation_llm_tuned_legacy.csv \
   --edges-csv data/processed/tardis/phase2_outputs/causal_discovery_edges.csv \
   --report-json reports/validation/phase2_causal_discovery.json \
   --report-md reports/validation/phase2_causal_discovery.md
@@ -224,7 +252,7 @@ Expected theoretical mechanism for comparison:
 
 ```bash
 python scripts/stage2_economics/21_intervention_analysis.py \
-  --sim-panel data/processed/tardis/phase2_outputs/lob_mini_simulation_llm.csv \
+  --sim-panel data/processed/tardis/phase2_outputs/phase2_canonical_tuned_legacy_500runs/lob_full_simulation_llm_tuned_legacy.csv \
   --report-json reports/validation/phase2_intervention_analysis.json \
   --report-md reports/validation/phase2_intervention_analysis.md
 ```
@@ -247,7 +275,7 @@ Use this exact sequence:
 python scripts/stage2_economics/05b_download_normal_week.py
 python scripts/stage2_economics/06_micro_feature_engineering.py --mode normal --normal-dir data/processed/tardis/normal_baseline --resolution 100
 python scripts/stage2_economics/11_compute_prior_anchors.py
-python scripts/stage2_economics/18_lob_mini_runner.py --scenario llm --calibration-phase pre --n-runs 50
+python scripts/stage2_economics/18_lob_mini_runner.py --config-json config/phase2_canonical_config.json --n-runs 50
 
 # Day 2
 python scripts/stage2_economics/18_lob_mini_runner.py --scenario uniform --calibration-phase normal_bull --n-runs 50 --output-csv data/processed/tardis/phase2_outputs/lob_mini_simulation_uniform.csv --summary-json data/processed/tardis/phase2_outputs/lob_mini_summary_uniform.json
@@ -255,13 +283,13 @@ python scripts/stage2_economics/18_lob_mini_runner.py --scenario literature --ca
 python scripts/stage2_economics/19_stylised_facts_validation.py
 
 # Day 3
-python scripts/stage2_economics/18_lob_mini_runner.py --scenario llm --calibration-phase pre --n-runs 1000 --output-csv data/processed/tardis/phase2_outputs/lob_full_simulation_llm.csv --summary-json data/processed/tardis/phase2_outputs/lob_full_summary_llm.json
+bash scripts/stage2_economics/run_phase2_canonical_tuned_legacy_parallel.sh 500 25 20 500
 
 # Day 4
-python scripts/stage2_economics/20_causal_discovery.py --sim-panel data/processed/tardis/phase2_outputs/lob_full_simulation_llm.csv
+python scripts/stage2_economics/20_causal_discovery.py --sim-panel data/processed/tardis/phase2_outputs/phase2_canonical_tuned_legacy_500runs/lob_full_simulation_llm_tuned_legacy.csv
 
 # Day 5
-python scripts/stage2_economics/21_intervention_analysis.py --sim-panel data/processed/tardis/phase2_outputs/lob_full_simulation_llm.csv
+python scripts/stage2_economics/21_intervention_analysis.py --sim-panel data/processed/tardis/phase2_outputs/phase2_canonical_tuned_legacy_500runs/lob_full_simulation_llm_tuned_legacy.csv
 ```
 
 ## Quick Sanity Check Commands

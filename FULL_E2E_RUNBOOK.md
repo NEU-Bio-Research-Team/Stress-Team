@@ -98,7 +98,7 @@ python scripts/stage2_economics/phase1_llm_elicitation/17_pre_simulation_sanity_
 # ------------------------------------------------------------------
 # E) Phase 2 Simulation + Validation + Causal
 # ------------------------------------------------------------------
-python scripts/stage2_economics/18_lob_mini_runner.py --scenario llm --calibration-phase pre --n-runs 50 --output-csv data/processed/tardis/phase2_outputs/lob_mini_simulation_llm.csv --summary-json data/processed/tardis/phase2_outputs/lob_mini_summary_llm.json
+python scripts/stage2_economics/18_lob_mini_runner.py --config-json config/phase2_canonical_config.json --n-runs 50 --output-csv data/processed/tardis/phase2_outputs/lob_mini_simulation_llm.csv --summary-json data/processed/tardis/phase2_outputs/lob_mini_summary_llm.json
 python scripts/stage2_economics/18_lob_mini_runner.py --scenario uniform --calibration-phase normal_bull --n-runs 50 --output-csv data/processed/tardis/phase2_outputs/lob_mini_simulation_uniform.csv --summary-json data/processed/tardis/phase2_outputs/lob_mini_summary_uniform.json
 python scripts/stage2_economics/18_lob_mini_runner.py --scenario literature --calibration-phase normal_bear --n-runs 50 --output-csv data/processed/tardis/phase2_outputs/lob_mini_simulation_literature.csv --summary-json data/processed/tardis/phase2_outputs/lob_mini_summary_literature.json
 
@@ -109,16 +109,18 @@ python scripts/stage2_economics/19_stylised_facts_validation.py \
   --report-json reports/validation/phase2_stylised_facts_validation.json \
   --report-md reports/validation/phase2_stylised_facts_validation.md
 
-python scripts/stage2_economics/18_lob_mini_runner.py --scenario llm --calibration-phase pre --n-runs 1000 --output-csv data/processed/tardis/phase2_outputs/lob_full_simulation_llm.csv --summary-json data/processed/tardis/phase2_outputs/lob_full_summary_llm.json
+bash scripts/stage2_economics/run_phase2_canonical_tuned_legacy_parallel.sh 500 25 20 500
+# If crash count after 500 runs is still below 20, top up only to 700-800.
+# bash scripts/stage2_economics/run_phase2_canonical_tuned_legacy_parallel.sh 750 25 20 500
 
 python scripts/stage2_economics/20_causal_discovery.py \
-  --sim-panel data/processed/tardis/phase2_outputs/lob_full_simulation_llm.csv \
+  --sim-panel data/processed/tardis/phase2_outputs/phase2_canonical_tuned_legacy_500runs/lob_full_simulation_llm_tuned_legacy.csv \
   --edges-csv data/processed/tardis/phase2_outputs/causal_discovery_edges.csv \
   --report-json reports/validation/phase2_causal_discovery.json \
   --report-md reports/validation/phase2_causal_discovery.md
 
 python scripts/stage2_economics/21_intervention_analysis.py \
-  --sim-panel data/processed/tardis/phase2_outputs/lob_full_simulation_llm.csv \
+  --sim-panel data/processed/tardis/phase2_outputs/phase2_canonical_tuned_legacy_500runs/lob_full_simulation_llm_tuned_legacy.csv \
   --report-json reports/validation/phase2_intervention_analysis.json \
   --report-md reports/validation/phase2_intervention_analysis.md
 ```
@@ -159,3 +161,4 @@ PY
 - Script 14 is the heaviest component. Use mock backend if model/GPU stack is not ready.
 - Script 05 and 05b depend on Binance Vision availability.
 - Script 20 may use fallback methods if NOTEARS/LiNGAM stack is unavailable.
+- Phase 2 canonical tuned legacy limitations are documented in `KNOWN_LIMITATIONS.md`.

@@ -42,6 +42,7 @@ DEFAULT_EVENTS_CSV = (
 )
 DEFAULT_OUTPUT_CSV = PROJECT_ROOT / "data" / "processed" / "tardis" / "phase2_outputs" / "lob_mini_simulation_llm.csv"
 DEFAULT_SUMMARY_JSON = PROJECT_ROOT / "data" / "processed" / "tardis" / "phase2_outputs" / "lob_mini_summary_llm.json"
+CONFIG_RUNNER_KEY = "runner_args"
 
 PHASES = ["pre", "drop", "recovery", "post"]
 CALIBRATION_PHASES = ["pre", "normal_bull", "normal_bear"]
@@ -92,48 +93,145 @@ class AgentState:
             self.is_solvent = False
 
 
-def parse_args() -> argparse.Namespace:
+def path_default(config_defaults: dict[str, Any], key: str, fallback: Path) -> Path:
+    value = config_defaults.get(key, fallback)
+    return Path(value) if isinstance(value, str) else value
+
+
+def load_runner_config(path: Path | None) -> dict[str, Any]:
+    if path is None:
+        return {}
+    if not path.exists():
+        raise FileNotFoundError(f"Missing config JSON: {path}")
+
+    payload = load_json(path)
+    if not isinstance(payload, dict):
+        raise ValueError(f"Config JSON must contain an object: {path}")
+
+    runner_args = payload.get(CONFIG_RUNNER_KEY, payload)
+    if not isinstance(runner_args, dict):
+        raise ValueError(
+            f"Config JSON key '{CONFIG_RUNNER_KEY}' must contain an object: {path}"
+        )
+    return runner_args
+
+
+def build_parser(config_defaults: dict[str, Any] | None = None) -> argparse.ArgumentParser:
+    defaults = config_defaults or {}
+
     parser = argparse.ArgumentParser(description="Run mini LOB simulation for flash-crash events")
-    parser.add_argument("--priors-json", type=Path, default=DEFAULT_PRIORS_JSON)
-    parser.add_argument("--anchors-json", type=Path, default=DEFAULT_ANCHORS_JSON)
-    parser.add_argument("--events-csv", type=Path, default=DEFAULT_EVENTS_CSV)
-    parser.add_argument("--output-csv", type=Path, default=DEFAULT_OUTPUT_CSV)
-    parser.add_argument("--summary-json", type=Path, default=DEFAULT_SUMMARY_JSON)
-    parser.add_argument("--scenario", choices=["llm", "uniform", "literature"], default="llm")
-    parser.add_argument("--n-runs", type=int, default=50)
-    parser.add_argument("--seed", type=int, default=42)
-    parser.add_argument("--tick-ms", type=int, default=100)
-    parser.add_argument("--impact-scale", type=float, default=2.0,
-                        help="Calibrated in Step-2 benchmark sweep to hit ~10%% crash-rate target")
-    parser.add_argument("--intensity-scale", type=float, default=1.2289,
-                        help="Calibrated via Step-1 OFI p50 match: target -0.1915, achieved -0.177 (7.7%% error)")
-    parser.add_argument("--calibration-phase", choices=CALIBRATION_PHASES, default="pre",
-                        help="Anchor phase used for Noise/MM calibration priors")
-    parser.add_argument("--base-order-size", type=float, default=0.25)
-    parser.add_argument("--mm-vol-threshold-mult", type=float, default=1.4)
-    parser.add_argument("--mm-withdrawal-strength", type=float, default=1.8)
-    parser.add_argument("--crash-window-ticks", type=int, default=10)
-    parser.add_argument("--crash-threshold-pct", type=float, default=1.93)
-    parser.add_argument("--max-drop-ticks", type=int, default=5000,
-                        help="Upper cap for drop-phase ticks per run to avoid pathological long events")
-    parser.add_argument("--max-recovery-ticks", type=int, default=3000,
-                        help="Upper cap for recovery-phase ticks per run")
-    parser.add_argument("--max-post-ticks", type=int, default=2000,
-                        help="Upper cap for post-phase ticks per run")
-    parser.add_argument("--max-pre-ticks", type=int, default=2000,
-                        help="Upper cap for pre-phase ticks per run")
-    parser.add_argument("--drop-sell-pressure", type=float, default=0.12,
-                        help="Extra sell tilt in drop phase (probability shift from buy to sell)")
-    parser.add_argument("--drop-impact-mult", type=float, default=1.35,
-                        help="Impact multiplier applied only during drop phase")
-    parser.add_argument("--min-price-fraction", type=float, default=0.70,
-                        help="Per-run hard floor as a fraction of init_price to avoid price-to-zero collapse")
-    parser.add_argument("--resilience-floor-fraction", type=float, default=0.85,
-                        help="Reference depth level for drop-phase impact damping")
-    parser.add_argument("--resilience-min-damp", type=float, default=0.20,
-                        help="Minimum impact multiplier near deep-drop region (0-1)")
-    parser.add_argument("--log-every-runs", type=int, default=1)
-    parser.add_argument("--log-every-ticks", type=int, default=500)
+    parser.add_argument(
+        "--config-json",
+        type=Path,
+        default=None,
+        help="Optional JSON file with runner defaults; explicit CLI flags override config values",
+    )
+    parser.add_argument("--priors-json", type=Path, default=path_default(defaults, "priors_json", DEFAULT_PRIORS_JSON))
+    parser.add_argument("--anchors-json", type=Path, default=path_default(defaults, "anchors_json", DEFAULT_ANCHORS_JSON))
+    parser.add_argument("--events-csv", type=Path, default=path_default(defaults, "events_csv", DEFAULT_EVENTS_CSV))
+    parser.add_argument("--output-csv", type=Path, default=path_default(defaults, "output_csv", DEFAULT_OUTPUT_CSV))
+    parser.add_argument("--summary-json", type=Path, default=path_default(defaults, "summary_json", DEFAULT_SUMMARY_JSON))
+    parser.add_argument("--scenario", choices=["llm", "uniform", "literature"], default=defaults.get("scenario", "llm"))
+    parser.add_argument("--n-runs", type=int, default=defaults.get("n_runs", 50))
+    parser.add_argument("--seed", type=int, default=defaults.get("seed", 42))
+    parser.add_argument("--tick-ms", type=int, default=defaults.get("tick_ms", 100))
+    parser.add_argument(
+        "--impact-scale",
+        type=float,
+        default=defaults.get("impact_scale", 2.0),
+        help="Calibrated in Step-2 benchmark sweep to hit ~10%% crash-rate target",
+    )
+    parser.add_argument(
+        "--intensity-scale",
+        type=float,
+        default=defaults.get("intensity_scale", 1.2289),
+        help="Calibrated via Step-1 OFI p50 match: target -0.1915, achieved -0.177 (7.7%% error)",
+    )
+    parser.add_argument(
+        "--calibration-phase",
+        choices=CALIBRATION_PHASES,
+        default=defaults.get("calibration_phase", "pre"),
+        help="Anchor phase used for Noise/MM calibration priors",
+    )
+    parser.add_argument("--base-order-size", type=float, default=defaults.get("base_order_size", 0.25))
+    parser.add_argument("--mm-vol-threshold-mult", type=float, default=defaults.get("mm_vol_threshold_mult", 1.4))
+    parser.add_argument("--mm-withdrawal-strength", type=float, default=defaults.get("mm_withdrawal_strength", 1.8))
+    parser.add_argument("--crash-window-ticks", type=int, default=defaults.get("crash_window_ticks", 10))
+    parser.add_argument("--crash-threshold-pct", type=float, default=defaults.get("crash_threshold_pct", 1.93))
+    parser.add_argument(
+        "--max-drop-ticks",
+        type=int,
+        default=defaults.get("max_drop_ticks", 5000),
+        help="Upper cap for drop-phase ticks per run to avoid pathological long events",
+    )
+    parser.add_argument(
+        "--max-recovery-ticks",
+        type=int,
+        default=defaults.get("max_recovery_ticks", 3000),
+        help="Upper cap for recovery-phase ticks per run",
+    )
+    parser.add_argument(
+        "--max-post-ticks",
+        type=int,
+        default=defaults.get("max_post_ticks", 2000),
+        help="Upper cap for post-phase ticks per run",
+    )
+    parser.add_argument(
+        "--max-pre-ticks",
+        type=int,
+        default=defaults.get("max_pre_ticks", 2000),
+        help="Upper cap for pre-phase ticks per run",
+    )
+    parser.add_argument(
+        "--drop-sell-pressure",
+        type=float,
+        default=defaults.get("drop_sell_pressure", 0.12),
+        help="Extra sell tilt in drop phase (probability shift from buy to sell)",
+    )
+    parser.add_argument(
+        "--drop-impact-mult",
+        type=float,
+        default=defaults.get("drop_impact_mult", 1.35),
+        help="Impact multiplier applied only during drop phase",
+    )
+    parser.add_argument(
+        "--min-price-fraction",
+        type=float,
+        default=defaults.get("min_price_fraction", 0.70),
+        help="Per-run hard floor as a fraction of init_price to avoid price-to-zero collapse",
+    )
+    parser.add_argument(
+        "--resilience-floor-fraction",
+        type=float,
+        default=defaults.get("resilience_floor_fraction", 0.85),
+        help="Reference depth level for drop-phase impact damping",
+    )
+    parser.add_argument(
+        "--resilience-min-damp",
+        type=float,
+        default=defaults.get("resilience_min_damp", 0.20),
+        help="Minimum impact multiplier near deep-drop region (0-1)",
+    )
+    parser.add_argument("--log-every-runs", type=int, default=defaults.get("log_every_runs", 1))
+    parser.add_argument("--log-every-ticks", type=int, default=defaults.get("log_every_ticks", 500))
+    return parser
+
+
+def parse_args() -> argparse.Namespace:
+    bootstrap = argparse.ArgumentParser(add_help=False)
+    bootstrap.add_argument("--config-json", type=Path, default=None)
+    bootstrap_args, _ = bootstrap.parse_known_args()
+
+    config_defaults = load_runner_config(bootstrap_args.config_json)
+    parser = build_parser(config_defaults)
+
+    supported_keys = {action.dest for action in parser._actions if action.dest != argparse.SUPPRESS}
+    unknown_keys = sorted(set(config_defaults) - supported_keys)
+    if unknown_keys:
+        parser.error(
+            f"Unsupported keys in {bootstrap_args.config_json}: {', '.join(unknown_keys)}"
+        )
+
     return parser.parse_args()
 
 
@@ -674,6 +772,7 @@ def summarize_output(df: pd.DataFrame, args: argparse.Namespace) -> dict[str, An
 
     return {
         "scenario": args.scenario,
+        "config_json": str(args.config_json) if args.config_json else None,
         "calibration_phase": args.calibration_phase,
         "n_runs": int(df["run_id"].nunique()),
         "n_rows": int(len(df)),
@@ -801,6 +900,7 @@ def main() -> None:
     print("=" * 72)
     print("Script 18: LOB mini runner")
     print("=" * 72)
+    print(f"Config file     : {args.config_json}" if args.config_json else "Config file     : <none>")
     print(f"Scenario        : {args.scenario}")
     print(f"Calibration     : {args.calibration_phase}")
     print(f"Runs            : {summary['n_runs']}")

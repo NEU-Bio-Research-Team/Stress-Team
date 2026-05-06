@@ -1,0 +1,18 @@
+{
+  "label": "smoke_task2_combo",
+  "config_json": "config/phase2_canonical_config.json",
+  "extra_runner_args": [
+    "--scenario",
+    "uniform",
+    "--calibration-phase",
+    "normal_bull",
+    "--min-price-fraction",
+    "0.70"
+  ],
+  "target_total_runs": 1,
+  "observed_total_runs": 1,
+  "crash_count": 0,
+  "flash_crash_rate": 0.0,
+  "merged_csv": "data/processed/tardis/phase2_outputs/smoke_task2_combo_1runs/lob_full_simulation_smoke_task2_combo.csv",
+  "source_shards": 1
+}

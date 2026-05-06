@@ -1,0 +1,6 @@
+--scenario
+uniform
+--calibration-phase
+normal_bull
+--min-price-fraction
+0.70
