@@ -83,7 +83,7 @@ The repository is organized around three linked goals:
 
 | Phase | Goal | Status in this repo |
 |------|------|---------------------|
-| Phase 1 | Prepare empirical anchors for offline LLM prompting | Script support is present via scripts 10 and 11; the prompt-execution layer is not implemented here |
+| Phase 1 | Prepare empirical anchors and run offline LLM prompting for behavioral priors | Implemented; checked-in outputs exist under `data/processed/tardis/phase1_outputs/` |
 | Phase 2 | Build BTC flash crash event data from raw market feeds | Implemented |
 | Phase 3 | Validate causal structure and export DAG-oriented artifacts | Implemented |
 
@@ -98,10 +98,11 @@ In practical terms, the codebase currently does four things well:
 
 If you are new to the workspace, read these files first:
 
-1. `Comosa-Plan-Rewritten.md` - high-level research specification for the market-only COMOSA path.
-2. `reports/DATA_PIPELINE.md` - lineage from raw BTC data to event-level outputs.
-3. `config/settings.py` - central paths, thresholds, and pipeline constants.
-4. `DAG/` - conceptual DAG notes and per-agent diagrams.
+1. `reports/MASTER_PHASE1_TO_PHASE3_REPORT.md` - current end-to-end report covering what was done in all three phases, the main outputs, ablations, and current reliability.
+2. `Comosa-Plan-Rewritten.md` - high-level research specification for the market-only COMOSA path.
+3. `reports/DATA_PIPELINE.md` - lineage from raw BTC data to event-level outputs.
+4. `config/settings.py` - central paths, thresholds, and pipeline constants.
+5. `DAG/` - conceptual DAG notes and per-agent diagrams.
 
 Important note: some files under `DAG/` still use older bio-technical language. The executable source code and `Comosa-Plan-Rewritten.md` are the source of truth for the current scope.
 
@@ -159,9 +160,10 @@ data/
   processed/tardis/              Main generated artifacts
 
 reports/
+  MASTER_PHASE1_TO_PHASE3_REPORT.md  Current end-to-end report for Phases 1-3
   DATA_PIPELINE.md               Pipeline lineage documentation
   audit/                         Audit outputs
-  validation/                    Currently empty in this branch
+  validation/                    Experiment, diagnosis, and validation reports
 
 DAG/
   DAG.md
