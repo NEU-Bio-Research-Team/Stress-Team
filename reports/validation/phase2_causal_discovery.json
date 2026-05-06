@@ -1,7 +1,21 @@
 {
   "data": {
     "sim_panel": "data/processed/tardis/phase2_outputs/phase2_canonical_tuned_legacy_500runs/lob_full_simulation_llm_tuned_legacy.csv",
-    "rows_used": 120000,
+    "rows_raw": 5810200,
+    "rows_after_floor_policy": 1463170,
+    "rows_after_slice": 620,
+    "runs_total": 500,
+    "crash_runs_total": 88,
+    "runs_used": 9,
+    "phase_filter": [
+      "drop"
+    ],
+    "crash_window_pre_ticks": 50,
+    "crash_window_post_ticks": 20,
+    "floor_policy": "censor_rows",
+    "floor_touched_run_rate": 1.0,
+    "floor_touched_used_rate": 1.0,
+    "rows_used": 620,
     "nodes": [
       "ofi",
       "spread_bps",
@@ -15,31 +29,59 @@
       "wealth_concentration"
     ],
     "notears_status": "ok",
-    "lingam_status": "ok",
+    "lingam_status": "ok (sequences_used=9, skipped_short=0, failed=0)",
+    "var_lingam_status": "ok (sequences_used=9, skipped_short=0, failed=0)",
     "weight_threshold": 0.05
   },
   "method_scores": [
     {
-      "method": "lingam",
-      "num_edges_above_threshold": 25,
-      "true_positives": 1,
-      "false_positives": 24,
-      "false_negatives": 7,
-      "precision": 0.04,
-      "recall": 0.125,
-      "matched_edges": [
-        "spread_bps->depth_imbalance"
-      ]
-    },
-    {
       "method": "notears",
-      "num_edges_above_threshold": 7,
+      "num_edges_above_threshold": 8,
       "true_positives": 0,
-      "false_positives": 7,
+      "false_positives": 8,
       "false_negatives": 8,
       "precision": 0.0,
       "recall": 0.0,
-      "matched_edges": []
+      "f1": 0.0,
+      "shd": 14,
+      "matched_edges": [],
+      "top_edges": [
+        "ofi->depth_imbalance@lag0 (0.899)",
+        "leverage_proxy->depth_imbalance@lag0 (-0.885)",
+        "wealth_concentration->pct_insolvent@lag0 (0.746)",
+        "pct_insolvent->vpin@lag0 (-0.627)",
+        "vpin->depth_imbalance@lag0 (-0.335)",
+        "mean_wealth_t->vpin@lag0 (-0.302)",
+        "leverage_proxy->wealth_concentration@lag0 (0.224)",
+        "flash_crash_flag->leverage_proxy@lag0 (0.120)"
+      ]
+    },
+    {
+      "method": "varlingam",
+      "num_edges_above_threshold": 25,
+      "true_positives": 2,
+      "false_positives": 23,
+      "false_negatives": 6,
+      "precision": 0.08,
+      "recall": 0.25,
+      "f1": 0.12121212121212122,
+      "shd": 28,
+      "matched_edges": [
+        "mean_wealth_t->ofi",
+        "wealth_concentration->leverage_proxy"
+      ],
+      "top_edges": [
+        "wealth_concentration->leverage_proxy@lag0 (55.788)",
+        "wealth_concentration->depth_imbalance@lag1 (52.205)",
+        "mean_wealth_t->depth_imbalance@lag1 (-27.052)",
+        "mean_wealth_t->ofi@lag1 (-22.263)",
+        "mean_wealth_t->leverage_proxy@lag1 (-21.089)",
+        "wealth_concentration->vpin@lag0 (8.467)",
+        "wealth_concentration->mean_wealth_t@lag1 (0.889)",
+        "mean_wealth_t->vpin@lag1 (0.560)",
+        "ofi->leverage_proxy@lag0 (-0.539)",
+        "leverage_proxy->ofi@lag0 (-0.446)"
+      ]
     }
   ],
   "theoretical_edges": [
