@@ -1,0 +1,11 @@
+{
+  "config_json": "config/phase2_uniform_config.json",
+  "target_runs": 500,
+  "observed_runs": 500,
+  "shard_count": 20,
+  "flash_crash_rate_mean_of_shards": 0.008,
+  "flash_crash_rate_from_merged_panel": 0.008,
+  "crash_event_count": 4,
+  "top_up_recommended": true,
+  "top_up_guidance": "Add 200-300 more runs, do not jump directly to 1000."
+}

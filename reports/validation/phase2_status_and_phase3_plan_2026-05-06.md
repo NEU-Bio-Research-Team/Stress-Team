@@ -219,7 +219,7 @@ Current conclusion for H3:
 
 - H3 is not supported yet.
 
-### Phase 3 Priority 4 - Run the main Task 2 comparison table on the corrected baseline
+### Phase 3 Priority 4 - Lock the main Task 2 comparison table on the corrected baseline
 
 The strongest next paper-facing deliverable is still the main prior comparison table:
 
@@ -229,13 +229,26 @@ The strongest next paper-facing deliverable is still the main prior comparison t
 
 This remains the cleanest route to support the main claim that LLM-elicited heterogeneous priors improve fidelity relative to simpler baselines.
 
-Recommended execution order:
+This comparison is now complete on the corrected framework. The 500-run validation report shows:
 
-1. run corrected 500-run LLM baseline as already completed
-2. run 500-run Uniform prior panel
-3. run 500-run Literature prior panel
-4. compare stylised facts and crash behavior across the three
-5. only then extend causal/intervention comparison if the baseline comparison is stable
+- LLM kurtosis excess = 29.08
+- Uniform kurtosis excess = 26.49
+- Literature kurtosis excess = 77.20
+- LLM crash rate = 0.176
+- Uniform crash rate = 0.008
+- Literature crash rate = 0.152
+
+Interpretation:
+
+- the LLM prior clearly dominates the Uniform prior on tail behavior while remaining in the target crash-rate band;
+- the Literature prior produces much heavier tails than the corrected LLM baseline and is therefore not the preferred fidelity match under the current stylised-facts targets;
+- the Uniform prior is now a weak baseline because it materially under-produces crashes.
+
+Recommended execution order from here:
+
+1. keep the corrected 500-run LLM baseline and the completed Uniform/Literature 500-run panels as the locked Task 2 comparison set
+2. use the 500-run stylised-facts comparison as the main paper-facing evidence for the prior-ablation claim
+3. only then extend causal/intervention comparison if the baseline comparison remains the stable narrative
 
 ### Phase 3 Priority 5 - Add robustness framing around the floor
 
@@ -260,6 +273,7 @@ At this point, the correct working interpretation is:
 Recommended next sequence:
 
 1. Keep the corrected 500-run canonical LLM panel as the locked Phase 2 baseline.
-2. Run the Uniform and Literature 500-run panels on the same corrected framework.
-3. Rework Task 3 on regime-sliced and floor-stratified data rather than the fully pooled panel.
-4. Only promote causal/intervention results into paper claims after OFI intervention behavior is corrected or convincingly explained.
+2. Keep the completed Uniform and Literature 500-run panels as the locked ablation baselines for Task 2.
+3. Use the 500-run stylised-facts comparison as the main paper-facing comparison table before expanding the causal story.
+4. Rework Task 3 on regime-sliced and floor-stratified data rather than the fully pooled panel.
+5. Only promote causal/intervention results into paper claims after OFI intervention behavior is corrected or convincingly explained.

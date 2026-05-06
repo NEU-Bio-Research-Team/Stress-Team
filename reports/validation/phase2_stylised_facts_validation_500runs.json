@@ -1,0 +1,95 @@
+{
+  "metadata": {
+    "script": "19_stylised_facts_validation.py",
+    "empirical_baseline": {
+      "kurtosis_excess": 8581.0,
+      "acf_vol_lag1": 1.0,
+      "ofi_drop_mean": -2.7,
+      "ofi_pre_mean": 0.26
+    }
+  },
+  "metrics": {
+    "llm": {
+      "exists": true,
+      "path": "data/processed/tardis/phase2_outputs/phase2_canonical_tuned_legacy_500runs/lob_full_simulation_llm_tuned_legacy.csv",
+      "rows": 5810200,
+      "runs": 500,
+      "kurtosis_excess": 29.08417701780441,
+      "acf_vol_lag1": 1.0,
+      "ofi_pre_mean": 0.18690711279890576,
+      "ofi_drop_mean": -5.039080724277167,
+      "crash_rate_sim": 0.176
+    },
+    "uniform": {
+      "exists": true,
+      "path": "data/processed/tardis/phase2_outputs/phase2_uniform_tuned_legacy_500runs/lob_full_simulation_phase2_uniform_tuned_legacy.csv",
+      "rows": 5804400,
+      "runs": 500,
+      "kurtosis_excess": 26.492039467122257,
+      "acf_vol_lag1": 1.0,
+      "ofi_pre_mean": 0.11542590303617163,
+      "ofi_drop_mean": -2.9119870910923527,
+      "crash_rate_sim": 0.008
+    },
+    "literature": {
+      "exists": true,
+      "path": "data/processed/tardis/phase2_outputs/phase2_literature_tuned_legacy_500runs/lob_full_simulation_phase2_literature_tuned_legacy.csv",
+      "rows": 5810600,
+      "runs": 500,
+      "kurtosis_excess": 77.19552670535295,
+      "acf_vol_lag1": 1.0,
+      "ofi_pre_mean": 0.18475693260798706,
+      "ofi_drop_mean": -2.88101141626842,
+      "crash_rate_sim": 0.152
+    }
+  },
+  "ablation": {
+    "h1_pass_kurtosis_llm_gt_uniform": true,
+    "kurtosis_ratio_llm_over_uniform": 1.0978459040082251,
+    "kurtosis_ratio_llm_over_literature": 0.37675987533339333,
+    "kurtosis_gap_llm_minus_uniform": 2.5921375506821533,
+    "kurtosis_gap_llm_minus_literature": -48.11134968754854,
+    "crash_rate_gap_llm_minus_uniform": 0.16799999999999998,
+    "crash_rate_gap_llm_minus_literature": 0.023999999999999994
+  },
+  "gates": [
+    {
+      "gate": "kurtosis_excess",
+      "pass": true,
+      "observed": 29.08417701780441,
+      "target": "> 3.0",
+      "empirical_baseline": 8581.0
+    },
+    {
+      "gate": "acf_vol_lag1",
+      "pass": true,
+      "observed": 1.0,
+      "target": "> 0.10",
+      "empirical_baseline": 1.0
+    },
+    {
+      "gate": "ofi_drop_less_than_pre",
+      "pass": true,
+      "observed": {
+        "ofi_pre_mean": 0.18690711279890576,
+        "ofi_drop_mean": -5.039080724277167
+      },
+      "target": "ofi_drop_mean < ofi_pre_mean",
+      "empirical_baseline": {
+        "ofi_pre_mean": 0.26,
+        "ofi_drop_mean": -2.7
+      }
+    },
+    {
+      "gate": "crash_rate_sim",
+      "pass": true,
+      "observed": 0.176,
+      "target": "in [0.05, 0.40]",
+      "empirical_baseline": "pending_real_world_mapping"
+    }
+  ],
+  "all_gates_pass": true,
+  "recommendations": [
+    "All stylized-fact gates pass for current thresholds"
+  ]
+}

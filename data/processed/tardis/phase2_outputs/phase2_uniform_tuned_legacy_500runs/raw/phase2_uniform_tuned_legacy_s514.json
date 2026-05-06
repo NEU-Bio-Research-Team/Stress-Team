@@ -1,0 +1,50 @@
+{
+  "scenario": "uniform",
+  "config_json": "config/phase2_uniform_config.json",
+  "calibration_phase": "pre",
+  "n_runs": 25,
+  "n_rows": 292350,
+  "tick_ms": 100,
+  "crash_window_ticks": 10,
+  "crash_threshold_pct": 1.93,
+  "min_price_fraction": 0.5,
+  "flash_crash_rate": 0.0,
+  "run_max_drawdown_pct": {
+    "mean": 0.6002045649476517,
+    "p50": 0.465516512487241,
+    "p90": 1.3521353592350636,
+    "p95": 1.5670305340523856,
+    "p99": 1.662298909638941,
+    "max": 1.6893051597255542
+  },
+  "mean_ofi_pre": 0.10885058396078034,
+  "mean_ofi_drop": -2.886809873707428,
+  "mean_wealth_by_phase": {
+    "drop": 577078.5922214299,
+    "post": 958305.4388810152,
+    "pre": 175108.51308214746,
+    "recovery": 1015098.7920199938
+  },
+  "pct_insolvent_peak": 0.2,
+  "wealth_concentration_drop": 0.7653761287860832,
+  "columns": [
+    "run_id",
+    "event_id",
+    "tick_ms",
+    "phase",
+    "close",
+    "mid_price",
+    "ofi",
+    "spread_bps",
+    "depth_imbalance",
+    "trade_intensity",
+    "realized_vol_50",
+    "leverage_proxy",
+    "kyle_lambda",
+    "vpin",
+    "flash_crash_flag",
+    "mean_wealth_t",
+    "pct_insolvent",
+    "wealth_concentration"
+  ]
+}
