@@ -83,6 +83,7 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--report-json", type=Path, default=DEFAULT_REPORT_JSON)
     parser.add_argument("--report-md", type=Path, default=DEFAULT_REPORT_MD)
     parser.add_argument("--pre-gap-ticks", type=int, default=20)
+    parser.add_argument("--trailing-pre-rows", type=int, default=None)
     parser.add_argument("--min-pre-rows", type=int, default=25)
     parser.add_argument("--min-variance", type=float, default=1e-6)
     parser.add_argument("--weight-threshold", type=float, default=0.05)
@@ -92,14 +93,15 @@ def parse_args() -> argparse.Namespace:
 
 
 def clean_panel(path: Path) -> pd.DataFrame:
-    required = ["run_id", "tick_ms", "close", "flash_crash_flag"] + RAW_FEATURES
+    required = ["run_id", "tick_ms", "phase", "close", "flash_crash_flag"] + RAW_FEATURES
     frame = pd.read_csv(path, usecols=required)
 
-    for column in required:
+    numeric_columns = [column for column in required if column != "phase"]
+    for column in numeric_columns:
         frame[column] = pd.to_numeric(frame[column], errors="coerce")
 
     frame = frame.replace([np.inf, -np.inf], np.nan)
-    frame = frame.dropna(subset=["run_id", "tick_ms", "close", "flash_crash_flag"] + RAW_FEATURES).copy()
+    frame = frame.dropna(subset=["run_id", "tick_ms", "phase", "close", "flash_crash_flag"] + RAW_FEATURES).copy()
     frame["run_id"] = frame["run_id"].astype(int)
     frame["flash_crash_flag"] = frame["flash_crash_flag"].astype(int)
     return frame.sort_values(["run_id", "tick_ms"]).reset_index(drop=True)
@@ -113,31 +115,62 @@ def compute_crash_severity_pct(close: pd.Series) -> float:
     return max(0.0, (start_close - min_close) / start_close * 100.0)
 
 
-def select_pre_window(run_frame: pd.DataFrame, pre_gap_ticks: int, min_pre_rows: int) -> tuple[pd.DataFrame, str]:
-    crash_rows = run_frame[run_frame["flash_crash_flag"] > 0]
-    if len(crash_rows) == 0:
-        return run_frame.copy(), "full_run_no_crash"
+def select_pre_window(
+    run_frame: pd.DataFrame,
+    pre_gap_ticks: int,
+    min_pre_rows: int,
+    trailing_pre_rows: int | None = None,
+) -> tuple[pd.DataFrame, str]:
+    pre_phase = run_frame[run_frame["phase"] == "pre"].copy()
+    if len(pre_phase) == 0:
+        return run_frame.copy(), "full_run_no_pre_phase"
 
-    crash_tick = int(crash_rows["run_tick_index"].iloc[0])
-    pre_frame = run_frame[run_frame["run_tick_index"] < crash_tick - pre_gap_ticks].copy()
-    if len(pre_frame) >= min_pre_rows:
-        return pre_frame, "before_crash_minus_gap"
+    pre_frame = pre_phase.copy()
+    if pre_gap_ticks > 0 and len(pre_phase) > pre_gap_ticks:
+        pre_frame = pre_phase.iloc[:-pre_gap_ticks].copy()
 
-    pre_frame = run_frame[run_frame["run_tick_index"] < crash_tick].copy()
+    if trailing_pre_rows is not None and trailing_pre_rows > 0:
+        if len(pre_frame) >= trailing_pre_rows:
+            trailing_frame = pre_frame.iloc[-trailing_pre_rows:].copy()
+            if len(trailing_frame) >= min_pre_rows:
+                return trailing_frame, "pre_phase_trailing_window"
+        if len(pre_frame) >= min_pre_rows:
+            return pre_frame, "pre_phase_minus_gap"
+        if len(pre_phase) >= trailing_pre_rows and len(pre_phase) >= min_pre_rows:
+            return pre_phase.iloc[-trailing_pre_rows:].copy(), "pre_phase_trailing_no_gap"
+        if len(pre_phase) >= min_pre_rows:
+            return pre_phase, "pre_phase"
+        return run_frame.copy(), "full_run_fallback"
+
     if len(pre_frame) >= min_pre_rows:
-        return pre_frame, "before_crash"
+        if pre_gap_ticks > 0 and len(pre_phase) > pre_gap_ticks:
+            return pre_frame, "pre_phase_minus_gap"
+        return pre_frame, "pre_phase"
+
+    if len(pre_phase) >= min_pre_rows:
+        return pre_phase, "pre_phase"
 
     return run_frame.copy(), "full_run_fallback"
 
 
-def build_run_level_panel(df: pd.DataFrame, pre_gap_ticks: int, min_pre_rows: int) -> tuple[pd.DataFrame, dict[str, Any]]:
+def build_run_level_panel(
+    df: pd.DataFrame,
+    pre_gap_ticks: int,
+    min_pre_rows: int,
+    trailing_pre_rows: int | None = None,
+) -> tuple[pd.DataFrame, dict[str, Any]]:
     records: list[dict[str, Any]] = []
     window_strategies: dict[str, int] = {}
 
     for run_id, sub in df.groupby("run_id", sort=False):
         sub = sub.sort_values("tick_ms").copy()
         sub["run_tick_index"] = np.arange(len(sub), dtype=int)
-        pre_frame, strategy = select_pre_window(sub, pre_gap_ticks=pre_gap_ticks, min_pre_rows=min_pre_rows)
+        pre_frame, strategy = select_pre_window(
+            sub,
+            pre_gap_ticks=pre_gap_ticks,
+            min_pre_rows=min_pre_rows,
+            trailing_pre_rows=trailing_pre_rows,
+        )
         window_strategies[strategy] = window_strategies.get(strategy, 0) + 1
 
         crash_rows = sub[sub["flash_crash_flag"] > 0]
@@ -293,6 +326,7 @@ def to_markdown(report: dict[str, Any]) -> str:
     lines.append(f"- runs_total: {report['data']['runs_total']}")
     lines.append(f"- crash_runs_total: {report['data']['crash_runs_total']}")
     lines.append(f"- pre_gap_ticks: {report['data']['pre_gap_ticks']}")
+    lines.append(f"- trailing_pre_rows: {report['data']['trailing_pre_rows']}")
     lines.append(f"- mean_pre_rows: {report['data']['mean_pre_rows']}")
     lines.append(f"- min_pre_rows: {report['data']['min_pre_rows']}")
     lines.append(f"- max_pre_rows: {report['data']['max_pre_rows']}")
@@ -334,6 +368,7 @@ def main() -> None:
         panel,
         pre_gap_ticks=args.pre_gap_ticks,
         min_pre_rows=args.min_pre_rows,
+        trailing_pre_rows=args.trailing_pre_rows,
     )
 
     kept_nodes, variances = variance_filter(run_panel, min_variance=args.min_variance)
@@ -375,6 +410,7 @@ def main() -> None:
             "crash_runs_total": panel_summary["crash_runs_total"],
             "crash_rate": float(run_panel["crashed"].mean()),
             "pre_gap_ticks": int(args.pre_gap_ticks),
+            "trailing_pre_rows": int(args.trailing_pre_rows) if args.trailing_pre_rows is not None else None,
             "mean_pre_rows": panel_summary["mean_pre_rows"],
             "min_pre_rows": panel_summary["min_pre_rows"],
             "max_pre_rows": panel_summary["max_pre_rows"],

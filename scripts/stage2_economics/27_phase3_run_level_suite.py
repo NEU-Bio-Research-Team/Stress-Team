@@ -60,18 +60,6 @@ CAUSAL_NODE_PRESETS = {
         "wealth_concentration_pre_mean",
         "crashed",
     ],
-    "crash_plus_severity": [
-        "ofi_pre_mean",
-        "spread_pre_mean",
-        "depth_imb_pre_mean",
-        "leverage_pre_max",
-        "kyle_lambda_pre_mean",
-        "mean_wealth_pre_mean",
-        "pct_insolvent_pre_max",
-        "wealth_concentration_pre_mean",
-        "crashed",
-        "crash_severity_pct",
-    ],
 }
 
 INTERVENTION_FEATURE_PRESETS = {
@@ -94,6 +82,8 @@ INTERVENTION_FEATURE_PRESETS = {
     ],
 }
 
+INTERVENTION_MODE = "local_sd_clip_to_stable_median"
+
 
 def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(description="Run the Phase 3 run-level suite")
@@ -101,6 +91,7 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--report-json", type=Path, default=DEFAULT_REPORT_JSON)
     parser.add_argument("--report-md", type=Path, default=DEFAULT_REPORT_MD)
     parser.add_argument("--summary-csv", type=Path, default=DEFAULT_SUMMARY_CSV)
+    parser.add_argument("--trailing-pre-rows", type=int, default=None)
     parser.add_argument("--min-pre-rows", type=int, default=25)
     parser.add_argument("--min-variance", type=float, default=1e-6)
     parser.add_argument("--weight-threshold", type=float, default=0.05)
@@ -158,17 +149,41 @@ def keep_columns_by_variance(df: pd.DataFrame, columns: list[str], min_variance:
     return kept, variances
 
 
+def build_local_mitigation_counterfactual(
+    X: pd.DataFrame,
+    run_panel: pd.DataFrame,
+    feature: str,
+    shift_sd_mult: float = 1.0,
+) -> tuple[pd.DataFrame, dict[str, float]]:
+    stable_feature = run_panel.loc[run_panel["crashed"] == 0, feature].astype(float)
+    if len(stable_feature) == 0:
+        target_floor = float(run_panel[feature].median())
+    else:
+        target_floor = float(stable_feature.median())
+
+    shift_sd = float(X[feature].std(ddof=0) * shift_sd_mult)
+    mitigated = X.copy()
+    mitigated[feature] = np.maximum(X[feature].astype(float) - shift_sd, target_floor)
+    return mitigated, {"target_floor": target_floor, "shift_sd": shift_sd}
+
+
 def run_causal_experiment(
     module: Any,
     panel: pd.DataFrame,
     pre_gap_ticks: int,
+    trailing_pre_rows: int | None,
     min_pre_rows: int,
     node_preset: str,
     min_variance: float,
     weight_threshold: float,
     seed: int,
 ) -> dict[str, Any]:
-    run_panel, panel_summary = module.build_run_level_panel(panel, pre_gap_ticks=pre_gap_ticks, min_pre_rows=min_pre_rows)
+    run_panel, panel_summary = module.build_run_level_panel(
+        panel,
+        pre_gap_ticks=pre_gap_ticks,
+        min_pre_rows=min_pre_rows,
+        trailing_pre_rows=trailing_pre_rows,
+    )
     candidate_nodes = CAUSAL_NODE_PRESETS[node_preset]
     kept_nodes, variances = keep_columns_by_variance(run_panel, candidate_nodes, min_variance=min_variance)
     if len(kept_nodes) < 2:
@@ -187,6 +202,7 @@ def run_causal_experiment(
 
     return {
         "pre_gap_ticks": int(pre_gap_ticks),
+        "trailing_pre_rows": int(trailing_pre_rows) if trailing_pre_rows is not None else None,
         "node_preset": node_preset,
         "runs_total": panel_summary["runs_total"],
         "crash_runs_total": panel_summary["crash_runs_total"],
@@ -206,12 +222,18 @@ def run_intervention_experiment(
     module: Any,
     panel: pd.DataFrame,
     pre_gap_ticks: int,
+    trailing_pre_rows: int | None,
     min_pre_rows: int,
     feature_preset: str,
     min_variance: float,
     seed: int,
 ) -> dict[str, Any]:
-    run_panel, panel_summary = module.build_run_level_panel(panel, pre_gap_ticks=pre_gap_ticks, min_pre_rows=min_pre_rows)
+    run_panel, panel_summary = module.build_run_level_panel(
+        panel,
+        pre_gap_ticks=pre_gap_ticks,
+        min_pre_rows=min_pre_rows,
+        trailing_pre_rows=trailing_pre_rows,
+    )
     candidate_features = INTERVENTION_FEATURE_PRESETS[feature_preset]
     kept_features, variances = keep_columns_by_variance(run_panel, candidate_features, min_variance=min_variance)
     if len(kept_features) < 1:
@@ -240,9 +262,9 @@ def run_intervention_experiment(
 
     do_ofi_rate = None
     ofi_reduction_pct = None
+    ofi_counterfactual = None
     if "ofi_pre_mean" in kept_features:
-        X_do_ofi = X.copy()
-        X_do_ofi["ofi_pre_mean"] = 0.0
+        X_do_ofi, ofi_counterfactual = build_local_mitigation_counterfactual(X, run_panel, feature="ofi_pre_mean")
         p_do_ofi = clf.predict_proba(X_do_ofi)[:, 1]
         do_ofi_rate = float(np.mean(p_do_ofi))
         ofi_reduction_pct = float((observational_rate - do_ofi_rate) / max(observational_rate, 1e-9) * 100.0)
@@ -250,9 +272,9 @@ def run_intervention_experiment(
     do_leverage_rate = None
     leverage_reduction_pct = None
     severity_reduction_pct = None
+    leverage_counterfactual = None
     if "leverage_pre_max" in kept_features:
-        X_do_lev = X.copy()
-        X_do_lev["leverage_pre_max"] = 0.0
+        X_do_lev, leverage_counterfactual = build_local_mitigation_counterfactual(X, run_panel, feature="leverage_pre_max")
         p_do_lev = clf.predict_proba(X_do_lev)[:, 1]
         do_leverage_rate = float(np.mean(p_do_lev))
         leverage_reduction_pct = float((observational_rate - do_leverage_rate) / max(observational_rate, 1e-9) * 100.0)
@@ -274,6 +296,7 @@ def run_intervention_experiment(
 
     return {
         "pre_gap_ticks": int(pre_gap_ticks),
+        "trailing_pre_rows": int(trailing_pre_rows) if trailing_pre_rows is not None else None,
         "feature_preset": feature_preset,
         "runs_total": panel_summary["runs_total"],
         "crash_runs_total": panel_summary["crash_runs_total"],
@@ -282,6 +305,7 @@ def run_intervention_experiment(
         "kept_features": kept_features,
         "dropped_features": [column for column in candidate_features if column not in kept_features],
         "variances": variances,
+        "intervention_mode": INTERVENTION_MODE,
         "observational_rate_raw": observational_rate_raw,
         "observational_rate_pred": observational_rate,
         "auc_in_sample": auc_in_sample,
@@ -289,8 +313,10 @@ def run_intervention_experiment(
         "cv_auc_std": cv_auc_std,
         "do_ofi_rate_pred": do_ofi_rate,
         "ofi_reduction_pct": ofi_reduction_pct,
+        "ofi_counterfactual": ofi_counterfactual,
         "do_leverage_rate_pred": do_leverage_rate,
         "leverage_reduction_pct": leverage_reduction_pct,
+        "leverage_counterfactual": leverage_counterfactual,
         "severity_reduction_pct": severity_reduction_pct,
         "group_means": group_means,
     }
@@ -366,6 +392,7 @@ def to_markdown(report: dict[str, Any]) -> str:
     lines.append("")
     main_causal = report["main"]["causal"]
     lines.append(f"- pre_gap_ticks: {main_causal['pre_gap_ticks']}")
+    lines.append(f"- trailing_pre_rows: {main_causal['trailing_pre_rows']}")
     lines.append(f"- node_preset: {main_causal['node_preset']}")
     lines.append(f"- kept_nodes: {', '.join(main_causal['kept_nodes'])}")
     lines.append(f"- dagma_status: {main_causal['dagma_status']}")
@@ -378,7 +405,9 @@ def to_markdown(report: dict[str, Any]) -> str:
     lines.append("")
     main_intervention = report["main"]["intervention"]
     lines.append(f"- pre_gap_ticks: {main_intervention['pre_gap_ticks']}")
+    lines.append(f"- trailing_pre_rows: {main_intervention['trailing_pre_rows']}")
     lines.append(f"- feature_preset: {main_intervention['feature_preset']}")
+    lines.append(f"- intervention_mode: {main_intervention['intervention_mode']}")
     lines.append(f"- kept_features: {', '.join(main_intervention['kept_features'])}")
     lines.append(f"- observational_rate_raw: {main_intervention['observational_rate_raw']}")
     lines.append(f"- observational_rate_pred: {main_intervention['observational_rate_pred']}")
@@ -386,7 +415,9 @@ def to_markdown(report: dict[str, Any]) -> str:
     lines.append(f"- cv_auc_mean: {main_intervention['cv_auc_mean']}")
     lines.append(f"- cv_auc_std: {main_intervention['cv_auc_std']}")
     lines.append(f"- ofi_reduction_pct: {main_intervention['ofi_reduction_pct']}")
+    lines.append(f"- ofi_counterfactual: {main_intervention['ofi_counterfactual']}")
     lines.append(f"- leverage_reduction_pct: {main_intervention['leverage_reduction_pct']}")
+    lines.append(f"- leverage_counterfactual: {main_intervention['leverage_counterfactual']}")
     lines.append(f"- severity_reduction_pct: {main_intervention['severity_reduction_pct']}")
     lines.append("")
     lines.append("Group means by crashed:")
@@ -398,7 +429,7 @@ def to_markdown(report: dict[str, Any]) -> str:
     lines.append("")
     for row in report["ablations"]["causal"]:
         lines.append(
-            f"- pre_gap={row['pre_gap_ticks']}, preset={row['node_preset']}: "
+            f"- pre_gap={row['pre_gap_ticks']}, trailing={row['trailing_pre_rows']}, preset={row['node_preset']}: "
             f"dagma_outcome_edges={row['dagma']['outcome_edges']}, "
             f"direct_lingam_outcome_edges={row['direct_lingam']['outcome_edges']}"
         )
@@ -408,7 +439,7 @@ def to_markdown(report: dict[str, Any]) -> str:
     lines.append("")
     for row in report["ablations"]["intervention"]:
         lines.append(
-            f"- pre_gap={row['pre_gap_ticks']}, preset={row['feature_preset']}: "
+            f"- pre_gap={row['pre_gap_ticks']}, trailing={row['trailing_pre_rows']}, preset={row['feature_preset']}: "
             f"cv_auc_mean={row['cv_auc_mean']}, "
             f"ofi_reduction_pct={row['ofi_reduction_pct']}, "
             f"leverage_reduction_pct={row['leverage_reduction_pct']}, "
@@ -431,6 +462,7 @@ def main() -> None:
         module,
         panel,
         pre_gap_ticks=20,
+        trailing_pre_rows=args.trailing_pre_rows,
         min_pre_rows=args.min_pre_rows,
         node_preset="crash_only",
         min_variance=args.min_variance,
@@ -441,8 +473,9 @@ def main() -> None:
         module,
         panel,
         pre_gap_ticks=20,
+        trailing_pre_rows=args.trailing_pre_rows,
         min_pre_rows=args.min_pre_rows,
-        feature_preset="market_core",
+        feature_preset="market_plus_wealth",
         min_variance=args.min_variance,
         seed=args.seed,
     )
@@ -451,13 +484,13 @@ def main() -> None:
         {"pre_gap_ticks": 0, "node_preset": "crash_only"},
         {"pre_gap_ticks": 20, "node_preset": "crash_only"},
         {"pre_gap_ticks": 50, "node_preset": "crash_only"},
-        {"pre_gap_ticks": 20, "node_preset": "crash_plus_severity"},
     ]
     causal_ablations = [
         run_causal_experiment(
             module,
             panel,
             pre_gap_ticks=config["pre_gap_ticks"],
+            trailing_pre_rows=args.trailing_pre_rows,
             min_pre_rows=args.min_pre_rows,
             node_preset=config["node_preset"],
             min_variance=args.min_variance,
@@ -475,6 +508,7 @@ def main() -> None:
                     module,
                     panel,
                     pre_gap_ticks=pre_gap_ticks,
+                    trailing_pre_rows=args.trailing_pre_rows,
                     min_pre_rows=args.min_pre_rows,
                     feature_preset=feature_preset,
                     min_variance=args.min_variance,
@@ -517,10 +551,10 @@ def main() -> None:
     print(f"Simulation panel   : {args.sim_panel}")
     print(f"Main causal preset : pre_gap=20, crash_only")
     print(f"Main DAGMA edges   : {main_causal['dagma']['outcome_edges']}")
-    print(f"Main intervention  : pre_gap=20, market_core")
+    print(f"Main intervention  : pre_gap=20, market_plus_wealth, mode={main_intervention['intervention_mode']}")
     print(f"Main CV AUC        : {main_intervention['cv_auc_mean']:.4f}")
-    print(f"Main do(OFI=0)     : {main_intervention['ofi_reduction_pct']:.2f}%")
-    print(f"Main do(lev=0)     : {main_intervention['leverage_reduction_pct']:.2f}%")
+    print(f"Main mitigate(OFI) : {main_intervention['ofi_reduction_pct']:.2f}%")
+    print(f"Main mitigate(lev) : {main_intervention['leverage_reduction_pct']:.2f}%")
     print(f"Saved JSON report  : {args.report_json}")
     print(f"Saved MD report    : {args.report_md}")
     print(f"Saved summary CSV  : {args.summary_csv}")

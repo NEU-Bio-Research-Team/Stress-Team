@@ -1,0 +1,765 @@
+{
+  "data": {
+    "sim_panel": "data/processed/tardis/phase2_outputs/phase2_canonical_tuned_legacy_500runs/lob_full_simulation_llm_tuned_legacy.csv",
+    "floor_touch": {
+      "floor_touch_rate": 1.0,
+      "counts": {
+        "crashed=0,floor_touched=1": 412,
+        "crashed=1,floor_touched=1": 88
+      }
+    },
+    "min_pre_rows": 25,
+    "min_variance": 1e-06,
+    "weight_threshold": 0.05
+  },
+  "main": {
+    "causal": {
+      "pre_gap_ticks": 20,
+      "trailing_pre_rows": 200,
+      "node_preset": "crash_only",
+      "runs_total": 500,
+      "crash_runs_total": 88,
+      "mean_pre_rows": 200.0,
+      "window_strategy_counts": {
+        "pre_phase_trailing_window": 500
+      },
+      "kept_nodes": [
+        "ofi_pre_mean",
+        "depth_imb_pre_mean",
+        "leverage_pre_max",
+        "mean_wealth_pre_mean",
+        "wealth_concentration_pre_mean",
+        "crashed"
+      ],
+      "dropped_nodes": [
+        "spread_pre_mean",
+        "kyle_lambda_pre_mean",
+        "pct_insolvent_pre_max"
+      ],
+      "variances": {
+        "ofi_pre_mean": 0.02026508565687972,
+        "spread_pre_mean": 0.0,
+        "depth_imb_pre_mean": 3.226017037617775e-05,
+        "leverage_pre_max": 0.011801163294388203,
+        "kyle_lambda_pre_mean": 1.232595164407831e-32,
+        "mean_wealth_pre_mean": 2862280.216756956,
+        "pct_insolvent_pre_max": 0.0,
+        "wealth_concentration_pre_mean": 0.00022385837032069545,
+        "crashed": 0.145024
+      },
+      "dagma_status": "ok",
+      "direct_lingam_status": "ok",
+      "dagma": {
+        "method": "dagma",
+        "num_edges": 8,
+        "top_edges": [
+          "depth_imb_pre_mean->ofi_pre_mean (0.980)",
+          "mean_wealth_pre_mean->wealth_concentration_pre_mean (-0.977)",
+          "leverage_pre_max->wealth_concentration_pre_mean (-0.886)",
+          "ofi_pre_mean->wealth_concentration_pre_mean (-0.539)",
+          "crashed->wealth_concentration_pre_mean (-0.427)",
+          "crashed->mean_wealth_pre_mean (0.388)",
+          "ofi_pre_mean->leverage_pre_max (0.287)",
+          "leverage_pre_max->crashed (0.059)"
+        ],
+        "outcome_edges": [
+          "leverage_pre_max->crashed (0.059)"
+        ]
+      },
+      "direct_lingam": {
+        "method": "direct_lingam",
+        "num_edges": 7,
+        "top_edges": [
+          "depth_imb_pre_mean->ofi_pre_mean (0.999)",
+          "wealth_concentration_pre_mean->mean_wealth_pre_mean (-0.997)",
+          "crashed->wealth_concentration_pre_mean (-0.834)",
+          "wealth_concentration_pre_mean->depth_imb_pre_mean (-0.833)",
+          "wealth_concentration_pre_mean->leverage_pre_max (-0.818)",
+          "depth_imb_pre_mean->leverage_pre_max (0.089)",
+          "crashed->leverage_pre_max (0.074)"
+        ],
+        "outcome_edges": []
+      }
+    },
+    "intervention": {
+      "pre_gap_ticks": 20,
+      "trailing_pre_rows": 200,
+      "feature_preset": "market_plus_wealth",
+      "runs_total": 500,
+      "crash_runs_total": 88,
+      "mean_pre_rows": 200.0,
+      "window_strategy_counts": {
+        "pre_phase_trailing_window": 500
+      },
+      "kept_features": [
+        "ofi_pre_mean",
+        "depth_imb_pre_mean",
+        "leverage_pre_max",
+        "mean_wealth_pre_mean",
+        "wealth_concentration_pre_mean"
+      ],
+      "dropped_features": [
+        "spread_pre_mean",
+        "kyle_lambda_pre_mean",
+        "pct_insolvent_pre_max"
+      ],
+      "variances": {
+        "ofi_pre_mean": 0.02026508565687972,
+        "spread_pre_mean": 0.0,
+        "depth_imb_pre_mean": 3.226017037617775e-05,
+        "leverage_pre_max": 0.011801163294388203,
+        "kyle_lambda_pre_mean": 1.232595164407831e-32,
+        "mean_wealth_pre_mean": 2862280.216756956,
+        "pct_insolvent_pre_max": 0.0,
+        "wealth_concentration_pre_mean": 0.00022385837032069545
+      },
+      "intervention_mode": "local_sd_clip_to_stable_median",
+      "observational_rate_raw": 0.176,
+      "observational_rate_pred": 0.1759840838664039,
+      "auc_in_sample": 0.9835061782877317,
+      "cv_auc_mean": 0.981676874883561,
+      "cv_auc_std": 0.007240472247651819,
+      "do_ofi_rate_pred": 0.1742551575264227,
+      "ofi_reduction_pct": 0.9824333553332552,
+      "ofi_counterfactual": {
+        "target_floor": 0.0021672802131483325,
+        "shift_sd": 0.14235549043461485
+      },
+      "do_leverage_rate_pred": 0.13581537787730816,
+      "leverage_reduction_pct": 22.825192543883293,
+      "leverage_counterfactual": {
+        "target_floor": 1.0979017331799055,
+        "shift_sd": 0.108633159276476
+      },
+      "severity_reduction_pct": 0.0005330001727144604,
+      "group_means": [
+        {
+          "crashed": 0,
+          "ofi_pre_mean": 0.011218257696348176,
+          "depth_imb_pre_mean": 0.00044771300049254424,
+          "leverage_pre_max": 1.1114836847457867,
+          "mean_wealth_pre_mean": 175485.8196332096,
+          "wealth_concentration_pre_mean": 0.9455666732270648,
+          "crash_severity_pct": 50.001755430271864
+        },
+        {
+          "crashed": 1,
+          "ofi_pre_mean": 0.26457862407636323,
+          "depth_imb_pre_mean": 0.010553035234810547,
+          "leverage_pre_max": 1.3446429431126312,
+          "mean_wealth_pre_mean": 179189.33237813384,
+          "wealth_concentration_pre_mean": 0.9128102216647279,
+          "crash_severity_pct": 50.00743339144453
+        }
+      ]
+    }
+  },
+  "ablations": {
+    "causal": [
+      {
+        "pre_gap_ticks": 0,
+        "trailing_pre_rows": 200,
+        "node_preset": "crash_only",
+        "runs_total": 500,
+        "crash_runs_total": 88,
+        "mean_pre_rows": 200.0,
+        "window_strategy_counts": {
+          "pre_phase_trailing_window": 500
+        },
+        "kept_nodes": [
+          "ofi_pre_mean",
+          "depth_imb_pre_mean",
+          "leverage_pre_max",
+          "mean_wealth_pre_mean",
+          "wealth_concentration_pre_mean",
+          "crashed"
+        ],
+        "dropped_nodes": [
+          "spread_pre_mean",
+          "kyle_lambda_pre_mean",
+          "pct_insolvent_pre_max"
+        ],
+        "variances": {
+          "ofi_pre_mean": 0.01939641451724861,
+          "spread_pre_mean": 0.0,
+          "depth_imb_pre_mean": 3.087856587133592e-05,
+          "leverage_pre_max": 0.011669547987893696,
+          "kyle_lambda_pre_mean": 1.232595164407831e-32,
+          "mean_wealth_pre_mean": 2941321.266235926,
+          "pct_insolvent_pre_max": 0.0,
+          "wealth_concentration_pre_mean": 0.00023011905144755982,
+          "crashed": 0.145024
+        },
+        "dagma_status": "ok",
+        "direct_lingam_status": "ok",
+        "dagma": {
+          "method": "dagma",
+          "num_edges": 7,
+          "top_edges": [
+            "depth_imb_pre_mean->ofi_pre_mean (0.980)",
+            "mean_wealth_pre_mean->wealth_concentration_pre_mean (-0.977)",
+            "leverage_pre_max->wealth_concentration_pre_mean (-0.900)",
+            "ofi_pre_mean->wealth_concentration_pre_mean (-0.554)",
+            "crashed->wealth_concentration_pre_mean (-0.431)",
+            "crashed->mean_wealth_pre_mean (0.383)",
+            "ofi_pre_mean->leverage_pre_max (0.268)"
+          ],
+          "outcome_edges": []
+        },
+        "direct_lingam": {
+          "method": "direct_lingam",
+          "num_edges": 6,
+          "top_edges": [
+            "depth_imb_pre_mean->ofi_pre_mean (0.999)",
+            "wealth_concentration_pre_mean->mean_wealth_pre_mean (-0.997)",
+            "wealth_concentration_pre_mean->leverage_pre_max (-0.954)",
+            "crashed->wealth_concentration_pre_mean (-0.834)",
+            "wealth_concentration_pre_mean->depth_imb_pre_mean (-0.565)",
+            "leverage_pre_max->depth_imb_pre_mean (0.277)"
+          ],
+          "outcome_edges": []
+        }
+      },
+      {
+        "pre_gap_ticks": 20,
+        "trailing_pre_rows": 200,
+        "node_preset": "crash_only",
+        "runs_total": 500,
+        "crash_runs_total": 88,
+        "mean_pre_rows": 200.0,
+        "window_strategy_counts": {
+          "pre_phase_trailing_window": 500
+        },
+        "kept_nodes": [
+          "ofi_pre_mean",
+          "depth_imb_pre_mean",
+          "leverage_pre_max",
+          "mean_wealth_pre_mean",
+          "wealth_concentration_pre_mean",
+          "crashed"
+        ],
+        "dropped_nodes": [
+          "spread_pre_mean",
+          "kyle_lambda_pre_mean",
+          "pct_insolvent_pre_max"
+        ],
+        "variances": {
+          "ofi_pre_mean": 0.02026508565687972,
+          "spread_pre_mean": 0.0,
+          "depth_imb_pre_mean": 3.226017037617775e-05,
+          "leverage_pre_max": 0.011801163294388203,
+          "kyle_lambda_pre_mean": 1.232595164407831e-32,
+          "mean_wealth_pre_mean": 2862280.216756956,
+          "pct_insolvent_pre_max": 0.0,
+          "wealth_concentration_pre_mean": 0.00022385837032069545,
+          "crashed": 0.145024
+        },
+        "dagma_status": "ok",
+        "direct_lingam_status": "ok",
+        "dagma": {
+          "method": "dagma",
+          "num_edges": 8,
+          "top_edges": [
+            "depth_imb_pre_mean->ofi_pre_mean (0.980)",
+            "mean_wealth_pre_mean->wealth_concentration_pre_mean (-0.977)",
+            "leverage_pre_max->wealth_concentration_pre_mean (-0.886)",
+            "ofi_pre_mean->wealth_concentration_pre_mean (-0.539)",
+            "crashed->wealth_concentration_pre_mean (-0.427)",
+            "crashed->mean_wealth_pre_mean (0.388)",
+            "ofi_pre_mean->leverage_pre_max (0.287)",
+            "leverage_pre_max->crashed (0.059)"
+          ],
+          "outcome_edges": [
+            "leverage_pre_max->crashed (0.059)"
+          ]
+        },
+        "direct_lingam": {
+          "method": "direct_lingam",
+          "num_edges": 7,
+          "top_edges": [
+            "depth_imb_pre_mean->ofi_pre_mean (0.999)",
+            "wealth_concentration_pre_mean->mean_wealth_pre_mean (-0.997)",
+            "crashed->wealth_concentration_pre_mean (-0.834)",
+            "wealth_concentration_pre_mean->depth_imb_pre_mean (-0.833)",
+            "wealth_concentration_pre_mean->leverage_pre_max (-0.818)",
+            "depth_imb_pre_mean->leverage_pre_max (0.089)",
+            "crashed->leverage_pre_max (0.074)"
+          ],
+          "outcome_edges": []
+        }
+      },
+      {
+        "pre_gap_ticks": 50,
+        "trailing_pre_rows": 200,
+        "node_preset": "crash_only",
+        "runs_total": 500,
+        "crash_runs_total": 88,
+        "mean_pre_rows": 200.0,
+        "window_strategy_counts": {
+          "pre_phase_trailing_window": 500
+        },
+        "kept_nodes": [
+          "ofi_pre_mean",
+          "depth_imb_pre_mean",
+          "leverage_pre_max",
+          "mean_wealth_pre_mean",
+          "wealth_concentration_pre_mean",
+          "crashed"
+        ],
+        "dropped_nodes": [
+          "spread_pre_mean",
+          "kyle_lambda_pre_mean",
+          "pct_insolvent_pre_max"
+        ],
+        "variances": {
+          "ofi_pre_mean": 0.020218814536305564,
+          "spread_pre_mean": 0.0,
+          "depth_imb_pre_mean": 3.219175339778894e-05,
+          "leverage_pre_max": 0.011807526135754403,
+          "kyle_lambda_pre_mean": 1.232595164407831e-32,
+          "mean_wealth_pre_mean": 2746358.2877538577,
+          "pct_insolvent_pre_max": 0.0,
+          "wealth_concentration_pre_mean": 0.00021466548402780385,
+          "crashed": 0.145024
+        },
+        "dagma_status": "ok",
+        "direct_lingam_status": "ok",
+        "dagma": {
+          "method": "dagma",
+          "num_edges": 8,
+          "top_edges": [
+            "depth_imb_pre_mean->ofi_pre_mean (0.980)",
+            "mean_wealth_pre_mean->wealth_concentration_pre_mean (-0.977)",
+            "leverage_pre_max->wealth_concentration_pre_mean (-0.882)",
+            "ofi_pre_mean->wealth_concentration_pre_mean (-0.544)",
+            "crashed->wealth_concentration_pre_mean (-0.418)",
+            "crashed->mean_wealth_pre_mean (0.396)",
+            "ofi_pre_mean->leverage_pre_max (0.275)",
+            "leverage_pre_max->crashed (0.064)"
+          ],
+          "outcome_edges": [
+            "leverage_pre_max->crashed (0.064)"
+          ]
+        },
+        "direct_lingam": {
+          "method": "direct_lingam",
+          "num_edges": 7,
+          "top_edges": [
+            "wealth_concentration_pre_mean->mean_wealth_pre_mean (-1.039)",
+            "depth_imb_pre_mean->ofi_pre_mean (1.000)",
+            "crashed->wealth_concentration_pre_mean (-0.834)",
+            "wealth_concentration_pre_mean->depth_imb_pre_mean (-0.826)",
+            "wealth_concentration_pre_mean->leverage_pre_max (-0.822)",
+            "depth_imb_pre_mean->leverage_pre_max (0.082)",
+            "crashed->leverage_pre_max (0.079)"
+          ],
+          "outcome_edges": []
+        }
+      }
+    ],
+    "intervention": [
+      {
+        "pre_gap_ticks": 0,
+        "trailing_pre_rows": 200,
+        "feature_preset": "market_core",
+        "runs_total": 500,
+        "crash_runs_total": 88,
+        "mean_pre_rows": 200.0,
+        "window_strategy_counts": {
+          "pre_phase_trailing_window": 500
+        },
+        "kept_features": [
+          "ofi_pre_mean",
+          "depth_imb_pre_mean",
+          "leverage_pre_max"
+        ],
+        "dropped_features": [
+          "spread_pre_mean",
+          "kyle_lambda_pre_mean"
+        ],
+        "variances": {
+          "ofi_pre_mean": 0.01939641451724861,
+          "spread_pre_mean": 0.0,
+          "depth_imb_pre_mean": 3.087856587133592e-05,
+          "leverage_pre_max": 0.011669547987893696,
+          "kyle_lambda_pre_mean": 1.232595164407831e-32
+        },
+        "intervention_mode": "local_sd_clip_to_stable_median",
+        "observational_rate_raw": 0.176,
+        "observational_rate_pred": 0.1760497625211218,
+        "auc_in_sample": 0.9793689320388349,
+        "cv_auc_mean": 0.9788295218175428,
+        "cv_auc_std": 0.012663652911743704,
+        "do_ofi_rate_pred": 0.16401954315538114,
+        "ofi_reduction_pct": 6.83341982031775,
+        "ofi_counterfactual": {
+          "target_floor": 0.004238287365611413,
+          "shift_sd": 0.13927101104411
+        },
+        "do_leverage_rate_pred": 0.09922864005346534,
+        "leverage_reduction_pct": 43.6360273183781,
+        "leverage_counterfactual": {
+          "target_floor": 1.0979017331799055,
+          "shift_sd": 0.10802568207557726
+        },
+        "severity_reduction_pct": 0.0010924165392374834,
+        "group_means": [
+          {
+            "crashed": 0,
+            "ofi_pre_mean": 0.012036894525493533,
+            "depth_imb_pre_mean": 0.0004804810751652128,
+            "leverage_pre_max": 1.1122089965743431,
+            "crash_severity_pct": 50.001755430271864
+          },
+          {
+            "crashed": 1,
+            "ofi_pre_mean": 0.25836415746432023,
+            "depth_imb_pre_mean": 0.010305676177470075,
+            "leverage_pre_max": 1.342355241040242,
+            "crash_severity_pct": 50.00743339144453
+          }
+        ]
+      },
+      {
+        "pre_gap_ticks": 0,
+        "trailing_pre_rows": 200,
+        "feature_preset": "market_plus_wealth",
+        "runs_total": 500,
+        "crash_runs_total": 88,
+        "mean_pre_rows": 200.0,
+        "window_strategy_counts": {
+          "pre_phase_trailing_window": 500
+        },
+        "kept_features": [
+          "ofi_pre_mean",
+          "depth_imb_pre_mean",
+          "leverage_pre_max",
+          "mean_wealth_pre_mean",
+          "wealth_concentration_pre_mean"
+        ],
+        "dropped_features": [
+          "spread_pre_mean",
+          "kyle_lambda_pre_mean",
+          "pct_insolvent_pre_max"
+        ],
+        "variances": {
+          "ofi_pre_mean": 0.01939641451724861,
+          "spread_pre_mean": 0.0,
+          "depth_imb_pre_mean": 3.087856587133592e-05,
+          "leverage_pre_max": 0.011669547987893696,
+          "kyle_lambda_pre_mean": 1.232595164407831e-32,
+          "mean_wealth_pre_mean": 2941321.266235926,
+          "pct_insolvent_pre_max": 0.0,
+          "wealth_concentration_pre_mean": 0.00023011905144755982
+        },
+        "intervention_mode": "local_sd_clip_to_stable_median",
+        "observational_rate_raw": 0.176,
+        "observational_rate_pred": 0.17606608656179354,
+        "auc_in_sample": 0.9820167696381288,
+        "cv_auc_mean": 0.9804011838842698,
+        "cv_auc_std": 0.009458321760330483,
+        "do_ofi_rate_pred": 0.17419451963304658,
+        "ofi_reduction_pct": 1.0629911559317242,
+        "ofi_counterfactual": {
+          "target_floor": 0.004238287365611413,
+          "shift_sd": 0.13927101104411
+        },
+        "do_leverage_rate_pred": 0.1397218378186629,
+        "leverage_reduction_pct": 20.64239028245509,
+        "leverage_counterfactual": {
+          "target_floor": 1.0979017331799055,
+          "shift_sd": 0.10802568207557726
+        },
+        "severity_reduction_pct": 0.00043709791589739553,
+        "group_means": [
+          {
+            "crashed": 0,
+            "ofi_pre_mean": 0.012036894525493533,
+            "depth_imb_pre_mean": 0.0004804810751652128,
+            "leverage_pre_max": 1.1122089965743431,
+            "mean_wealth_pre_mean": 175489.74805524075,
+            "wealth_concentration_pre_mean": 0.945532463852851,
+            "crash_severity_pct": 50.001755430271864
+          },
+          {
+            "crashed": 1,
+            "ofi_pre_mean": 0.25836415746432023,
+            "depth_imb_pre_mean": 0.010305676177470075,
+            "leverage_pre_max": 1.342355241040242,
+            "mean_wealth_pre_mean": 179243.80774343424,
+            "wealth_concentration_pre_mean": 0.9123224775980734,
+            "crash_severity_pct": 50.00743339144453
+          }
+        ]
+      },
+      {
+        "pre_gap_ticks": 20,
+        "trailing_pre_rows": 200,
+        "feature_preset": "market_core",
+        "runs_total": 500,
+        "crash_runs_total": 88,
+        "mean_pre_rows": 200.0,
+        "window_strategy_counts": {
+          "pre_phase_trailing_window": 500
+        },
+        "kept_features": [
+          "ofi_pre_mean",
+          "depth_imb_pre_mean",
+          "leverage_pre_max"
+        ],
+        "dropped_features": [
+          "spread_pre_mean",
+          "kyle_lambda_pre_mean"
+        ],
+        "variances": {
+          "ofi_pre_mean": 0.02026508565687972,
+          "spread_pre_mean": 0.0,
+          "depth_imb_pre_mean": 3.226017037617775e-05,
+          "leverage_pre_max": 0.011801163294388203,
+          "kyle_lambda_pre_mean": 1.232595164407831e-32
+        },
+        "intervention_mode": "local_sd_clip_to_stable_median",
+        "observational_rate_raw": 0.176,
+        "observational_rate_pred": 0.17606225573488182,
+        "auc_in_sample": 0.9816857899382172,
+        "cv_auc_mean": 0.9802282299931434,
+        "cv_auc_std": 0.010797068158578378,
+        "do_ofi_rate_pred": 0.16599074348661783,
+        "ofi_reduction_pct": 5.720426678748163,
+        "ofi_counterfactual": {
+          "target_floor": 0.0021672802131483325,
+          "shift_sd": 0.14235549043461485
+        },
+        "do_leverage_rate_pred": 0.09970986820168602,
+        "leverage_reduction_pct": 43.36669845248876,
+        "leverage_counterfactual": {
+          "target_floor": 1.0979017331799055,
+          "shift_sd": 0.108633159276476
+        },
+        "severity_reduction_pct": 0.0011863004122898448,
+        "group_means": [
+          {
+            "crashed": 0,
+            "ofi_pre_mean": 0.011218257696348176,
+            "depth_imb_pre_mean": 0.00044771300049254424,
+            "leverage_pre_max": 1.1114836847457867,
+            "crash_severity_pct": 50.001755430271864
+          },
+          {
+            "crashed": 1,
+            "ofi_pre_mean": 0.26457862407636323,
+            "depth_imb_pre_mean": 0.010553035234810547,
+            "leverage_pre_max": 1.3446429431126312,
+            "crash_severity_pct": 50.00743339144453
+          }
+        ]
+      },
+      {
+        "pre_gap_ticks": 20,
+        "trailing_pre_rows": 200,
+        "feature_preset": "market_plus_wealth",
+        "runs_total": 500,
+        "crash_runs_total": 88,
+        "mean_pre_rows": 200.0,
+        "window_strategy_counts": {
+          "pre_phase_trailing_window": 500
+        },
+        "kept_features": [
+          "ofi_pre_mean",
+          "depth_imb_pre_mean",
+          "leverage_pre_max",
+          "mean_wealth_pre_mean",
+          "wealth_concentration_pre_mean"
+        ],
+        "dropped_features": [
+          "spread_pre_mean",
+          "kyle_lambda_pre_mean",
+          "pct_insolvent_pre_max"
+        ],
+        "variances": {
+          "ofi_pre_mean": 0.02026508565687972,
+          "spread_pre_mean": 0.0,
+          "depth_imb_pre_mean": 3.226017037617775e-05,
+          "leverage_pre_max": 0.011801163294388203,
+          "kyle_lambda_pre_mean": 1.232595164407831e-32,
+          "mean_wealth_pre_mean": 2862280.216756956,
+          "pct_insolvent_pre_max": 0.0,
+          "wealth_concentration_pre_mean": 0.00022385837032069545
+        },
+        "intervention_mode": "local_sd_clip_to_stable_median",
+        "observational_rate_raw": 0.176,
+        "observational_rate_pred": 0.1759840838664039,
+        "auc_in_sample": 0.9835061782877317,
+        "cv_auc_mean": 0.981676874883561,
+        "cv_auc_std": 0.007240472247651819,
+        "do_ofi_rate_pred": 0.1742551575264227,
+        "ofi_reduction_pct": 0.9824333553332552,
+        "ofi_counterfactual": {
+          "target_floor": 0.0021672802131483325,
+          "shift_sd": 0.14235549043461485
+        },
+        "do_leverage_rate_pred": 0.13581537787730816,
+        "leverage_reduction_pct": 22.825192543883293,
+        "leverage_counterfactual": {
+          "target_floor": 1.0979017331799055,
+          "shift_sd": 0.108633159276476
+        },
+        "severity_reduction_pct": 0.0005330001727144604,
+        "group_means": [
+          {
+            "crashed": 0,
+            "ofi_pre_mean": 0.011218257696348176,
+            "depth_imb_pre_mean": 0.00044771300049254424,
+            "leverage_pre_max": 1.1114836847457867,
+            "mean_wealth_pre_mean": 175485.8196332096,
+            "wealth_concentration_pre_mean": 0.9455666732270648,
+            "crash_severity_pct": 50.001755430271864
+          },
+          {
+            "crashed": 1,
+            "ofi_pre_mean": 0.26457862407636323,
+            "depth_imb_pre_mean": 0.010553035234810547,
+            "leverage_pre_max": 1.3446429431126312,
+            "mean_wealth_pre_mean": 179189.33237813384,
+            "wealth_concentration_pre_mean": 0.9128102216647279,
+            "crash_severity_pct": 50.00743339144453
+          }
+        ]
+      },
+      {
+        "pre_gap_ticks": 50,
+        "trailing_pre_rows": 200,
+        "feature_preset": "market_core",
+        "runs_total": 500,
+        "crash_runs_total": 88,
+        "mean_pre_rows": 200.0,
+        "window_strategy_counts": {
+          "pre_phase_trailing_window": 500
+        },
+        "kept_features": [
+          "ofi_pre_mean",
+          "depth_imb_pre_mean",
+          "leverage_pre_max"
+        ],
+        "dropped_features": [
+          "spread_pre_mean",
+          "kyle_lambda_pre_mean"
+        ],
+        "variances": {
+          "ofi_pre_mean": 0.020218814536305564,
+          "spread_pre_mean": 0.0,
+          "depth_imb_pre_mean": 3.219175339778894e-05,
+          "leverage_pre_max": 0.011807526135754403,
+          "kyle_lambda_pre_mean": 1.232595164407831e-32
+        },
+        "intervention_mode": "local_sd_clip_to_stable_median",
+        "observational_rate_raw": 0.176,
+        "observational_rate_pred": 0.1760030932377397,
+        "auc_in_sample": 0.9819340247131509,
+        "cv_auc_mean": 0.9807639933238453,
+        "cv_auc_std": 0.009392433680782682,
+        "do_ofi_rate_pred": 0.16420561761422617,
+        "ofi_reduction_pct": 6.702993343178261,
+        "ofi_counterfactual": {
+          "target_floor": -0.00016817320850602612,
+          "shift_sd": 0.14219287793805133
+        },
+        "do_leverage_rate_pred": 0.1019602665783027,
+        "leverage_reduction_pct": 42.069048502131814,
+        "leverage_counterfactual": {
+          "target_floor": 1.0978952256617611,
+          "shift_sd": 0.10866244123778189
+        },
+        "severity_reduction_pct": 0.0009721032330231739,
+        "group_means": [
+          {
+            "crashed": 0,
+            "ofi_pre_mean": 0.012759765966684992,
+            "depth_imb_pre_mean": 0.0005092050119309583,
+            "leverage_pre_max": 1.1110326920888933,
+            "crash_severity_pct": 50.001755430271864
+          },
+          {
+            "crashed": 1,
+            "ofi_pre_mean": 0.2650666624135296,
+            "depth_imb_pre_mean": 0.010573297633866932,
+            "leverage_pre_max": 1.3448401879830432,
+            "crash_severity_pct": 50.00743339144453
+          }
+        ]
+      },
+      {
+        "pre_gap_ticks": 50,
+        "trailing_pre_rows": 200,
+        "feature_preset": "market_plus_wealth",
+        "runs_total": 500,
+        "crash_runs_total": 88,
+        "mean_pre_rows": 200.0,
+        "window_strategy_counts": {
+          "pre_phase_trailing_window": 500
+        },
+        "kept_features": [
+          "ofi_pre_mean",
+          "depth_imb_pre_mean",
+          "leverage_pre_max",
+          "mean_wealth_pre_mean",
+          "wealth_concentration_pre_mean"
+        ],
+        "dropped_features": [
+          "spread_pre_mean",
+          "kyle_lambda_pre_mean",
+          "pct_insolvent_pre_max"
+        ],
+        "variances": {
+          "ofi_pre_mean": 0.020218814536305564,
+          "spread_pre_mean": 0.0,
+          "depth_imb_pre_mean": 3.219175339778894e-05,
+          "leverage_pre_max": 0.011807526135754403,
+          "kyle_lambda_pre_mean": 1.232595164407831e-32,
+          "mean_wealth_pre_mean": 2746358.2877538577,
+          "pct_insolvent_pre_max": 0.0,
+          "wealth_concentration_pre_mean": 0.00021466548402780385
+        },
+        "intervention_mode": "local_sd_clip_to_stable_median",
+        "observational_rate_raw": 0.176,
+        "observational_rate_pred": 0.17596245344916592,
+        "auc_in_sample": 0.9831476169461607,
+        "cv_auc_mean": 0.9809743997510847,
+        "cv_auc_std": 0.006888775351352329,
+        "do_ofi_rate_pred": 0.17157162282945415,
+        "ofi_reduction_pct": 2.495322458651806,
+        "ofi_counterfactual": {
+          "target_floor": -0.00016817320850602612,
+          "shift_sd": 0.14219287793805133
+        },
+        "do_leverage_rate_pred": 0.13630364184581822,
+        "leverage_reduction_pct": 22.53822382330262,
+        "leverage_counterfactual": {
+          "target_floor": 1.0978952256617611,
+          "shift_sd": 0.10866244123778189
+        },
+        "severity_reduction_pct": 0.000195326638047927,
+        "group_means": [
+          {
+            "crashed": 0,
+            "ofi_pre_mean": 0.012759765966684992,
+            "depth_imb_pre_mean": 0.0005092050119309583,
+            "leverage_pre_max": 1.1110326920888933,
+            "mean_wealth_pre_mean": 175479.79122659966,
+            "wealth_concentration_pre_mean": 0.9456190475572771,
+            "crash_severity_pct": 50.001755430271864
+          },
+          {
+            "crashed": 1,
+            "ofi_pre_mean": 0.2650666624135296,
+            "depth_imb_pre_mean": 0.010573297633866932,
+            "leverage_pre_max": 1.3448401879830432,
+            "mean_wealth_pre_mean": 179107.5075796228,
+            "wealth_concentration_pre_mean": 0.9135443669243223,
+            "crash_severity_pct": 50.00743339144453
+          }
+        ]
+      }
+    ]
+  }
+}
